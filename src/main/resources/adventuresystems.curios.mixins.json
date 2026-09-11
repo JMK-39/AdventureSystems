@@ -1,0 +1,10 @@
+{
+  "minVersion": "0.8",
+  "compatibilityLevel": "JAVA_17",
+  "package": "dev.xyat.adventuresystems.curios.mixin",
+  "refmap": "adventuresystems.mixins.refmap.json",
+  "mixins": [
+    "MerchantMenuAccessor",
+    "MerchantMenuMixin"
+  ]
+}

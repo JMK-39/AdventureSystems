@@ -1,0 +1,9 @@
+{
+  "add_cosmetic": false,
+  "conditions": [],
+  "icon": "adventuresystems:slot/core_slot",
+  "operation": "SET",
+  "order": 0,
+  "size":1,
+  "replace": false
+}
