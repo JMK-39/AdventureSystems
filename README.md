@@ -19,12 +19,11 @@ The project is designed around in-game administration. Where a feature changes s
 - Language-aware tip data and in-game visual editing.
 - Optional integrations with Refined Storage, Sophisticated Backpacks and JEI.
 
-### Requirements and Compatibility
+### Dependencies
 
 | Type | Dependency |
 |---|---|
-| Required | Minecraft 1.20.1 |
-| Required | Minecraft Forge 47+ |
+| Required | Forge 47.4.0+ |
 | Required | KineticCore 26.9.8+ |
 | Required | Curios 5.10+ |
 | Required | FTB Library |
@@ -355,12 +354,11 @@ Primary configuration/data paths:
 - 提示数据支持多语言并可在游戏内可视化编辑。
 - 可选兼容 Refined Storage、Sophisticated Backpacks 与 JEI。
 
-### 运行环境与兼容
+### 依赖
 
 | 类型 | 依赖 |
 |---|---|
-| 必需 | Minecraft 1.20.1 |
-| 必需 | Minecraft Forge 47+ |
+| 必需 | Forge 47.4.0+ |
 | 必需 | KineticCore 26.9.8+ |
 | 必需 | Curios 5.10+ |
 | 必需 | FTB Library |
