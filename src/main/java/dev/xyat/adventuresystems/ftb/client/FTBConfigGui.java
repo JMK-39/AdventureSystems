@@ -18,23 +18,23 @@ public final class FTBConfigGui {
     public static void load() {
         KTConfigApi.register(KTConfigPage.builder(
                         PAGE_ID,
-                        Component.translatable("cfg.adventuresystems.ftb.ftb.title")
+                        Component.translatable("cfg.adventuresystems.ftb.title")
                 )
                 .scope(KTConfigScope.CLIENT_LOCAL)
                 .applyTiming(KTConfigPage.ApplyTiming.IMMEDIATE)
                 .booleanValue(
                         "enable_task_jump",
-                        Component.translatable("cfg.adventuresystems.ftb.ftb.enable_task_jump"),
+                        Component.translatable("cfg.adventuresystems.ftb.enable_task_jump"),
                         FTBClientConfig::isTaskJumpEnabled,
                         FTBClientConfig::setTaskJumpEnabled,
                         true,
-                        Component.translatable("cfg.adventuresystems.ftb.ftb.enable_task_jump.tooltip")
+                        Component.translatable("cfg.adventuresystems.ftb.enable_task_jump.tooltip")
                 )
                 .action(
                         "open_binding_editor",
-                        Component.translatable("cfg.adventuresystems.ftb.ftb.open_editor"),
+                        Component.translatable("cfg.adventuresystems.ftb.open_editor"),
                         FTBConfigGui::openEditor,
-                        Component.translatable("cfg.adventuresystems.ftb.ftb.open_editor.tooltip")
+                        Component.translatable("cfg.adventuresystems.ftb.open_editor.tooltip")
                 )
                 .onSave(FTBClientConfig::save)
                 .build());

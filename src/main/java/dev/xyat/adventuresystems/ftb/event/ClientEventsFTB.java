@@ -45,7 +45,7 @@ public final class ClientEventsFTB {
         Component singleKeyName = KeyMappingsFTB.OPEN_QUEST.getTranslatedKeyMessage().copy().withStyle(ChatFormatting.GOLD);
 
         event.getToolTip().add(Component.translatable(
-                "tip.adventuresystems.ftb.ftb.open",
+                "tip.adventuresystems.ftb.open",
                 singleKeyName
         ));
 
@@ -53,7 +53,7 @@ public final class ClientEventsFTB {
             Component multiKeyName = KeyMappingsFTB.OPEN_QUEST_MULTI.getTranslatedKeyMessage().copy().withStyle(ChatFormatting.GOLD);
             Component countText = Component.literal(String.valueOf(count)).withStyle(ChatFormatting.GOLD);
             event.getToolTip().add(Component.translatable(
-                    "tip.adventuresystems.ftb.ftb.open.list",
+                    "tip.adventuresystems.ftb.open.list",
                     multiKeyName,
                     countText
             ));
@@ -78,7 +78,7 @@ public final class ClientEventsFTB {
 
             List<RefFTB> refs = ResolverFTB.findQuestRefs(hovered);
             if (refs.isEmpty()) {
-                FTBToastUtil.showQuick("adventuresystems.ftb.no.quest", Component.translatable("msg.adventuresystems.ftb.ftb.no.quest"));
+                FTBToastUtil.showQuick("adventuresystems.ftb.no.quest", Component.translatable("msg.adventuresystems.ftb.no.quest"));
                 event.setCanceled(true);
                 return;
             }

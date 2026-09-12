@@ -162,23 +162,23 @@ public class SelectScreenFTB extends KineticScreen {
     protected void renderTooltips(GuiGraphics g, int smx, int smy, int mx, int my) {
         if (smx >= LIST_X && smx <= LIST_X + 520 && smy >= 54 && smy <= 74) {
             GuiOverlay.requestTooltip(List.of(
-                    Component.translatable("tip.adventuresystems.ftb.ftb.search.title"),
-                    Component.translatable("tip.adventuresystems.ftb.ftb.search.desc"),
-                    Component.translatable("tip.adventuresystems.ftb.ftb.search.match")
+                    Component.translatable("tip.adventuresystems.ftb.search.title"),
+                    Component.translatable("tip.adventuresystems.ftb.search.desc"),
+                    Component.translatable("tip.adventuresystems.ftb.search.match")
             ), mx, my);
             return;
         }
         if (smx >= LIST_X && smx <= LIST_X + LIST_W - 10 && smy >= LIST_Y && smy <= LIST_Y + LIST_H) {
             if (smx >= LIST_X + LIST_W - 10 - FAV_W) {
                 GuiOverlay.requestTooltip(List.of(
-                        Component.translatable("tip.adventuresystems.ftb.ftb.favorite.title"),
-                        Component.translatable("tip.adventuresystems.ftb.ftb.favorite.desc")
+                        Component.translatable("tip.adventuresystems.ftb.favorite.title"),
+                        Component.translatable("tip.adventuresystems.ftb.favorite.desc")
                 ), mx, my);
             } else {
                 GuiOverlay.requestTooltip(List.of(
-                        Component.translatable("tip.adventuresystems.ftb.ftb.list.title"),
-                        Component.translatable("tip.adventuresystems.ftb.ftb.list.open"),
-                        Component.translatable("tip.adventuresystems.ftb.ftb.list.multi")
+                        Component.translatable("tip.adventuresystems.ftb.list.title"),
+                        Component.translatable("tip.adventuresystems.ftb.list.open"),
+                        Component.translatable("tip.adventuresystems.ftb.list.multi")
                 ), mx, my);
             }
         }

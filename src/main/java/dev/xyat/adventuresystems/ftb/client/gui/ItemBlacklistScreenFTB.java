@@ -77,7 +77,7 @@ public class ItemBlacklistScreenFTB extends KineticScreen {
             if (!target.isEmpty()) {
                 BlacklistStoreFTB.add(target);
                 reloadEntries();
-                FTBToastUtil.show("adventuresystems_blacklist_added", Component.translatable("msg.adventuresystems.ftb.ftb_item.blacklist_added"));
+                FTBToastUtil.show("adventuresystems_blacklist_added", Component.translatable("msg.adventuresystems.ftb_item.blacklist_added"));
             }
         }))).bounds(LIST_X, 52, 100, 22).build());
 
@@ -199,7 +199,7 @@ public class ItemBlacklistScreenFTB extends KineticScreen {
                     if (mx >= LIST_X + LIST_W - 70 && mx <= LIST_X + LIST_W - 18) {
                         BlacklistStoreFTB.remove(entry);
                         reloadEntries();
-                        FTBToastUtil.show("adventuresystems_blacklist_removed", Component.translatable("msg.adventuresystems.ftb.ftb_item.blacklist_removed"));
+                        FTBToastUtil.show("adventuresystems_blacklist_removed", Component.translatable("msg.adventuresystems.ftb_item.blacklist_removed"));
                     }
                     return true;
                 }

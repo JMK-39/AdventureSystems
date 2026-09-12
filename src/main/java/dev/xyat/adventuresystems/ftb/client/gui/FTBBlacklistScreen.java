@@ -54,7 +54,6 @@ public class FTBBlacklistScreen extends KineticScreen {
 
     @Override
     protected void buildUi() {
-        reloadEntries();
         int paddingX = 14;
         int maxAvailableWidth = this.canvasWidth - paddingX * 2 - 8 - 4;
         this.gridCols = Math.max(1, maxAvailableWidth / SLOT_SIZE);
@@ -63,6 +62,7 @@ public class FTBBlacklistScreen extends KineticScreen {
         this.gridY = 36;
         int bottomY = this.canvasHeight - 10;
         this.gridRowsVisible = Math.max(1, (bottomY - gridY) / SLOT_SIZE);
+        reloadEntries();
 
         int rightEdge = gridX + contentW + 8 + 4;
 
@@ -96,7 +96,7 @@ public class FTBBlacklistScreen extends KineticScreen {
             if (!target.isEmpty()) {
                 BlacklistStoreFTB.add(target);
                 reloadEntries();
-                FTBToastUtil.show("adventuresystems_blacklist_added", Component.translatable("msg.adventuresystems.ftb.ftb.blacklist.added"));
+                FTBToastUtil.show("adventuresystems_blacklist_added", Component.translatable("msg.adventuresystems.ftb.blacklist.added"));
             }
         }));
     }
@@ -156,7 +156,6 @@ public class FTBBlacklistScreen extends KineticScreen {
 
         }
 
-        g.disableScissor();
         if (maxScroll > 0) {
             int contentH = gridRowsVisible * SLOT_SIZE;
             int thumbH = Scroll.calculateThumbHeight(contentH, gridRowsVisible, (int) Math.ceil((double) allEntries.size() / gridCols), 20);
@@ -171,7 +170,10 @@ public class FTBBlacklistScreen extends KineticScreen {
         int scrollShift = (int) Math.round((smoothScroll - smoothRow) * SLOT_SIZE);
         int startIdx = smoothRow * gridCols;
         int endIdx = Math.min(startIdx + (gridRowsVisible + 1) * gridCols, allEntries.size());
-        enableCanvasScissor(g, gridX, gridY, gridX + gridCols * SLOT_SIZE, gridY + gridRowsVisible * SLOT_SIZE);
+        if (smx < gridX || smx >= gridX + gridCols * SLOT_SIZE
+                || smy < gridY || smy >= gridY + gridRowsVisible * SLOT_SIZE) {
+            return;
+        }
         for (int i = startIdx; i < endIdx; i++) {
             int x = gridX + (i - startIdx) % gridCols * SLOT_SIZE;
             int y = gridY + (i - startIdx) / gridCols * SLOT_SIZE - scrollShift;
@@ -189,7 +191,7 @@ public class FTBBlacklistScreen extends KineticScreen {
                 }
 
                 tips.add(Component.literal(entry).withStyle(net.minecraft.ChatFormatting.GOLD));
-                tips.add(Component.translatable("tip.adventuresystems.ftb.ftb.blacklist.remove"));
+                tips.add(Component.translatable("tip.adventuresystems.ftb.blacklist.remove"));
 
                 GuiOverlay.requestTooltip(tips, mx, my);
                 return;
@@ -216,7 +218,7 @@ public class FTBBlacklistScreen extends KineticScreen {
                 if (btn == 1) { // 仅右键触发移除
                     BlacklistStoreFTB.remove(allEntries.get(idx));
                     reloadEntries();
-                    FTBToastUtil.show("adventuresystems_blacklist_removed", Component.translatable("msg.adventuresystems.ftb.ftb.blacklist.removed"));
+                    FTBToastUtil.show("adventuresystems_blacklist_removed", Component.translatable("msg.adventuresystems.ftb.blacklist.removed"));
                 }
             }
             return true;

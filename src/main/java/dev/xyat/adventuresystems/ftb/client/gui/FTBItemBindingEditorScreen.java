@@ -247,7 +247,7 @@ public class FTBItemBindingEditorScreen extends KineticScreen {
             if (selection != null && selection.isItem()) {
                 selectStack(selection.stack());
             } else {
-                FTBToastUtil.showQuick("adventuresystems_binding_item_only", Component.translatable("msg.adventuresystems.ftb.ftb.item.only"));
+                FTBToastUtil.showQuick("adventuresystems_binding_item_only", Component.translatable("msg.adventuresystems.ftb.item.only"));
             }
             Minecraft.getInstance().setScreen(this);
         }));
@@ -284,7 +284,7 @@ public class FTBItemBindingEditorScreen extends KineticScreen {
     private void addTask(RefFTB ref) {
         if (ref == null) return;
         if (selectedStack.isEmpty()) {
-            FTBToastUtil.showQuick("adventuresystems_binding_select_item_first", Component.translatable("msg.adventuresystems.ftb.ftb.item.first"));
+            FTBToastUtil.showQuick("adventuresystems_binding_select_item_first", Component.translatable("msg.adventuresystems.ftb.item.first"));
             return;
         }
         if (selectedQuestIds.add(ref.id())) {
@@ -321,7 +321,7 @@ public class FTBItemBindingEditorScreen extends KineticScreen {
     private void setFavoriteTask(RefFTB ref) {
         if (ref == null) return;
         if (selectedStack.isEmpty()) {
-            FTBToastUtil.showQuick("adventuresystems_binding_select_item_first", Component.translatable("msg.adventuresystems.ftb.ftb.item.first"));
+            FTBToastUtil.showQuick("adventuresystems_binding_select_item_first", Component.translatable("msg.adventuresystems.ftb.item.first"));
             return;
         }
         boolean changed = selectedQuestIds.add(ref.id());
@@ -351,7 +351,7 @@ public class FTBItemBindingEditorScreen extends KineticScreen {
 
     private void clearSelectedBinding() {
         if (selectedStack.isEmpty()) {
-            FTBToastUtil.showQuick("adventuresystems_binding_select_item_first", Component.translatable("msg.adventuresystems.ftb.ftb.item.first"));
+            FTBToastUtil.showQuick("adventuresystems_binding_select_item_first", Component.translatable("msg.adventuresystems.ftb.item.first"));
             return;
         }
         if (!selectedQuestIds.isEmpty()) {
@@ -365,7 +365,7 @@ public class FTBItemBindingEditorScreen extends KineticScreen {
 
     private void saveCurrentBinding() {
         if (selectedStack.isEmpty()) {
-            FTBToastUtil.showQuick("adventuresystems_binding_select_item_first", Component.translatable("msg.adventuresystems.ftb.ftb.item.first"));
+            FTBToastUtil.showQuick("adventuresystems_binding_select_item_first", Component.translatable("msg.adventuresystems.ftb.item.first"));
             return;
         }
 
@@ -381,7 +381,7 @@ public class FTBItemBindingEditorScreen extends KineticScreen {
             KTConfigApi.notifySaved(FTBConfigGui.PAGE_ID);
         } else {
             updateSaveButton();
-            FTBToastUtil.showQuick("adventuresystems_binding_failed", Component.translatable("msg.adventuresystems.ftb.ftb.failed"));
+            FTBToastUtil.showQuick("adventuresystems_binding_failed", Component.translatable("msg.adventuresystems.ftb.failed"));
         }
     }
 
@@ -459,7 +459,7 @@ public class FTBItemBindingEditorScreen extends KineticScreen {
 
         drawItemSlot(g, selectedItemIconX(), selectedItemIconY(), selectedStack, mx, my, 0xFF444444);
         if (selectedStack.isEmpty()) {
-            g.drawString(font, Component.translatable("tip.adventuresystems.ftb.ftb.item.choose"), selectedItemIconX() + ITEM_SLOT + 8, selectedItemIconY() + 7, 0xFFFFFF55, false);
+            g.drawString(font, Component.translatable("tip.adventuresystems.ftb.item.choose"), selectedItemIconX() + ITEM_SLOT + 8, selectedItemIconY() + 7, 0xFFFFFF55, false);
         }
 
         g.drawString(font, Component.translatable("label.adventuresystems.ftb.custom.items", number(explicitEntries.size(), ChatFormatting.GREEN)), headerX, panelY + 30, 0xFFFFAA00, false);
@@ -469,7 +469,7 @@ public class FTBItemBindingEditorScreen extends KineticScreen {
         renderBoundTasks(g, mx, my);
 
         if (!selectedStack.isEmpty() && boundTasks.isEmpty() && !dirty) {
-            g.drawString(font, Component.translatable("tip.adventuresystems.ftb.ftb.default"), rightX + 8, boundY + boundH + 1, 0xFF55FF55, false);
+            g.drawString(font, Component.translatable("tip.adventuresystems.ftb.default"), rightX + 8, boundY + boundH + 1, 0xFF55FF55, false);
         }
     }
 
@@ -589,16 +589,16 @@ public class FTBItemBindingEditorScreen extends KineticScreen {
         RefFTB taskRef = taskAt(smx, smy);
         if (taskRef != null) {
             Component tip = selectedQuestIds.contains(taskRef.id())
-                    ? Component.translatable("tip.adventuresystems.ftb.ftb.task.remove")
-                    : Component.translatable("tip.adventuresystems.ftb.ftb.task.add");
+                    ? Component.translatable("tip.adventuresystems.ftb.task.remove")
+                    : Component.translatable("tip.adventuresystems.ftb.task.add");
             GuiOverlay.requestTooltip(List.of(tip), mx, my);
             return;
         }
         RefFTB boundRef = boundAt(smx, smy);
         if (boundRef != null) {
             GuiOverlay.requestTooltip(List.of(
-                    Component.translatable("tip.adventuresystems.ftb.ftb.task.remove"),
-                    Component.translatable("tip.adventuresystems.ftb.ftb.favorite.desc")
+                    Component.translatable("tip.adventuresystems.ftb.task.remove"),
+                    Component.translatable("tip.adventuresystems.ftb.favorite.desc")
             ), mx, my);
             return;
         }

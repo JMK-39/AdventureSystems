@@ -87,7 +87,7 @@ public abstract class ValidItemsScreenSubmitLimitMixin extends BaseScreen {
 
             @Override
             public void addMouseOverText(TooltipList list) {
-                list.add(Component.translatable("tip.adventuresystems.ftb.ftb.submit.button"));
+                list.add(Component.translatable("tip.adventuresystems.ftb.submit.button"));
             }
 
             @Override
