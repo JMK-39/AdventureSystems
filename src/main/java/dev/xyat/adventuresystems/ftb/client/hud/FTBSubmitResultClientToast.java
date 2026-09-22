@@ -1,6 +1,6 @@
 package dev.xyat.adventuresystems.ftb.client.hud;
 
-import net.minecraft.ChatFormatting;
+import dev.xyat.kineticcore.api.text.KineticI18n;
 import net.minecraft.network.chat.Component;
 
 public final class FTBSubmitResultClientToast {
@@ -14,19 +14,19 @@ public final class FTBSubmitResultClientToast {
 
         Component message;
         if (completed == 0 && submitted > 0L) {
-            message = Component.translatable("toast.adventuresystems.ftb.submit.partial_items", number(submitted, ChatFormatting.GOLD));
+            message = KineticI18n.translatable("toast.adventuresystems.ftb.submit.partial_items", number(submitted));
         } else if (completed == 0) {
-            message = Component.translatable("toast.adventuresystems.ftb.submit.none", number(requested, ChatFormatting.AQUA));
+            message = KineticI18n.translatable("toast.adventuresystems.ftb.submit.none", number(requested));
         } else if (completed < requested) {
-            message = Component.translatable("toast.adventuresystems.ftb.submit.partial", number(requested, ChatFormatting.AQUA), number(completed, ChatFormatting.GREEN));
+            message = KineticI18n.translatable("toast.adventuresystems.ftb.submit.partial", number(requested), number(completed));
         } else {
-            message = Component.translatable("toast.adventuresystems.ftb.submit.success", number(completed, ChatFormatting.AQUA));
+            message = KineticI18n.translatable("toast.adventuresystems.ftb.submit.success", number(completed));
         }
 
         FTBToastUtil.showLong("adventuresystems.ftb.submit.result", message);
     }
 
-    private static Component number(long value, ChatFormatting color) {
-        return Component.literal(String.valueOf(value)).withStyle(color);
+    private static Component number(long value) {
+        return Component.literal(String.valueOf(value));
     }
 }

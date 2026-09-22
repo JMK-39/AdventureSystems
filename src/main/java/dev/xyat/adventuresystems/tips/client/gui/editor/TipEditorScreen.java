@@ -1,48 +1,54 @@
 package dev.xyat.adventuresystems.tips.client.gui.editor;
 
-import dev.xyat.kineticcore.api.client.theme.GuiTheme;
-import dev.xyat.kineticcore.api.client.screen.KineticNativeScreen;
-import dev.xyat.kineticcore.api.client.widget.KineticWidgets;
+import dev.xyat.adventuresystems.tips.TipsNetwork;
 import dev.xyat.adventuresystems.tips.api.HelpTip;
 import dev.xyat.adventuresystems.tips.client.TipRenderer;
-import dev.xyat.adventuresystems.tips.TipsNetwork;
 import dev.xyat.adventuresystems.tips.config.ConfigLoader;
 import dev.xyat.adventuresystems.tips.config.TipsConfigGui;
-import dev.xyat.kineticcore.api.client.overlay.GuiOverlay;
-import dev.xyat.kineticcore.config.client.KTConfigApi;
-import dev.xyat.kineticcore.api.client.search.ItemSearchIndex;
-import dev.xyat.kineticcore.api.client.selector.ItemSelectorScreen;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Font;
+import dev.xyat.kineticcore.api.client.input.KineticMouseButtons;
+import dev.xyat.kineticcore.api.client.overlay.KineticOverlays;
+import dev.xyat.kineticcore.api.client.screen.KineticNativeScreen;
+import dev.xyat.kineticcore.api.client.screen.KineticScreen;
+import dev.xyat.kineticcore.api.client.selector.KineticSelectors;
+import dev.xyat.kineticcore.api.client.theme.GuiTheme;
+import dev.xyat.kineticcore.api.client.widget.button.KineticButtons.StateButton;
+import dev.xyat.kineticcore.api.client.widget.input.KineticTextFields.KineticEditBox;
+import dev.xyat.kineticcore.api.client.widget.selection.KineticTabs.SelectionItem;
+import dev.xyat.kineticcore.api.client.widget.selection.KineticTabs.ScrollableSelectionList;
+import dev.xyat.kineticcore.api.config.client.KTConfigApi;
+import dev.xyat.kineticcore.api.registry.KineticRegistries;
+import dev.xyat.kineticcore.api.resource.KineticResourceIds;
+import dev.xyat.kineticcore.api.runtime.KineticClientRuntime;
+import dev.xyat.kineticcore.api.text.KineticI18n;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.EditBox;
-import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.registries.ForgeRegistries;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.regex.Matcher;
 
 public class TipEditorScreen extends KineticNativeScreen {
-    private final Screen lastScreen;
     private final String languageCode;
     private final List<HelpTip.JsonModel.Entry> allEntries;
     private boolean savePending;
     private List<HelpTip.JsonModel.Entry> displayEntries;
     private HelpTip.JsonModel.Entry selectedEntry;
 
-    private TipListWidget leftList;
-    private EditBox searchBox, textInput;
-    private Button stageBtn, timeBtn;
+    private ScrollableSelectionList leftList;
+    private KineticEditBox searchBox;
+    private KineticEditBox textInput;
+    private StateButton stageBtn;
+    private StateButton timeBtn;
 
-    private int guiW, guiH, x0, y0;
+    private int guiW;
+    private int guiH;
+    private int x0;
+    private int y0;
     private int leftW;
     private int editX;
     private int dynamicCondY;
@@ -58,8 +64,8 @@ public class TipEditorScreen extends KineticNativeScreen {
             String languageCode,
             List<HelpTip.JsonModel.Entry> entries
     ) {
-        super(Component.translatable("gui.adventuresystems.tips.tips.editor.title"));
-        this.lastScreen = lastScreen;
+        super(KineticI18n.translatable("gui.adventuresystems.tips.tips.editor.title"));
+        setParentScreen(lastScreen);
         this.languageCode = languageCode == null ? "en_us" : languageCode;
         this.allEntries = entries == null ? new ArrayList<>() : new ArrayList<>(entries);
         this.displayEntries = new ArrayList<>(this.allEntries);
@@ -90,101 +96,154 @@ public class TipEditorScreen extends KineticNativeScreen {
     }
 
     @Override
-    protected void init() {
-        Minecraft mc = Minecraft.getInstance();
-        long pW = mc.getWindow().getScreenWidth();
-        long pH = mc.getWindow().getScreenHeight();
-
-        double uiScale;
-        if (pW < 900 || pH < 600) uiScale = 0.55;
-        else if (pW < 1600 || pH < 900) uiScale = 0.8;
-        else uiScale = 1.0;
-
-        this.guiW = (int)(this.width * 0.95);
-        this.guiH = (int)(this.height * 0.95);
+    protected void buildUi() {
+        this.guiW = (int) (this.width * 0.95D);
+        this.guiH = (int) (this.height * 0.95D);
         this.x0 = (this.width - guiW) / 2;
         this.y0 = (this.height - guiH) / 2;
 
-        this.leftW = (int)(guiW * 0.30);
-        int maxLabelW = Math.max(font.width(Component.translatable("gui.adventuresystems.tips.tips.label.content")),
-                Math.max(font.width(Component.translatable("gui.adventuresystems.tips.tips.label.setting")),
-                        font.width(Component.translatable("gui.adventuresystems.tips.tips.label.condition")))) + 8;
+        this.leftW = (int) (guiW * 0.30D);
+        int maxLabelW = Math.max(
+                font.width(KineticI18n.translatable("gui.adventuresystems.tips.tips.label.content")),
+                Math.max(
+                        font.width(KineticI18n.translatable("gui.adventuresystems.tips.tips.label.setting")),
+                        font.width(KineticI18n.translatable("gui.adventuresystems.tips.tips.label.condition"))
+                )
+        ) + 8;
 
         this.editX = x0 + leftW + maxLabelW + 15;
         int editW = (x0 + guiW - 15) - editX;
 
-        this.searchBox = new EditBox(this.font, x0 + 10, y0 + 10, leftW - 15, 20, Component.empty());
+        this.searchBox = addTextField(
+                x0 + 10,
+                y0 + 10,
+                leftW - 15,
+                Component.empty(),
+                KineticI18n.translatable("gui.adventuresystems.tips.tips.search"),
+                null,
+                null
+        );
         this.searchBox.setResponder(this::updateSearch);
-        this.addRenderableWidget(searchBox);
 
-        int itemHeight = Math.max(14, (int)(18 * uiScale));
-        this.leftList = new TipListWidget(this.minecraft, leftW, guiH - 80, y0 + 40, y0 + guiH - 40, itemHeight);
-        this.leftList.setLeftPos(x0 + 5);
-        this.addWidget(this.leftList);
+        this.leftList = addScrollableSelectionList(
+                x0 + 10,
+                y0 + 40,
+                leftW - 20,
+                guiH - 80,
+                tipSelectionItems(),
+                selectedDisplayIndex(),
+                0,
+                index -> {
+                    if (index >= 0 && index < displayEntries.size()) select(displayEntries.get(index));
+                }
+        );
 
         int curY = y0 + 10;
-
-        int colorBtnGap = (int)(2 * uiScale);
-        int colorBtnSize = (editW - (17 * colorBtnGap)) / 17;
-        colorBtnSize = Math.min(16, Math.max(8, colorBtnSize));
-
+        int swatchGap = 2;
+        int swatchSize = KineticScreen.COMPACT_CONTROL_HEIGHT;
+        int swatchColumns = 8;
+        int swatchRows = (COLORS.length + swatchColumns - 1) / swatchColumns;
+        int paletteWidth = swatchColumns * swatchSize + (swatchColumns - 1) * swatchGap;
         for (int i = 0; i < COLORS.length; i++) {
-            final String c = "§" + CODES[i];
-            this.addRenderableWidget(new ColorSmallButton(editX + (i * (colorBtnSize + colorBtnGap)), curY, colorBtnSize, COLORS[i], b -> insertCode(c)));
+            final String code = "§" + CODES[i];
+            int row = i / swatchColumns;
+            int column = i % swatchColumns;
+            addColorSwatchButton(
+                    editX + column * (swatchSize + swatchGap),
+                    curY + row * (swatchSize + swatchGap),
+                    COLORS[i],
+                    null,
+                    () -> insertCode(code)
+            );
         }
-        this.addRenderableWidget(Button.builder(Component.literal("R"), b -> insertCode("§r"))
-                .bounds(editX + (COLORS.length * (colorBtnSize + colorBtnGap)), curY - 1, colorBtnSize + 6, colorBtnSize + 2)
-                .tooltip(Tooltip.create(Component.translatable("gui.adventuresystems.tips.tips.reset_tooltip")))
-                .build());
+        addCompactButton(
+                editX + paletteWidth + 8,
+                curY + (swatchRows - 1) * (swatchSize + swatchGap),
+                24,
+                KineticI18n.translatable("gui.adventuresystems.tips.tips.reset_short"),
+                KineticI18n.translatable("gui.adventuresystems.tips.tips.reset_tooltip"),
+                () -> insertCode("§r")
+        );
 
-        curY += (colorBtnSize + 12);
-        this.textInput = new EditBox(this.font, editX, curY, editW, 20, Component.empty());
+        curY += swatchRows * swatchSize + (swatchRows - 1) * swatchGap + 12;
+        this.textInput = addTextField(
+                editX,
+                curY,
+                editW,
+                Component.empty(),
+                KineticI18n.translatable("gui.adventuresystems.tips.tips.content_hint_amp"),
+                null,
+                null
+        );
         this.textInput.setMaxLength(512);
         this.textInput.setFormatter((string, index) -> {
             Style activeStyle = getStyleAtPos(this.textInput.getValue(), index);
             return Component.literal(string).setStyle(activeStyle).getVisualOrderText();
         });
-
         if (selectedEntry != null) this.textInput.setValue(selectedEntry.text != null ? selectedEntry.text : "");
-        this.textInput.setResponder(s -> { if (selectedEntry != null) { selectedEntry.text = s; leftList.refresh(); }});
-        this.addRenderableWidget(textInput);
+        this.textInput.setResponder(value -> {
+            if (selectedEntry != null) {
+                selectedEntry.text = value;
+                refreshTipList(false);
+            }
+        });
 
-        int btnH = (int)(20 * uiScale);
-        int vGap = (int)(28 * uiScale);
+        int vGap = KineticScreen.STANDARD_CONTROL_HEIGHT + 8;
         curY += vGap;
         int halfW = (editW - 10) / 2;
-        this.stageBtn = Button.builder(Component.translatable("gui.adventuresystems.tips.tips.stage", selectedEntry != null ? selectedEntry.stage : "any"), b -> cycleStage()).bounds(editX, curY, halfW, btnH).build();
-        this.timeBtn = Button.builder(Component.translatable("gui.adventuresystems.tips.tips.duration", selectedEntry != null ? String.format("%.1f", selectedEntry.time / 1000.0) : "3.0"), b -> {
-            if (this.minecraft != null) this.minecraft.setScreen(new TimeEditScreen(this, selectedEntry.time, t -> { if (selectedEntry != null) selectedEntry.time = t; updateUI(); }));
-        }).bounds(editX + halfW + 10, curY, halfW, btnH).build();
-        this.addRenderableWidget(stageBtn);
-        this.addRenderableWidget(timeBtn);
+        this.stageBtn = addButton(
+                editX,
+                curY,
+                halfW,
+                stageText(),
+                null,
+                this::cycleStage
+        );
+        this.timeBtn = addButton(
+                editX + halfW + 10,
+                curY,
+                halfW,
+                durationText(),
+                null,
+                () -> {
+                    if (selectedEntry == null) return;
+                    KineticClientRuntime.openScreen(new TimeEditScreen(
+                            this,
+                            selectedEntry.time,
+                            value -> {
+                                if (selectedEntry != null) selectedEntry.time = value;
+                                updateUI();
+                            }
+                    ));
+                }
+        );
 
         curY += vGap;
         int thirdW = (editW - 20) / 3;
-        this.addRenderableWidget(Button.builder(Component.translatable("gui.adventuresystems.tips.tips.add_item"), b -> openItemSelector(false)).bounds(editX, curY, thirdW, btnH).build());
-        this.addRenderableWidget(Button.builder(Component.translatable("gui.adventuresystems.tips.tips.add_curios"), b -> openItemSelector(true)).bounds(editX + thirdW + 10, curY, thirdW, btnH).build());
-        this.addRenderableWidget(Button.builder(Component.translatable("gui.adventuresystems.tips.tips.set_structure"), b -> openRegistrySelector("structures")).bounds(editX + (thirdW + 10) * 2, curY, thirdW, btnH).build());
+        addButton(editX, curY, thirdW, KineticI18n.translatable("gui.adventuresystems.tips.tips.add_item"), null, () -> openItemSelector(false));
+        addButton(editX + thirdW + 10, curY, thirdW, KineticI18n.translatable("gui.adventuresystems.tips.tips.add_curios"), null, () -> openItemSelector(true));
+        addButton(editX + (thirdW + 10) * 2, curY, thirdW, KineticI18n.translatable("gui.adventuresystems.tips.tips.set_structure"), null, () -> openRegistrySelector("structures"));
 
-        curY += (btnH + 5);
-        this.addRenderableWidget(Button.builder(Component.translatable("gui.adventuresystems.tips.tips.set_biome"), b -> openRegistrySelector("biomes")).bounds(editX, curY, thirdW, btnH).build());
-        this.addRenderableWidget(Button.builder(Component.translatable("gui.adventuresystems.tips.tips.set_advancement"), b -> openRegistrySelector("advancements")).bounds(editX + thirdW + 10, curY, thirdW, btnH).build());
-        this.addRenderableWidget(Button.builder(Component.translatable("gui.adventuresystems.tips.tips.set_dimension"), b -> openRegistrySelector("dimensions")).bounds(editX + (thirdW + 10) * 2, curY, thirdW, btnH).build());
+        curY += KineticScreen.STANDARD_CONTROL_HEIGHT + 5;
+        addButton(editX, curY, thirdW, KineticI18n.translatable("gui.adventuresystems.tips.tips.set_biome"), null, () -> openRegistrySelector("biomes"));
+        addButton(editX + thirdW + 10, curY, thirdW, KineticI18n.translatable("gui.adventuresystems.tips.tips.set_advancement"), null, () -> openRegistrySelector("advancements"));
+        addButton(editX + (thirdW + 10) * 2, curY, thirdW, KineticI18n.translatable("gui.adventuresystems.tips.tips.set_dimension"), null, () -> openRegistrySelector("dimensions"));
 
-        this.dynamicCondY = curY + btnH + 15;
-        this.addRenderableWidget(Button.builder(Component.translatable("gui.adventuresystems.tips.tips.new"), b -> addNew()).bounds(x0 + 10, y0 + guiH - 30, 75, 20).build());
-        this.addRenderableWidget(Button.builder(Component.translatable("gui.adventuresystems.tips.tips.save"), b -> save()).bounds(x0 + guiW - 85, y0 + guiH - 30, 75, 20).build());
-        updateSearch("");
+        this.dynamicCondY = curY + KineticScreen.STANDARD_CONTROL_HEIGHT + 15;
+        addButton(x0 + 10, y0 + guiH - 30, 75, KineticI18n.translatable("gui.adventuresystems.tips.tips.new"), null, this::addNew);
+        addButton(x0 + guiW - 170, y0 + guiH - 30, 75, KineticI18n.translatable("gui.adventuresystems.tips.tips.save"), null, this::save);
+        addButton(x0 + guiW - 85, y0 + guiH - 30, 75, KineticI18n.translatable("gui.adventuresystems.tips.tips.back"), null, this::onClose);
+        updateSearch(searchBox.getValue());
         updateUI();
     }
 
     private Style getStyleAtPos(String text, int index) {
         if (index <= 0 || text.isEmpty()) return Style.EMPTY;
         String sub = text.substring(0, Math.min(index, text.length()));
-        Matcher m = TipRenderer.COLOR_PATTERN.matcher(sub);
+        Matcher matcher = TipRenderer.COLOR_PATTERN.matcher(sub);
         Style style = Style.EMPTY;
-        while (m.find()) {
-            String code = m.group().toLowerCase();
+        while (matcher.find()) {
+            String code = matcher.group().toLowerCase(Locale.ROOT);
             if (code.matches("§[0-9a-f]")) {
                 int colorValue = COLORS["0123456789abcdef".indexOf(code.charAt(1))];
                 style = Style.EMPTY.withColor(colorValue);
@@ -198,148 +257,242 @@ public class TipEditorScreen extends KineticNativeScreen {
     }
 
     @Override
-    public void render(@NotNull GuiGraphics g, int mx, int my, float pt) {
-        this.renderBackground(g);
-        GuiTheme.panel(g, x0, y0, guiW, guiH, 0xCC000000, 0x88FFFFFF);
+    protected void renderNativeBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        GuiTheme.panel(graphics, x0, y0, guiW, guiH);
+        GuiTheme.verticalSeparator(graphics, x0 + leftW + 5, y0 + 5, guiH - 40);
 
-        if (leftList != null) leftList.render(g, mx, my, pt);
-        g.fill(x0 + leftW + 5, y0 + 5, x0 + leftW + 6, y0 + guiH - 35, 0x33FFFFFF);
-
-        int labelX = editX - 10;
-        int fontH = 9;
-        drawRightAligned(g, Component.translatable("gui.adventuresystems.tips.tips.label.content"), labelX, textInput.getY() + (textInput.getHeight() - fontH) / 2);
-        drawRightAligned(g, Component.translatable("gui.adventuresystems.tips.tips.label.setting"), labelX, stageBtn.getY() + (stageBtn.getHeight() - fontH) / 2);
-        drawRightAligned(g, Component.translatable("gui.adventuresystems.tips.tips.label.condition"), labelX, dynamicCondY - 20 - (20 - fontH) / 2 - 15);
-
-        super.render(g, mx, my, pt);
-
-        if (searchBox != null && searchBox.getValue().isEmpty()) {
-            g.drawString(this.font, Component.translatable("gui.adventuresystems.tips.tips.search"), searchBox.getX() + 4, searchBox.getY() + (searchBox.getHeight() - 9) / 2, 0x777777, false);
+        if (textInput != null && stageBtn != null) {
+            int labelX = editX - 10;
+            int fontHeight = font.lineHeight;
+            drawRightAligned(
+                    graphics,
+                    KineticI18n.translatable("gui.adventuresystems.tips.tips.label.content"),
+                    labelX,
+                    textInput.getY() + (textInput.getHeight() - fontHeight) / 2
+            );
+            drawRightAligned(
+                    graphics,
+                    KineticI18n.translatable("gui.adventuresystems.tips.tips.label.setting"),
+                    labelX,
+                    stageBtn.getY() + (stageBtn.getHeight() - fontHeight) / 2
+            );
+            drawRightAligned(
+                    graphics,
+                    KineticI18n.translatable("gui.adventuresystems.tips.tips.label.condition"),
+                    labelX,
+                    dynamicCondY - KineticScreen.STANDARD_CONTROL_HEIGHT - 15
+            );
         }
 
-        g.drawString(this.font, Component.translatable("gui.adventuresystems.tips.tips.delete_hint"), editX, dynamicCondY, 0xFFFF55);
+        graphics.drawString(
+                this.font,
+                KineticI18n.translatable("gui.adventuresystems.tips.tips.delete_hint"),
+                editX,
+                dynamicCondY,
+                GuiTheme.current().text()
+        );
         if (selectedEntry != null && selectedEntry.conditions != null) {
-            renderConditions(g, mx, my, editX, dynamicCondY + 15);
+            renderConditions(graphics, mouseX, mouseY, editX, dynamicCondY + 15);
         }
     }
 
-    private void drawRightAligned(GuiGraphics g, Component text, int x, int y) {
-        g.drawString(this.font, text, x - this.font.width(text), y, 0xFFFFFF);
+    private void drawRightAligned(GuiGraphics graphics, Component text, int x, int y) {
+        graphics.drawString(this.font, text, x - this.font.width(text), y, GuiTheme.current().text());
     }
 
     @Override
-    public boolean mouseClicked(double mx, double my, int btn) {
-        if (selectedEntry != null && selectedEntry.conditions != null) {
-            HelpTip.JsonModel.Conditions c = selectedEntry.conditions;
-            int x = this.editX; int cy = this.dynamicCondY + 15;
-            if (btn == 1) {
-                if (hasText(c.structure)) { if (isHover((int)mx, (int)my, x, cy, 150, 10)) { c.structure = null; return true; } cy += 12; }
-                if (hasText(c.biome)) { if (isHover((int)mx, (int)my, x, cy, 150, 10)) { c.biome = null; return true; } cy += 12; }
-                if (hasText(c.dimension)) { if (isHover((int)mx, (int)my, x, cy, 150, 10)) { c.dimension = null; return true; } cy += 12; }
-                if (hasText(c.advancement)) { if (isHover((int)mx, (int)my, x, cy, 150, 10)) { c.advancement = null; return true; } cy += 12; }
-            }
-            if (c.items != null) {
-                int ix = x;
-                for (int i = 0; i < c.items.size(); i++) {
-                    if (isHover((int)mx, (int)my, ix, cy, 16, 16)) {
-                        if (btn == 1) { c.items.remove(i); return true; }
-                        else if (btn == 0) { cycleNbtMode(c.items.get(i)); return true; }
-                    }
-                    ix += 18;
-                }
-                if (!c.items.isEmpty()) cy += 18;
-            }
-            if (c.curios != null) {
-                int ix = x + 35;
-                for (int i = 0; i < c.curios.size(); i++) {
-                    if (isHover((int)mx, (int)my, ix, cy, 16, 16)) {
-                        if (btn == 1) { c.curios.remove(i); return true; }
-                        else if (btn == 0) { cycleNbtMode(c.curios.get(i)); return true; }
-                    }
-                    ix += 18;
-                }
+    protected boolean nativeMouseClicked(double mouseX, double mouseY, int button) {
+        if (KineticMouseButtons.isSecondary(button) && leftList != null) {
+            int index = leftList.itemAt(mouseX, mouseY);
+            if (index >= 0 && index < displayEntries.size()) {
+                allEntries.remove(displayEntries.get(index));
+                updateSearch(searchBox == null ? "" : searchBox.getValue());
+                return true;
             }
         }
-
-        boolean handled = super.mouseClicked(mx, my, btn);
-
-        if (!handled && btn == 0) {
-            this.setFocused(null);
-            if (textInput != null) textInput.setFocused(false);
-            if (searchBox != null) searchBox.setFocused(false);
+        if (selectedEntry == null || selectedEntry.conditions == null) return false;
+        HelpTip.JsonModel.Conditions conditions = selectedEntry.conditions;
+        int x = this.editX;
+        int currentY = this.dynamicCondY + 15;
+        if (KineticMouseButtons.isSecondary(button)) {
+            if (hasText(conditions.structure)) {
+                if (isHover((int) mouseX, (int) mouseY, x, currentY, 150, 10)) {
+                    conditions.structure = null;
+                    return true;
+                }
+                currentY += 12;
+            }
+            if (hasText(conditions.biome)) {
+                if (isHover((int) mouseX, (int) mouseY, x, currentY, 150, 10)) {
+                    conditions.biome = null;
+                    return true;
+                }
+                currentY += 12;
+            }
+            if (hasText(conditions.dimension)) {
+                if (isHover((int) mouseX, (int) mouseY, x, currentY, 150, 10)) {
+                    conditions.dimension = null;
+                    return true;
+                }
+                currentY += 12;
+            }
+            if (hasText(conditions.advancement)) {
+                if (isHover((int) mouseX, (int) mouseY, x, currentY, 150, 10)) {
+                    conditions.advancement = null;
+                    return true;
+                }
+                currentY += 12;
+            }
+        } else {
+            if (hasText(conditions.structure)) currentY += 12;
+            if (hasText(conditions.biome)) currentY += 12;
+            if (hasText(conditions.dimension)) currentY += 12;
+            if (hasText(conditions.advancement)) currentY += 12;
         }
 
-        return handled;
+        if (conditions.items != null) {
+            int itemX = x;
+            for (int i = 0; i < conditions.items.size(); i++) {
+                if (isHover((int) mouseX, (int) mouseY, itemX, currentY, 16, 16)) {
+                    if (KineticMouseButtons.isSecondary(button)) {
+                        conditions.items.remove(i);
+                        return true;
+                    }
+                    if (KineticMouseButtons.isPrimary(button)) {
+                        cycleNbtMode(conditions.items.get(i));
+                        return true;
+                    }
+                }
+                itemX += 18;
+            }
+            if (!conditions.items.isEmpty()) currentY += 18;
+        }
+        if (conditions.curios != null) {
+            int itemX = x + 35;
+            for (int i = 0; i < conditions.curios.size(); i++) {
+                if (isHover((int) mouseX, (int) mouseY, itemX, currentY, 16, 16)) {
+                    if (KineticMouseButtons.isSecondary(button)) {
+                        conditions.curios.remove(i);
+                        return true;
+                    }
+                    if (KineticMouseButtons.isPrimary(button)) {
+                        cycleNbtMode(conditions.curios.get(i));
+                        return true;
+                    }
+                }
+                itemX += 18;
+            }
+        }
+        return false;
     }
 
-    private void insertCode(String c) { if (textInput == null) return; textInput.setFocused(true); int pos = textInput.getCursorPosition(); String next = textInput.getValue().substring(0, pos) + c + textInput.getValue().substring(pos); textInput.setValue(next); textInput.setCursorPosition(pos + c.length()); }
+    private void insertCode(String code) {
+        if (textInput == null) return;
+        focusControl(textInput);
+        int position = textInput.getCursorPosition();
+        String current = textInput.getValue();
+        String next = current.substring(0, position) + code + current.substring(position);
+        textInput.setValue(next);
+        textInput.setCursorPosition(position + code.length());
+    }
 
     private void openItemSelector(boolean curio) {
-        ItemSearchIndex.prepareCache(() -> {
-            if (this.minecraft != null) {
-                this.minecraft.setScreen(new ItemSelectorScreen(this, selection -> {
-                    if (selectedEntry == null) return;
-                    if (selection == null || !selection.isItem()) return;
-                    ItemStack stack = selection.stack();
-                    if (stack == null || stack.isEmpty()) return;
-                    ResourceLocation itemId = ForgeRegistries.ITEMS.getKey(stack.getItem());
-                    if (itemId == null) return;
-                    if (selectedEntry.conditions == null) selectedEntry.conditions = new HelpTip.JsonModel.Conditions();
-                    HelpTip.JsonModel.ItemCheck ic = new HelpTip.JsonModel.ItemCheck();
-                    ic.id = itemId.toString();
-                    ic.nbtMode = "NONE";
-                    if (curio) {
-                        if (selectedEntry.conditions.curios == null) selectedEntry.conditions.curios = new ArrayList<>();
-                        selectedEntry.conditions.curios.add(ic);
-                    } else {
-                        if (selectedEntry.conditions.items == null) selectedEntry.conditions.items = new ArrayList<>();
-                        selectedEntry.conditions.items.add(ic);
-                    }
-                }));
+        KineticSelectors.openItemSelector(this, selection -> {
+            if (selectedEntry == null || selection == null || !selection.isItem()) return;
+            ItemStack stack = selection.stack();
+            if (stack.isEmpty()) return;
+            ResourceLocation itemId = KineticRegistries.items().id(stack.getItem());
+            if (itemId == null) return;
+            if (selectedEntry.conditions == null) selectedEntry.conditions = new HelpTip.JsonModel.Conditions();
+            HelpTip.JsonModel.ItemCheck check = new HelpTip.JsonModel.ItemCheck();
+            check.id = itemId.toString();
+            check.nbtMode = "NONE";
+            if (curio) {
+                if (selectedEntry.conditions.curios == null) selectedEntry.conditions.curios = new ArrayList<>();
+                selectedEntry.conditions.curios.add(check);
+            } else {
+                if (selectedEntry.conditions.items == null) selectedEntry.conditions.items = new ArrayList<>();
+                selectedEntry.conditions.items.add(check);
             }
         });
     }
 
     private void openRegistrySelector(String type) {
-        if (this.minecraft != null) this.minecraft.setScreen(new TipSelectors.RegistrySelectorScreen(this, type, id -> {
+        KineticClientRuntime.openScreen(new TipSelectors.RegistrySelectorScreen(this, type, id -> {
             if (selectedEntry == null) return;
             if (selectedEntry.conditions == null) selectedEntry.conditions = new HelpTip.JsonModel.Conditions();
-            switch(type) {
+            switch (type) {
                 case "structures" -> selectedEntry.conditions.structure = id;
                 case "biomes" -> selectedEntry.conditions.biome = id;
                 case "advancements" -> selectedEntry.conditions.advancement = id;
                 case "dimensions" -> selectedEntry.conditions.dimension = id;
+                default -> {
+                }
             }
         }));
     }
 
-    private void renderConditions(GuiGraphics g, int mx, int my, int x, int y) {
-        HelpTip.JsonModel.Conditions c = selectedEntry.conditions;
-        int cy = y;
-        if (hasText(c.structure)) { g.drawString(this.font, Component.translatable("gui.adventuresystems.tips.tips.cond_prefix.structure").append(c.structure), x, cy, isHover(mx,my,x,cy,150,10)?0xFF5555:0xAAAAAA); cy+=12; }
-        if (hasText(c.biome)) { g.drawString(this.font, Component.translatable("gui.adventuresystems.tips.tips.cond_prefix.biome").append(c.biome), x, cy, isHover(mx,my,x,cy,150,10)?0xFF5555:0xAAAAAA); cy+=12; }
-        if (hasText(c.dimension)) { g.drawString(this.font, Component.translatable("gui.adventuresystems.tips.tips.cond_prefix.dimension").append(c.dimension), x, cy, isHover(mx,my,x,cy,150,10)?0xFF5555:0xAAAAAA); cy+=12; }
-        if (hasText(c.advancement)) { g.drawString(this.font, Component.translatable("gui.adventuresystems.tips.tips.cond_prefix.advancement").append(c.advancement), x, cy, isHover(mx,my,x,cy,150,10)?0xFF5555:0xAAAAAA); cy+=12; }
-        if (c.items != null) {
-            int ix = x; for (HelpTip.JsonModel.ItemCheck ic : c.items) { renderItemCheck(g, mx, my, ix, cy, ic); ix += 18; }
-            if (!c.items.isEmpty()) cy += 18;
+    private void renderConditions(GuiGraphics graphics, int mouseX, int mouseY, int x, int y) {
+        HelpTip.JsonModel.Conditions conditions = selectedEntry.conditions;
+        int currentY = y;
+        if (hasText(conditions.structure)) {
+            drawConditionLine(graphics, mouseX, mouseY, x, currentY, KineticI18n.translatable("gui.adventuresystems.tips.tips.cond_prefix.structure").append(conditions.structure));
+            currentY += 12;
         }
-        if (c.curios != null) {
-            g.drawString(this.font, Component.translatable("gui.adventuresystems.tips.tips.cond_prefix.curios"), x, cy, 0xAAAAAA);
-            int ix = x + 35; for (HelpTip.JsonModel.ItemCheck ic : c.curios) { renderItemCheck(g, mx, my, ix, cy, ic); ix += 18; }
+        if (hasText(conditions.biome)) {
+            drawConditionLine(graphics, mouseX, mouseY, x, currentY, KineticI18n.translatable("gui.adventuresystems.tips.tips.cond_prefix.biome").append(conditions.biome));
+            currentY += 12;
+        }
+        if (hasText(conditions.dimension)) {
+            drawConditionLine(graphics, mouseX, mouseY, x, currentY, KineticI18n.translatable("gui.adventuresystems.tips.tips.cond_prefix.dimension").append(conditions.dimension));
+            currentY += 12;
+        }
+        if (hasText(conditions.advancement)) {
+            drawConditionLine(graphics, mouseX, mouseY, x, currentY, KineticI18n.translatable("gui.adventuresystems.tips.tips.cond_prefix.advancement").append(conditions.advancement));
+            currentY += 12;
+        }
+        if (conditions.items != null) {
+            int itemX = x;
+            for (HelpTip.JsonModel.ItemCheck check : conditions.items) {
+                renderItemCheck(graphics, mouseX, mouseY, itemX, currentY, check);
+                itemX += 18;
+            }
+            if (!conditions.items.isEmpty()) currentY += 18;
+        }
+        if (conditions.curios != null) {
+            graphics.drawString(
+                    this.font,
+                    KineticI18n.translatable("gui.adventuresystems.tips.tips.condition.normal", KineticI18n.translatable("gui.adventuresystems.tips.tips.cond_prefix.curios")),
+                    x,
+                    currentY,
+                    GuiTheme.current().text()
+            );
+            int itemX = x + 35;
+            for (HelpTip.JsonModel.ItemCheck check : conditions.curios) {
+                renderItemCheck(graphics, mouseX, mouseY, itemX, currentY, check);
+                itemX += 18;
+            }
         }
     }
 
-    private void renderItemCheck(GuiGraphics g, int mx, int my, int x, int y, HelpTip.JsonModel.ItemCheck ic) {
-        var item = ForgeRegistries.ITEMS.getValue(new ResourceLocation(ic.id));
-        if (item != null) {
-            ItemStack stack = new ItemStack(item);
-            boolean hovered = isHover(mx, my, x, y, 18, 18);
-            GuiTheme.itemSlot(g, stack, x, y, 18, 4, hovered);
-            g.renderItem(stack, x + 1, y + 1);
-            if ("WEAK".equals(ic.nbtMode)) g.renderItemDecorations(this.font, stack, x + 1, y + 1, "W");
-            else if ("STRONG".equals(ic.nbtMode)) g.renderItemDecorations(this.font, stack, x + 1, y + 1, "S");
-        }
+    private void drawConditionLine(GuiGraphics graphics, int mouseX, int mouseY, int x, int y, Component text) {
+        String key = isHover(mouseX, mouseY, x, y, 150, 10)
+                ? "gui.adventuresystems.tips.tips.condition.hover"
+                : "gui.adventuresystems.tips.tips.condition.normal";
+        graphics.drawString(this.font, KineticI18n.translatable(key, text), x, y, GuiTheme.current().text());
+    }
+
+    private void renderItemCheck(GuiGraphics graphics, int mouseX, int mouseY, int x, int y, HelpTip.JsonModel.ItemCheck check) {
+        ResourceLocation id = KineticResourceIds.tryParse(check.id);
+        if (id == null) return;
+        var item = KineticRegistries.items().get(id);
+        if (item == null) return;
+        ItemStack stack = new ItemStack(item);
+        boolean hovered = isHover(mouseX, mouseY, x, y, 18, 18);
+        GuiTheme.itemSlot(graphics, x, y, 18, 4, hovered);
+        graphics.renderItem(stack, x + 1, y + 1);
+        if ("WEAK".equals(check.nbtMode)) graphics.renderItemDecorations(this.font, stack, x + 1, y + 1, "W");
+        else if ("STRONG".equals(check.nbtMode)) graphics.renderItemDecorations(this.font, stack, x + 1, y + 1, "S");
     }
 
     @Override
@@ -350,26 +503,26 @@ public class TipEditorScreen extends KineticNativeScreen {
 
     private ItemStack hoveredConditionStack(int mouseX, int mouseY) {
         if (selectedEntry == null || selectedEntry.conditions == null) return ItemStack.EMPTY;
-        HelpTip.JsonModel.Conditions c = selectedEntry.conditions;
+        HelpTip.JsonModel.Conditions conditions = selectedEntry.conditions;
         int x = editX;
-        int cy = dynamicCondY + 15;
-        if (hasText(c.structure)) cy += 12;
-        if (hasText(c.biome)) cy += 12;
-        if (hasText(c.dimension)) cy += 12;
-        if (hasText(c.advancement)) cy += 12;
-        if (c.items != null) {
-            int ix = x;
-            for (HelpTip.JsonModel.ItemCheck check : c.items) {
-                if (isHover(mouseX, mouseY, ix, cy, 18, 18)) return stackFor(check);
-                ix += 18;
+        int currentY = dynamicCondY + 15;
+        if (hasText(conditions.structure)) currentY += 12;
+        if (hasText(conditions.biome)) currentY += 12;
+        if (hasText(conditions.dimension)) currentY += 12;
+        if (hasText(conditions.advancement)) currentY += 12;
+        if (conditions.items != null) {
+            int itemX = x;
+            for (HelpTip.JsonModel.ItemCheck check : conditions.items) {
+                if (isHover(mouseX, mouseY, itemX, currentY, 18, 18)) return stackFor(check);
+                itemX += 18;
             }
-            if (!c.items.isEmpty()) cy += 18;
+            if (!conditions.items.isEmpty()) currentY += 18;
         }
-        if (c.curios != null) {
-            int ix = x + 35;
-            for (HelpTip.JsonModel.ItemCheck check : c.curios) {
-                if (isHover(mouseX, mouseY, ix, cy, 18, 18)) return stackFor(check);
-                ix += 18;
+        if (conditions.curios != null) {
+            int itemX = x + 35;
+            for (HelpTip.JsonModel.ItemCheck check : conditions.curios) {
+                if (isHover(mouseX, mouseY, itemX, currentY, 18, 18)) return stackFor(check);
+                itemX += 18;
             }
         }
         return ItemStack.EMPTY;
@@ -377,45 +530,110 @@ public class TipEditorScreen extends KineticNativeScreen {
 
     private ItemStack stackFor(HelpTip.JsonModel.ItemCheck check) {
         if (check == null || check.id == null) return ItemStack.EMPTY;
-        ResourceLocation id = ResourceLocation.tryParse(check.id);
+        ResourceLocation id = KineticResourceIds.tryParse(check.id);
         if (id == null) return ItemStack.EMPTY;
-        var item = ForgeRegistries.ITEMS.getValue(id);
+        var item = KineticRegistries.items().get(id);
         return item == null ? ItemStack.EMPTY : new ItemStack(item);
     }
 
-    private void cycleNbtMode(HelpTip.JsonModel.ItemCheck ic) { if ("NONE".equals(ic.nbtMode) || ic.nbtMode == null) ic.nbtMode = "WEAK"; else if ("WEAK".equals(ic.nbtMode)) ic.nbtMode = "STRONG"; else ic.nbtMode = "NONE"; }
-
-    private boolean hasText(String s) { return s != null && !s.isEmpty(); }
-    private boolean isHover(int mx, int my, int x, int y, int w, int h) { return mx >= x && mx <= x + w && my >= y && my <= y + h; }
-
-    private void addNew() {
-        HelpTip.JsonModel.Entry e = new HelpTip.JsonModel.Entry();
-        e.text = ""; e.stage="any"; e.time=5000;
-        allEntries.add(e);
-        updateSearch(searchBox.getValue()); select(e);
+    private void cycleNbtMode(HelpTip.JsonModel.ItemCheck check) {
+        if ("NONE".equals(check.nbtMode) || check.nbtMode == null) check.nbtMode = "WEAK";
+        else if ("WEAK".equals(check.nbtMode)) check.nbtMode = "STRONG";
+        else check.nbtMode = "NONE";
     }
 
-    private void select(HelpTip.JsonModel.Entry e) {
-        this.selectedEntry = e;
-        if (textInput != null) textInput.setValue(e.text != null ? e.text : "");
+    private boolean hasText(String value) {
+        return value != null && !value.isEmpty();
+    }
+
+    private boolean isHover(int mouseX, int mouseY, int x, int y, int width, int height) {
+        return mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height;
+    }
+
+    private void addNew() {
+        HelpTip.JsonModel.Entry entry = new HelpTip.JsonModel.Entry();
+        entry.text = "";
+        entry.stage = "any";
+        entry.time = 5000;
+        allEntries.add(entry);
+        updateSearch(searchBox == null ? "" : searchBox.getValue());
+        select(entry);
+    }
+
+    private void select(HelpTip.JsonModel.Entry entry) {
+        this.selectedEntry = entry;
+        if (textInput != null) textInput.setValue(entry.text != null ? entry.text : "");
+        if (leftList != null) {
+            leftList.setSelectedIndex(selectedDisplayIndex());
+            leftList.ensureSelectedVisible();
+        }
         updateUI();
+    }
+
+    private Component stageText() {
+        return KineticI18n.translatable(
+                "gui.adventuresystems.tips.tips.stage",
+                selectedEntry != null ? selectedEntry.stage : "any"
+        );
+    }
+
+    private Component durationText() {
+        return KineticI18n.translatable(
+                "gui.adventuresystems.tips.tips.duration",
+                selectedEntry != null ? String.format(Locale.ROOT, "%.1f", selectedEntry.time / 1000.0D) : "3.0"
+        );
     }
 
     private void updateUI() {
-        if (selectedEntry==null) return;
-        if (stageBtn!=null) stageBtn.setMessage(Component.translatable("gui.adventuresystems.tips.tips.stage", selectedEntry.stage));
-        if (timeBtn!=null) timeBtn.setMessage(Component.translatable("gui.adventuresystems.tips.tips.duration", String.format("%.1f", selectedEntry.time/1000.0)));
+        if (stageBtn != null) stageBtn.setText(stageText());
+        if (timeBtn != null) timeBtn.setText(durationText());
     }
 
     private void cycleStage() {
-        if (selectedEntry==null) return;
-        selectedEntry.stage="any".equals(selectedEntry.stage)?"loading":("loading".equals(selectedEntry.stage)?"game":"any");
+        if (selectedEntry == null) return;
+        selectedEntry.stage = "any".equals(selectedEntry.stage)
+                ? "loading"
+                : ("loading".equals(selectedEntry.stage) ? "game" : "any");
         updateUI();
     }
 
-    private void updateSearch(String q) {
-        displayEntries = allEntries.stream().filter(e -> e.text != null && e.text.toLowerCase().contains(q.toLowerCase())).collect(java.util.stream.Collectors.toList());
-        if (leftList != null) { leftList.refresh(); leftList.snapScrollAmount(0); }
+    private void updateSearch(String queryText) {
+        String query = queryText == null ? "" : queryText.toLowerCase(Locale.ROOT);
+        displayEntries = allEntries.stream()
+                .filter(entry -> entry.text != null && entry.text.toLowerCase(Locale.ROOT).contains(query))
+                .toList();
+        refreshTipList(true);
+    }
+
+    private void refreshTipList(boolean resetScroll) {
+        if (leftList == null) return;
+        leftList.setItems(tipSelectionItems());
+        leftList.setSelectedIndex(selectedDisplayIndex());
+        if (resetScroll) leftList.setScrollOffset(0);
+    }
+
+    private int selectedDisplayIndex() {
+        return selectedEntry == null ? -1 : displayEntries.indexOf(selectedEntry);
+    }
+
+    private List<SelectionItem> tipSelectionItems() {
+        return displayEntries.stream()
+                .map(entry -> new SelectionItem(
+                        tipLabel(entry),
+                        null,
+                        null,
+                        true,
+                        false,
+                        false
+                ))
+                .toList();
+    }
+
+    private Component tipLabel(HelpTip.JsonModel.Entry entry) {
+        if (entry == null || entry.text == null || entry.text.isEmpty()) {
+            return KineticI18n.translatable("gui.adventuresystems.tips.tips.unnamed");
+        }
+        return Component.literal(TipRenderer.COLOR_PATTERN.matcher(entry.text).replaceAll(""));
     }
 
     private void save() {
@@ -428,64 +646,11 @@ public class TipEditorScreen extends KineticNativeScreen {
         savePending = false;
         if (success) {
             KTConfigApi.notifySaved(TipsConfigGui.EDITOR_PAGE_ID);
-        } else {
-            GuiOverlay.toast(Component.translatable("msg.adventuresystems.tips.tips.save_failed"));
-        }
-        if (success && this.minecraft != null) {
             commitDraft();
-            this.minecraft.setScreen(lastScreen);
+            navigateBack();
+        } else {
+            KineticOverlays.toast(KineticI18n.translatable("msg.adventuresystems.tips.tips.save_failed"));
         }
     }
 
-    private static class ColorSmallButton extends Button {
-        private final int color;
-        public ColorSmallButton(int x, int y, int s, int color, OnPress p) { super(x, y, s, s, Component.empty(), p, DEFAULT_NARRATION); this.color = color; }
-        @Override public void renderWidget(GuiGraphics g, int mx, int my, float pt) {
-            g.fill(getX(), getY(), getX()+width, getY()+height, 0xFF000000);
-            g.fill(getX()+1, getY()+1, getX()+width-1, getY()+height-1, color|0xFF000000);
-            if(isHoveredOrFocused()) g.renderOutline(getX(), getY(), width, height, 0xFFFFFFFF);
-        }
-    }
-
-    class TipListWidget extends KineticWidgets.SmoothSelectionList<TipListWidget.Entry> {
-        public TipListWidget(Minecraft mc, int w, int h, int t, int b, int ih) { super(mc, w, h, t, b, ih); this.setRenderHeader(false, 0); this.setRenderBackground(false); this.setRenderTopAndBottom(false); refresh(); }
-        public void refresh() { this.clearEntries(); displayEntries.forEach(e -> this.addEntry(new Entry(e))); }
-        @Override protected int getScrollbarPosition() { return this.x0 + this.width - 6; }
-        @Override public int getRowWidth() { return this.width - 10; }
-
-        class Entry extends net.minecraft.client.gui.components.ObjectSelectionList.Entry<Entry> {
-            private final HelpTip.JsonModel.Entry data;
-            public Entry(HelpTip.JsonModel.Entry e) { this.data = e; }
-
-            @Override
-            public void render(GuiGraphics g, int i, int t, int l, int w, int h, int mx, int my, boolean hv, float pt) {
-                boolean isSelected = (data == selectedEntry);
-
-                int bgColor = isSelected ? 0x66000000 : (hv ? 0x44000000 : 0x22000000);
-                int outlineColor = isSelected ? 0xFFFFAA00 : (hv ? 0xFFAAAAAA : 0xFF555555);
-                g.fill(l, t, l + w, t + h - 2, bgColor);
-                g.renderOutline(l, t, w, h - 2, outlineColor);
-
-                String label = (data.text == null || data.text.isEmpty()) ? Component.translatable("gui.adventuresystems.tips.tips.unnamed").getString() : TipRenderer.COLOR_PATTERN.matcher(data.text).replaceAll("");
-
-                Font font = Minecraft.getInstance().font;
-                int maxTextW = w - 8;
-                String displayStr = label;
-                if (font.width(label) > maxTextW) {
-                    displayStr = font.plainSubstrByWidth(label, maxTextW - font.width("...")) + "...";
-                }
-
-                int textColor = isSelected ? 0xFFFFFF : (hv ? 0xDDDDDD : 0xAAAAAA);
-                g.drawString(font, displayStr, l + 4, t + (h - 2 - font.lineHeight) / 2 + 1, textColor, true);
-            }
-
-            @Override
-            public boolean mouseClicked(double x, double y, int b) {
-                if(b == 0) select(data);
-                else if(b == 1) { allEntries.remove(data); updateSearch(searchBox.getValue()); }
-                return true;
-            }
-            @Override public @NotNull Component getNarration() { return Component.empty(); }
-        }
-    }
 }

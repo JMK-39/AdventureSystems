@@ -4,79 +4,81 @@ import dev.ftb.mods.ftbquests.quest.task.ItemTask;
 import dev.xyat.adventuresystems.ftb.api.FTBTaskSubmitHelper;
 import dev.xyat.adventuresystems.ftb.client.FTBVirtualItemClientState;
 import dev.xyat.adventuresystems.ftb.network.FTBSubmitLimitNetwork;
-import net.minecraft.ChatFormatting;
-import net.minecraft.client.Minecraft;
+import dev.xyat.kineticcore.api.client.input.KineticKeyBindings;
+import dev.xyat.kineticcore.api.client.screen.KineticScreen;
+import dev.xyat.kineticcore.api.client.theme.GuiTheme;
+import dev.xyat.kineticcore.api.client.widget.input.KineticNumericFields.NumericEditBox;
+import dev.xyat.kineticcore.api.runtime.KineticClientRuntime;
+import dev.xyat.kineticcore.api.text.KineticI18n;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
-import org.lwjgl.glfw.GLFW;
 
-public class FTBSubmitCountScreen extends Screen {
+public class FTBSubmitCountScreen extends KineticScreen {
     private static final int PANEL_W = 420;
     private static final int PANEL_H = 230;
     private static final int MARGIN_X = 24;
     private static final int BUTTON_W = 150;
-    private static final int BUTTON_H = 22;
     private static final long STATS_REFRESH_MS = 250L;
 
     private final Screen parent;
     private final ItemTask task;
-    private EditBox countBox;
+    private NumericEditBox countBox;
     private int left;
     private int top;
     private String lastCountValue = "";
-    private long lastStatsRefreshMs = 0L;
+    private long lastStatsRefreshMs;
     private int cachedCount = 1;
     private long cachedPerExchange = 1L;
     private long cachedRequiredItems = 1L;
-    private long cachedInventoryItems = 0L;
-    private long cachedVirtualItems = 0L;
-    private boolean cachedVirtualSupported = false;
-    private int cachedInventoryEstimatedTimes = 0;
-    private int cachedTotalEstimatedTimes = 0;
+    private long cachedInventoryItems;
+    private long cachedVirtualItems;
+    private boolean cachedVirtualSupported;
+    private int cachedInventoryEstimatedTimes;
+    private int cachedTotalEstimatedTimes;
 
     public FTBSubmitCountScreen(Screen parent, ItemTask task) {
-        super(Component.translatable("screen.adventuresystems.ftb.submit"));
+        super(KineticI18n.translatable("screen.adventuresystems.ftb.submit"));
         this.parent = parent;
+        setParentScreen(parent);
         this.task = task;
+        useCanvas(460f, 270f, 6);
     }
 
     @Override
-    protected void init() {
-        left = (width - PANEL_W) / 2;
-        top = (height - PANEL_H) / 2;
-
-        countBox = new EditBox(font, left + MARGIN_X, top + 52, PANEL_W - MARGIN_X * 2, 22, Component.translatable("placeholder.adventuresystems.ftb.submit.count"));
+    protected void buildUi() {
+        left = (canvasWidth() - PANEL_W) / 2;
+        top = (canvasHeight() - PANEL_H) / 2;
+        countBox = addIntegerField(
+                left + MARGIN_X,
+                top + 52,
+                PANEL_W - MARGIN_X * 2,
+                KineticI18n.translatable("placeholder.adventuresystems.ftb.submit.count"),
+                false,
+                1,
+                1_000_000,
+                null
+        );
         countBox.setValue("1");
-        addRenderableWidget(countBox);
-
         int buttonY = top + PANEL_H - 38;
-        addRenderableWidget(Button.builder(Component.translatable("button.adventuresystems.ftb.submit.confirm"), button -> submit())
-                .bounds(left + MARGIN_X, buttonY, BUTTON_W, BUTTON_H)
-                .build());
-
-        addRenderableWidget(Button.builder(Component.translatable("gui.cancel"), button -> onClose())
-                .bounds(left + PANEL_W - MARGIN_X - BUTTON_W, buttonY, BUTTON_W, BUTTON_H)
-                .build());
-
+        addButton(left + MARGIN_X, buttonY, BUTTON_W, KineticI18n.translatable("button.adventuresystems.ftb.submit.confirm"), null, this::submit);
+        addButton(left + PANEL_W - MARGIN_X - BUTTON_W, buttonY, BUTTON_W, KineticI18n.translatable("gui.cancel"), null, this::onClose);
         refreshStats(true);
-        setInitialFocus(countBox);
+        focusControl(countBox);
     }
 
     private void submit() {
         if (!FTBTaskSubmitHelper.isCustomSubmitAllowed(task)) {
             FTBSubmitLimitNetwork.sendSubmit(task.id, 1);
-            Minecraft.getInstance().setScreen(parent);
+            navigateBack();
             return;
         }
-
         refreshStats(true);
         FTBSubmitLimitNetwork.sendSubmit(task.id, cachedCount);
-        Minecraft.getInstance().setScreen(parent);
+        navigateBack();
     }
 
     private int parseCountValue(String value) {
@@ -90,10 +92,7 @@ public class FTBSubmitCountScreen extends Screen {
     private void refreshStats(boolean force) {
         String value = countBox == null ? "" : countBox.getValue().trim();
         long now = System.currentTimeMillis();
-        if (!force && value.equals(lastCountValue) && now - lastStatsRefreshMs < STATS_REFRESH_MS) {
-            return;
-        }
-
+        if (!force && value.equals(lastCountValue) && now - lastStatsRefreshMs < STATS_REFRESH_MS) return;
         lastCountValue = value;
         lastStatsRefreshMs = now;
         cachedCount = parseCountValue(value);
@@ -108,11 +107,10 @@ public class FTBSubmitCountScreen extends Screen {
     }
 
     private long calculateInventoryItems(long stopAt) {
-        Minecraft mc = Minecraft.getInstance();
-        if (mc.player == null) return 0L;
-
+        LocalPlayer player = KineticClientRuntime.localPlayer();
+        if (player == null) return 0L;
         long total = 0L;
-        for (ItemStack stack : mc.player.getInventory().items) {
+        for (ItemStack stack : player.getInventory().items) {
             if (stack.isEmpty()) continue;
             try {
                 if (task.test(stack)) {
@@ -147,64 +145,57 @@ public class FTBSubmitCountScreen extends Screen {
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+    protected void renderCanvasBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         refreshStats(false);
-        renderBackground(graphics);
+        GuiTheme.shadow(graphics, canvasWidth(), canvasHeight());
+        GuiTheme.canvasBackground(graphics, canvasWidth(), canvasHeight());
+        GuiTheme.panel(graphics, left, top, PANEL_W, PANEL_H);
+        graphics.drawCenteredString(font, title, left + PANEL_W / 2, top + 14, GuiTheme.current().text());
+        graphics.drawString(font, KineticI18n.translatable("label.adventuresystems.ftb.submit.desc"), left + MARGIN_X, top + 34, GuiTheme.current().mutedText(), false);
+    }
 
-        graphics.fill(left, top, left + PANEL_W, top + PANEL_H, 0xEE101010);
-        graphics.fill(left + 1, top + 1, left + PANEL_W - 1, top + PANEL_H - 1, 0xEE202020);
-        graphics.renderOutline(left, top, PANEL_W, PANEL_H, 0xFFFFAA00);
-
-        graphics.drawCenteredString(font, title, left + PANEL_W / 2, top + 14, 0xFFFFAA00);
-        graphics.drawString(font, Component.translatable("label.adventuresystems.ftb.submit.desc"), left + MARGIN_X, top + 34, 0xFF55FFFF, false);
-
-        super.render(graphics, mouseX, mouseY, partialTick);
-
-        if (countBox != null && countBox.getValue().isEmpty() && !countBox.isFocused()) {
-            graphics.drawString(font, Component.translatable("placeholder.adventuresystems.ftb.submit.count"), countBox.getX() + 5, countBox.getY() + 7, 0xFFAAAAAA, false);
-        }
-
+    @Override
+    protected void renderCanvasForeground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         int lineX = left + MARGIN_X;
         int y = top + 86;
         int gap = 18;
-
-        drawLine(graphics, Component.translatable("label.adventuresystems.ftb.submit.exchanges", number(cachedCount, ChatFormatting.GREEN)), lineX, y, 0xFFFFFF55);
+        drawLine(graphics, KineticI18n.translatable("label.adventuresystems.ftb.submit.exchanges", number(cachedCount)), lineX, y);
         y += gap;
-        drawLine(graphics, Component.translatable("label.adventuresystems.ftb.submit.required", number(cachedRequiredItems, ChatFormatting.AQUA)), lineX, y, 0xFF55FF55);
+        drawLine(graphics, KineticI18n.translatable("label.adventuresystems.ftb.submit.required", number(cachedRequiredItems)), lineX, y);
         y += gap;
-        drawLine(graphics, Component.translatable("label.adventuresystems.ftb.submit.inventory", number(cachedInventoryItems, ChatFormatting.YELLOW)), lineX, y, 0xFF55FFFF);
+        drawLine(graphics, KineticI18n.translatable("label.adventuresystems.ftb.submit.inventory", number(cachedInventoryItems)), lineX, y);
         y += gap;
-        drawLine(graphics, Component.translatable("label.adventuresystems.ftb.submit.inventory.times", number(cachedInventoryEstimatedTimes, ChatFormatting.GREEN)), lineX, y, 0xFFFFAA00);
+        drawLine(graphics, KineticI18n.translatable("label.adventuresystems.ftb.submit.inventory.times", number(cachedInventoryEstimatedTimes)), lineX, y);
         y += gap;
-
         if (cachedVirtualSupported) {
-            drawLine(graphics, Component.translatable("label.adventuresystems.ftb.submit.virtual", number(cachedVirtualItems, ChatFormatting.LIGHT_PURPLE)), lineX, y, 0xFFFF55FF);
+            drawLine(graphics, KineticI18n.translatable("label.adventuresystems.ftb.submit.virtual", number(cachedVirtualItems)), lineX, y);
             y += gap;
-            drawLine(graphics, Component.translatable("label.adventuresystems.ftb.submit.total", number(cachedTotalEstimatedTimes, ChatFormatting.GREEN)), lineX, y, 0xFF55FF55);
+            drawLine(graphics, KineticI18n.translatable("label.adventuresystems.ftb.submit.total", number(cachedTotalEstimatedTimes)), lineX, y);
         }
     }
 
-    private static Component number(long value, ChatFormatting color) {
-        return Component.literal(String.valueOf(value)).withStyle(color);
+    private static Component number(long value) {
+        return Component.literal(String.valueOf(value));
     }
 
-    private void drawLine(GuiGraphics graphics, Component component, int x, int y, int color) {
-        graphics.drawString(font, component, x, y, color, false);
+    private void drawLine(GuiGraphics graphics, Component component, int x, int y) {
+        graphics.drawString(font, component, x, y, GuiTheme.current().text(), false);
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_KP_ENTER) {
+    protected boolean canvasKeyPressed(int keyCode, int scanCode, int modifiers) {
+        if (KineticKeyBindings.matchesKeyCode(KineticKeyBindings.Key.ENTER, keyCode)
+                || KineticKeyBindings.matchesKeyCode(KineticKeyBindings.Key.KP_ENTER, keyCode)) {
             submit();
             return true;
         }
-
-        return super.keyPressed(keyCode, scanCode, modifiers);
+        return false;
     }
 
     @Override
-    public void onClose() {
-        Minecraft.getInstance().setScreen(parent);
+    protected boolean handleCloseRequest() {
+        navigateBack();
+        return true;
     }
 
     @Override

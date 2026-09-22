@@ -33,8 +33,8 @@ public final class FTBTaskSubmitHelper {
         if (task.isOnlyFromCrafting()) return false;
         if (task.getMaxProgress() <= 0L) return false;
         if (task.getItemStack().isEmpty()) return false;
-        if (!isSingleTaskQuest(task)) return false;
-        if (!hasSingleAcceptedDisplayItem(task)) return false;
+        if (isNotSingleTaskQuest(task)) return false;
+        if (lacksSingleAcceptedDisplayItem(task)) return false;
         return hasSingleSupportedReward(task);
     }
 
@@ -84,7 +84,7 @@ public final class FTBTaskSubmitHelper {
                 break;
             }
 
-            if (!claimSingleRewardForRepeat(player, data, quest)) {
+            if (failsToClaimSingleRewardForRepeat(player, data, quest)) {
                 break;
             }
 
@@ -98,23 +98,23 @@ public final class FTBTaskSubmitHelper {
         return new Result(requested, completedTimes, submittedItems);
     }
 
-    private static boolean isSingleTaskQuest(ItemTask task) {
+    private static boolean isNotSingleTaskQuest(ItemTask task) {
         try {
             Collection<?> tasks = task.getQuest().getTasks();
-            return tasks.size() == 1 && tasks.contains(task);
+            return tasks.size() != 1 || !tasks.contains(task);
         } catch (Throwable ignored) {
-            return false;
+            return true;
         }
     }
 
-    private static boolean hasSingleAcceptedDisplayItem(ItemTask task) {
+    private static boolean lacksSingleAcceptedDisplayItem(ItemTask task) {
         try {
             List<ItemStack> validItems = task.getValidDisplayItems();
-            if (validItems.size() != 1) return false;
+            if (validItems.size() != 1) return true;
             ItemStack stack = validItems.get(0);
-            return stack != null && !stack.isEmpty();
+            return stack == null || stack.isEmpty();
         } catch (Throwable ignored) {
-            return false;
+            return true;
         }
     }
 
@@ -144,7 +144,7 @@ public final class FTBTaskSubmitHelper {
         for (int slot = 0; slot < inventory.getContainerSize() && remaining > 0L; slot++) {
             ItemStack stack = inventory.getItem(slot);
             if (stack.isEmpty()) continue;
-            if (!matches(task, stack)) continue;
+            if (doesNotMatch(task, stack)) continue;
 
             int take = (int) Math.min(stack.getCount(), remaining);
             if (take <= 0) continue;
@@ -171,26 +171,26 @@ public final class FTBTaskSubmitHelper {
         return removed;
     }
 
-    private static boolean matches(ItemTask task, ItemStack stack) {
+    private static boolean doesNotMatch(ItemTask task, ItemStack stack) {
         try {
-            return task.test(stack);
+            return !task.test(stack);
         } catch (Throwable ignored) {
-            return false;
+            return true;
         }
     }
 
-    private static boolean claimSingleRewardForRepeat(ServerPlayer player, TeamData data, Quest quest) {
-        if (!quest.canBeRepeated()) return false;
-        if (!data.isCompleted(quest)) return false;
+    private static boolean failsToClaimSingleRewardForRepeat(ServerPlayer player, TeamData data, Quest quest) {
+        if (!quest.canBeRepeated()) return true;
+        if (!data.isCompleted(quest)) return true;
 
         Collection<Reward> rewards = quest.getRewards();
-        if (rewards.size() != 1) return false;
+        if (rewards.size() != 1) return true;
 
         Reward reward = rewards.iterator().next();
-        if (!isSupportedReward(reward)) return false;
+        if (!isSupportedReward(reward)) return true;
 
         data.claimReward(player, reward, true);
-        return !data.isCompleted(quest);
+        return data.isCompleted(quest);
     }
 
     private static int clampTimes(int value) {

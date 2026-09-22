@@ -1,5 +1,6 @@
 package dev.xyat.adventuresystems.curios.wallet.storage;
 
+import dev.xyat.kineticcore.api.runtime.KineticPlatform;
 import dev.xyat.adventuresystems.curios.wallet.compat.rs.RefinedStorageCompat;
 import dev.xyat.adventuresystems.curios.wallet.compat.sophisticated.SophisticatedBackpackCompat;
 import dev.xyat.adventuresystems.curios.wallet.data.Data;
@@ -9,7 +10,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.fml.ModList;
 
 public final class MaterialStorage {
     private MaterialStorage() {
@@ -19,10 +19,10 @@ public final class MaterialStorage {
         if (player == null || target == null || target.isEmpty()) return Snapshot.empty();
         Optional<ItemStack> wallet = Data.equippedWallet(player);
         long inventory = inventoryCount(player.getInventory(), target);
-        boolean backpackLoaded = ModList.get().isLoaded("sophisticatedbackpacks") && ModList.get().isLoaded("sophisticatedcore");
+        boolean backpackLoaded = KineticPlatform.isModLoaded("sophisticatedbackpacks") && KineticPlatform.isModLoaded("sophisticatedcore");
         boolean hasBackpack = backpackLoaded && SophisticatedBackpackCompat.hasAnyBackpack(player);
         long backpack = hasBackpack ? SophisticatedBackpackCompat.count(player, target) : 0L;
-        boolean rsLoaded = ModList.get().isLoaded("refinedstorage");
+        boolean rsLoaded = KineticPlatform.isModLoaded("refinedstorage");
         Data.RsBinding binding = wallet.map(Data::rsBinding).orElse(Data.RsBinding.none());
         RsState rsState = RsState.HIDDEN;
         long rs = 0L;
@@ -94,14 +94,14 @@ public final class MaterialStorage {
 
     public static long consumeBackpack(ServerPlayer player, ItemStack target, long amount) {
         if (player == null || target == null || target.isEmpty() || amount <= 0L) return 0L;
-        if (!ModList.get().isLoaded("sophisticatedbackpacks") || !ModList.get().isLoaded("sophisticatedcore")) return 0L;
+        if (!KineticPlatform.isModLoaded("sophisticatedbackpacks") || !KineticPlatform.isModLoaded("sophisticatedcore")) return 0L;
         if (!SophisticatedBackpackCompat.hasAnyBackpack(player)) return 0L;
         return SophisticatedBackpackCompat.extract(player, target, amount, false);
     }
 
     public static long consumeRs(ServerPlayer player, ItemStack target, long amount) {
         if (player == null || target == null || target.isEmpty() || amount <= 0L) return 0L;
-        if (!ModList.get().isLoaded("refinedstorage")) return 0L;
+        if (!KineticPlatform.isModLoaded("refinedstorage")) return 0L;
         Optional<ItemStack> wallet = Data.equippedWallet(player);
         if (wallet.isEmpty()) return 0L;
         Data.RsBinding binding = Data.rsBinding(wallet.get());

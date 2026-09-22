@@ -1,10 +1,11 @@
 package dev.xyat.adventuresystems.ftb.util;
 
+import dev.xyat.kineticcore.api.resource.KineticResourceIds;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.runtime.IJeiRuntime;
-import net.minecraft.client.Minecraft;
+import dev.xyat.kineticcore.api.runtime.KineticClientRuntime;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
@@ -19,7 +20,7 @@ public class JeiHoveredItemFTB implements IModPlugin {
 
     @Override
     public @NotNull ResourceLocation getPluginUid() {
-        return new ResourceLocation("adventuresystems", "ftb_hovered_item");
+        return KineticResourceIds.of("adventuresystems", "ftb_hovered_item");
     }
 
     @Override
@@ -62,9 +63,9 @@ public class JeiHoveredItemFTB implements IModPlugin {
                 return ItemStack.EMPTY;
             }
 
-            Minecraft mc = Minecraft.getInstance();
-            double mouseX = mc.mouseHandler.xpos() * (double) mc.getWindow().getGuiScaledWidth() / (double) mc.getWindow().getScreenWidth();
-            double mouseY = mc.mouseHandler.ypos() * (double) mc.getWindow().getGuiScaledHeight() / (double) mc.getWindow().getScreenHeight();
+            KineticClientRuntime.CursorPosition mouse = KineticClientRuntime.scaledCursorPosition();
+            double mouseX = mouse.x();
+            double mouseY = mouse.y();
 
             ItemStack stack = invokeItemMethod(recipesGui, "getIngredientUnderMouse", VanillaTypes.ITEM_STACK);
             if (!stack.isEmpty()) {

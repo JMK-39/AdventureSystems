@@ -1,5 +1,8 @@
 package dev.xyat.adventuresystems.curios.wallet.shop;
 
+import dev.xyat.kineticcore.api.runtime.KineticPaths;
+import dev.xyat.kineticcore.api.registry.KineticRegistries;
+import dev.xyat.kineticcore.api.resource.KineticResourceIds;
 import com.electronwill.nightconfig.core.Config;
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import com.electronwill.nightconfig.core.file.FileConfig;
@@ -10,7 +13,6 @@ import dev.xyat.adventuresystems.curios.wallet.data.Data;
 import dev.xyat.adventuresystems.curios.wallet.data.StackCodec;
 import dev.xyat.adventuresystems.curios.wallet.storage.MaterialStorage;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -27,12 +29,10 @@ import net.minecraft.stats.Stats;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraftforge.fml.loading.FMLPaths;
-import net.minecraftforge.registries.ForgeRegistries;
 
 public final class Shop {
-    private static final Path CONFIG_DIR = FMLPaths.CONFIGDIR.get().resolve("kineticcore");
-    private static final Path CONFIG_PATH = CONFIG_DIR.resolve("currency_wallet_shop.toml");
+    private static final String CONFIG_FILE = "kineticcore/currency_wallet_shop.toml";
+    private static final Path CONFIG_PATH = KineticPaths.configFile(CONFIG_FILE);
     private static final String EDIT_KEY = "adventuresystems_currency_wallet_shop_editor";
     private static final String USAGE_KEY = "adventuresystems_currency_wallet_shop_usage";
     private static final String TIMED_KEY = "Timed";
@@ -55,9 +55,9 @@ public final class Shop {
 
     public static void load() {
         try {
-            if (!Files.exists(CONFIG_DIR)) Files.createDirectories(CONFIG_DIR);
+            KineticPaths.ensureConfigDirectory("kineticcore");
             Config old = Config.inMemory();
-            if (Files.exists(CONFIG_PATH)) {
+            if (KineticPaths.configFileExists(CONFIG_FILE)) {
                 try (FileConfig oldFile = FileConfig.of(CONFIG_PATH)) {
                     oldFile.load();
                     old.putAll(oldFile);
@@ -1184,7 +1184,7 @@ public final class Shop {
     private static String itemNameArg(String itemId) {
         if (itemId == null || itemId.isBlank()) return "";
         try {
-            Item item = ForgeRegistries.ITEMS.getValue(new ResourceLocation(itemId));
+            Item item = KineticRegistries.items().get(KineticResourceIds.parse(itemId));
             if (item == null || item == Items.AIR) return itemId;
             return "tr:" + item.getDescriptionId();
         } catch (Exception ignored) {
@@ -1324,7 +1324,7 @@ public final class Shop {
         private String stackKey(ItemStack stack) {
             String key = StackCodec.toConfigString(stack, 1);
             if (!key.isEmpty()) return key;
-            ResourceLocation id = ForgeRegistries.ITEMS.getKey(stack.getItem());
+            ResourceLocation id = KineticRegistries.items().id(stack.getItem());
             return id == null ? "" : id.toString();
         }
     }

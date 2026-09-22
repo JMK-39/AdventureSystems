@@ -1,5 +1,7 @@
 package dev.xyat.adventuresystems.curios.wallet.compat.rs;
 
+import dev.xyat.kineticcore.api.runtime.KineticPlatform;
+import dev.xyat.kineticcore.api.registry.KineticRegistries;
 import com.refinedmods.refinedstorage.api.IRSAPI;
 import com.refinedmods.refinedstorage.api.RSAPIInject;
 import com.refinedmods.refinedstorage.api.network.INetwork;
@@ -9,8 +11,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.fml.ModList;
-import net.minecraftforge.registries.ForgeRegistries;
 
 public class RefinedStorageCompat {
     @RSAPIInject
@@ -20,12 +20,12 @@ public class RefinedStorageCompat {
     }
 
     private static boolean unavailable() {
-        return !ModList.get().isLoaded("refinedstorage");
+        return !KineticPlatform.isModLoaded("refinedstorage");
     }
 
     public static boolean isController(ServerLevel level, BlockPos pos) {
         if (unavailable() || level == null || pos == null) return false;
-        ResourceLocation id = ForgeRegistries.BLOCKS.getKey(level.getBlockState(pos).getBlock());
+        ResourceLocation id = KineticRegistries.blocks().id(level.getBlockState(pos).getBlock());
         return id != null && "refinedstorage".equals(id.getNamespace()) && id.getPath().contains("controller");
     }
 

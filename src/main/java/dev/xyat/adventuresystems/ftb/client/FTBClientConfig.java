@@ -1,27 +1,19 @@
 package dev.xyat.adventuresystems.ftb.client;
 
-import net.minecraftforge.common.ForgeConfigSpec;
-import net.minecraftforge.fml.ModLoadingContext;
-import net.minecraftforge.fml.config.ModConfig;
+import dev.xyat.kineticcore.api.config.client.KTClientConfigAdapter;
+import dev.xyat.kineticcore.api.config.client.KTClientConfigSpec;
 
 public final class FTBClientConfig {
-    public static final ForgeConfigSpec SPEC;
+    public static final KTClientConfigSpec SPEC;
 
-    private static final ForgeConfigSpec.BooleanValue ENABLE_TASK_JUMP;
+    private static final KTClientConfigSpec.BooleanValue ENABLE_TASK_JUMP;
     private static boolean registered;
 
     static {
-        ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
-
+        KTClientConfigSpec.Builder builder = KTClientConfigSpec.builder();
         builder.push("ftb_item_task_jump");
-        ENABLE_TASK_JUMP = builder
-                .comment(
-                        "是否启用 FTB 任务物品跳转提示与跳转按键。",
-                        "Enable FTB quest item jump tooltip and jump hotkey."
-                )
-                .define("enableTaskJump", true);
+        ENABLE_TASK_JUMP = builder.defineBoolean("enableTaskJump", true);
         builder.pop();
-
         SPEC = builder.build();
     }
 
@@ -30,7 +22,7 @@ public final class FTBClientConfig {
 
     public static void register() {
         if (registered) return;
-        ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, SPEC, "kineticcore/ftb_item_client.toml");
+        KTClientConfigAdapter.registerSpec(SPEC, "kineticcore/ftb_item_client.toml");
         registered = true;
     }
 
@@ -49,5 +41,4 @@ public final class FTBClientConfig {
     public static void save() {
         SPEC.save();
     }
-
 }

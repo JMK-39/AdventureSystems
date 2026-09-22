@@ -1,11 +1,11 @@
 package dev.xyat.adventuresystems.curios.wallet.compat.sophisticated;
 
+import dev.xyat.kineticcore.api.runtime.KineticPlatform;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.fml.ModList;
 import net.p3pp3rf1y.sophisticatedbackpacks.api.CapabilityBackpackWrapper;
 import net.p3pp3rf1y.sophisticatedbackpacks.backpack.wrapper.IBackpackWrapper;
 import net.p3pp3rf1y.sophisticatedcore.inventory.InventoryHandler;
@@ -16,7 +16,7 @@ public final class SophisticatedBackpackCompat {
     }
 
     private static boolean unavailable() {
-        return !ModList.get().isLoaded("sophisticatedbackpacks") || !ModList.get().isLoaded("sophisticatedcore");
+        return !KineticPlatform.isModLoaded("sophisticatedbackpacks") || !KineticPlatform.isModLoaded("sophisticatedcore");
     }
 
     public static boolean hasAnyBackpack(ServerPlayer player) {

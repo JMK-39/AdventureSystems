@@ -1,9 +1,10 @@
 package dev.xyat.adventuresystems.curios.wallet.data;
 
+import dev.xyat.kineticcore.api.registry.KineticRegistries;
+import dev.xyat.kineticcore.api.resource.KineticResourceIds;
 import java.util.Optional;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
-import net.minecraftforge.registries.ForgeRegistries;
 
 public record CurrencyType(String itemId, ResourceLocation resourceLocation, long value) {
     public static Optional<CurrencyType> parse(String text) {
@@ -13,7 +14,7 @@ public record CurrencyType(String itemId, ResourceLocation resourceLocation, lon
         String id = parts[0].trim();
         String valueText = parts[1].trim();
         try {
-            ResourceLocation location = new ResourceLocation(id);
+            ResourceLocation location = KineticResourceIds.parse(id);
             long value = Long.parseLong(valueText);
             if (value <= 0) return Optional.empty();
             return Optional.of(new CurrencyType(location.toString(), location, value));
@@ -23,7 +24,7 @@ public record CurrencyType(String itemId, ResourceLocation resourceLocation, lon
     }
 
     public Item item() {
-        Item item = ForgeRegistries.ITEMS.getValue(resourceLocation);
+        Item item = KineticRegistries.items().get(resourceLocation);
         if (item == null) return net.minecraft.world.item.Items.AIR;
         return item;
     }

@@ -1,21 +1,21 @@
 package dev.xyat.adventuresystems.curios.config;
 
+import dev.xyat.kineticcore.api.runtime.KineticPaths;
 import com.electronwill.nightconfig.core.Config;
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import com.electronwill.nightconfig.core.file.FileConfig;
 import com.electronwill.nightconfig.core.io.WritingMode;
 import dev.xyat.adventuresystems.curios.CuriosModule;
+import dev.xyat.adventuresystems.curios.paradiselost.data.ParadiseLostCurve;
 import dev.xyat.adventuresystems.curios.wallet.data.Data;
-import net.minecraftforge.fml.loading.FMLPaths;
 
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 
 public class CuriosConfig {
-    private static final Path CONFIG_DIR = FMLPaths.CONFIGDIR.get().resolve("kineticcore");
-    private static final Path CONFIG_PATH = CONFIG_DIR.resolve("curios.toml");
+    private static final String CONFIG_FILE = "kineticcore/curios.toml";
+    private static final Path CONFIG_PATH = KineticPaths.configFile(CONFIG_FILE);
     private static CommentedFileConfig configData;
 
     public static final List<String> DEFAULT_WALLET_CURRENCY_DEFINITIONS = Arrays.asList(
@@ -44,6 +44,7 @@ public class CuriosConfig {
     public static boolean enableParadiseLost = true;
     public static boolean enableLevitationBackpack = true;
     public static boolean enableCurrencyWallet = true;
+    public static boolean levitationKnockbackImmunity = true;
 
     public static int hosGrowthInterval = 3;
     public static double hosDamageCap = 3.0;
@@ -55,9 +56,14 @@ public class CuriosConfig {
     public static int hosMinGain = 2;
     public static int hosMaxGain = 5;
     public static double hosDamagePerHp = 0.005;
+    public static double hosHealActivationThreshold = 0.01;
     public static List<String> hosConflicts = Arrays.asList("enigmaticlegacy:cursed_ring");
 
     public static int plMinNutrition = 0;
+    public static double plScoreMultiplier = 1.0;
+    public static List<String> plCurvePoints = ParadiseLostCurve.DEFAULT_DEFINITIONS;
+    public static String plCurveMode = "sine_ease_out";
+    public static double plCurvePower = 2.0;
     public static List<String> plConflicts = Arrays.asList("enigmaticlegacy:cursed_ring");
 
     public static int walletExtraBeltSlots = 1;
@@ -78,9 +84,9 @@ public class CuriosConfig {
     public static void load() {
         if (configData != null) return;
         try {
-            if (!Files.exists(CONFIG_DIR)) Files.createDirectories(CONFIG_DIR);
+            KineticPaths.ensureConfigDirectory("kineticcore");
             Config old = Config.inMemory();
-            if (Files.exists(CONFIG_PATH)) {
+            if (KineticPaths.configFileExists(CONFIG_FILE)) {
                 try (FileConfig oldFile = FileConfig.of(CONFIG_PATH)) {
                     oldFile.load();
                     old.putAll(oldFile);
@@ -125,6 +131,10 @@ public class CuriosConfig {
         define(old, "general.enable_currency_wallet", true, """
                 启用 钱包袋子 饰品
                 Enable the Currency Wallet accessory""");
+
+        define(old, "levitation_backpack.knockbackImmunity", true, """
+                悬浮背包在玩家处于飞行状态时是否提供击退免疫。
+                Whether the Levitation Backpack grants knockback immunity while the player is flying.""");
 
         configData.setComment("heart_of_steel", """
                 心之钢机制设定
@@ -180,6 +190,12 @@ public class CuriosConfig {
                 示例: 0.005 = 0.5% (若玩家有200血, 200 * 0.5% = 增加1点额外伤害)
                 Example: 0.005 = 0.5% (If player has 200 HP, 200 * 0.5% = +1 bonus damage)""");
 
+        define(old, "heart_of_steel.healActivationThreshold", 0.01, """
+                治疗加成实际生效所需的最小倍率。
+                Minimum healing bonus multiplier required before the bonus is applied.
+                示例: 0.01 = 治疗加成至少达到 1% 才生效
+                Example: 0.01 = Healing bonus must reach at least 1% to apply""");
+
         define(old, "heart_of_steel.conflicts", Arrays.asList("enigmaticlegacy:cursed_ring"), """
                 排斥的饰品ID列表。如果玩家佩戴了列表中的饰品，心之钢将失效。
                 List of incompatible accessory IDs. Heart of Steel won't work if these are equipped.
@@ -196,6 +212,26 @@ public class CuriosConfig {
                 示例: 0 = 不恢复饱食度的物品不生效
                 Example: 0 = Ignore items that do not restore hunger""");
 
+        define(old, "paradise_lost.scoreMultiplier", 1.0, """
+                新食物提供的失乐园积分倍率。实际增加积分 = 食物营养值 × 此倍率，再四舍五入为整数。
+                Paradise Lost score multiplier for newly discovered foods. Added score = food nutrition × this multiplier, rounded to an integer.
+                默认 1.0 保持原有 1:1 积分规则。
+                Default 1.0 preserves the original 1:1 score rule.""");
+
+        define(old, "paradise_lost.curvePoints", ParadiseLostCurve.DEFAULT_DEFINITIONS, """
+                失乐园积分到伤害加成的曲线节点，格式为 积分|加成倍率。必须至少两行且包含 0 积分起点，积分不能重复。最后一行同时决定积分上限和最终伤害加成上限。
+                Paradise Lost score-to-damage curve points in score|bonus format. At least two points are required and score 0 must exist. Scores must be unique. The final point defines both the score cap and final bonus cap.
+                示例: 30000|2.0 = 30000 积分时最终额外伤害为 200%
+                Example: 30000|2.0 = +200% final damage at 30000 score""");
+
+        define(old, "paradise_lost.curveMode", "sine_ease_out", """
+                曲线节点之间的插值方式。可选 sine_ease_out、linear、smoothstep、power。
+                Interpolation mode between curve points: sine_ease_out, linear, smoothstep, or power.""");
+
+        define(old, "paradise_lost.curvePower", 2.0, """
+                当曲线模式为 power 时使用的指数。必须大于 0。
+                Exponent used when curve mode is power. Must be greater than 0.""");
+
         define(old, "paradise_lost.conflicts", Arrays.asList("enigmaticlegacy:cursed_ring"), """
                 排斥的饰品ID列表。如果玩家佩戴了列表中的饰品，失乐园将失效。
                 List of incompatible accessory IDs. Paradise Lost won't work if these are equipped.""");
@@ -209,8 +245,8 @@ public class CuriosConfig {
                 Extra Curios belt slots provided when the wallet is equipped.""");
 
         define(old, "currency_wallet.maxCurrencyTypes", 10, """
-                系统支持的最大货币种类数量。建议不要超过10，以防止UI超出屏幕范围。
-                Max supported currency types. Hard cap at 10 recommended to avoid UI overflow.""");
+                系统支持的最大货币种类数量。数值越大，钱包界面需要显示的货币项目越多。
+                Maximum supported currency types. Higher values allow more currencies to appear in the wallet UI.""");
 
         define(old, "currency_wallet.magnetRange", 6.0, """
                 佩戴钱包时，自动收集周围货币掉落物的半径（单位：格子）。
@@ -263,6 +299,7 @@ public class CuriosConfig {
         configData.set("general.enable_paradise_lost", enableParadiseLost);
         configData.set("general.enable_levitation_backpack", enableLevitationBackpack);
         configData.set("general.enable_currency_wallet", enableCurrencyWallet);
+        configData.set("levitation_backpack.knockbackImmunity", levitationKnockbackImmunity);
 
         configData.set("heart_of_steel.growthInterval", hosGrowthInterval);
         configData.set("heart_of_steel.damageCap", hosDamageCap);
@@ -274,9 +311,14 @@ public class CuriosConfig {
         configData.set("heart_of_steel.minGain", hosMinGain);
         configData.set("heart_of_steel.maxGain", hosMaxGain);
         configData.set("heart_of_steel.damagePerHp", hosDamagePerHp);
+        configData.set("heart_of_steel.healActivationThreshold", hosHealActivationThreshold);
         configData.set("heart_of_steel.conflicts", hosConflicts);
 
         configData.set("paradise_lost.minNutrition", plMinNutrition);
+        configData.set("paradise_lost.scoreMultiplier", plScoreMultiplier);
+        configData.set("paradise_lost.curvePoints", plCurvePoints);
+        configData.set("paradise_lost.curveMode", plCurveMode);
+        configData.set("paradise_lost.curvePower", plCurvePower);
         configData.set("paradise_lost.conflicts", plConflicts);
 
         configData.set("currency_wallet.extraBeltSlots", walletExtraBeltSlots);
@@ -324,6 +366,7 @@ public class CuriosConfig {
         enableParadiseLost = configData.getOrElse("general.enable_paradise_lost", true);
         enableLevitationBackpack = configData.getOrElse("general.enable_levitation_backpack", true);
         enableCurrencyWallet = configData.getOrElse("general.enable_currency_wallet", true);
+        levitationKnockbackImmunity = configData.getOrElse("levitation_backpack.knockbackImmunity", true);
 
         hosGrowthInterval = configData.getOrElse("heart_of_steel.growthInterval", 3);
         hosDamageCap = configData.getOrElse("heart_of_steel.damageCap", 3.0);
@@ -335,9 +378,14 @@ public class CuriosConfig {
         hosMinGain = configData.getOrElse("heart_of_steel.minGain", 2);
         hosMaxGain = configData.getOrElse("heart_of_steel.maxGain", 5);
         hosDamagePerHp = configData.getOrElse("heart_of_steel.damagePerHp", 0.005);
+        hosHealActivationThreshold = configData.getOrElse("heart_of_steel.healActivationThreshold", 0.01);
         hosConflicts = configData.getOrElse("heart_of_steel.conflicts", Arrays.asList("enigmaticlegacy:cursed_ring"));
 
         plMinNutrition = configData.getOrElse("paradise_lost.minNutrition", 0);
+        plScoreMultiplier = configData.getOrElse("paradise_lost.scoreMultiplier", 1.0);
+        plCurvePoints = configData.getOrElse("paradise_lost.curvePoints", ParadiseLostCurve.DEFAULT_DEFINITIONS);
+        plCurveMode = configData.getOrElse("paradise_lost.curveMode", "sine_ease_out");
+        plCurvePower = configData.getOrElse("paradise_lost.curvePower", 2.0);
         plConflicts = configData.getOrElse("paradise_lost.conflicts", Arrays.asList("enigmaticlegacy:cursed_ring"));
 
         walletExtraBeltSlots = configData.getOrElse("currency_wallet.extraBeltSlots", 1);

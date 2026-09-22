@@ -17,29 +17,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 
 final class ShopGuiSupport {
-    static final int GOLD = 0xFFFFAA00;
-    static final int GOLD_DARK = 0xFF8A5A00;
-    static final int PANEL_BG = 0xF0101010;
-    static final int ROW_BG = 0xEE171717;
-    static final int ROW_HOVER = 0xEE252525;
-    static final int RED = 0xFFFF5555;
-    static final int CYAN = 0xFFBBBBBB;
-    static final int CYAN_DARK = 0xFF444444;
-    static final int TEXT_WHITE = 0xFFFFFFFF;
-    static final int TEXT_GRAY = 0xFFAAAAAA;
-    static final int SCROLLBAR_BORDER = 0xFF666666;
-    static final int SCROLLBAR_TRACK = 0xFF171717;
-    static final int SCROLLBAR_THUMB = 0xFFFF9800;
-    static final int SCROLLBAR_HOVER = 0xFFFFD700;
-
-    private ShopGuiSupport() {
-    }
-
-    static void renderBox(GuiGraphics graphics, int x, int y, int width, int height, int fill) {
-        graphics.fill(x, y, x + width, y + height, ShopGuiSupport.GOLD_DARK);
-        graphics.fill(x + 1, y + 1, x + width - 1, y + height - 1, fill);
-    }
-
     static ItemStack stack(String id) {
         ItemStack stack = StackCodec.fromConfigString(id);
         return stack.isEmpty() ? new ItemStack(net.minecraft.world.item.Items.BARRIER) : stack;

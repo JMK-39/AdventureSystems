@@ -7,25 +7,22 @@ import dev.xyat.adventuresystems.curios.wallet.event.WalletModule;
 import dev.xyat.adventuresystems.curios.wallet.network.Network;
 import dev.xyat.adventuresystems.ftb.api.FTBVirtualItemProvider;
 import dev.xyat.adventuresystems.ftb.api.FTBVirtualItemProviders;
+import dev.xyat.kineticcore.api.resource.KineticResourceIds;
+import dev.xyat.kineticcore.api.runtime.KineticModLifecycle;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 
-@Mod.EventBusSubscriber(modid = CuriosModule.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public final class FTBCompat {
     private FTBCompat() {
     }
 
-    @SubscribeEvent
-    public static void onCommonSetup(FMLCommonSetupEvent event) {
-        event.enqueueWork(() -> FTBVirtualItemProviders.register(new WalletProvider()));
+    public static void install() {
+        KineticModLifecycle.onCommonSetup(() -> FTBVirtualItemProviders.register(new WalletProvider()));
     }
 
     private static final class WalletProvider implements FTBVirtualItemProvider {
-        private static final ResourceLocation ID = new ResourceLocation(CuriosModule.MODID, "currency_wallet");
+        private static final ResourceLocation ID = KineticResourceIds.of(CuriosModule.MODID, "currency_wallet");
 
         @Override
         public ResourceLocation id() {
@@ -51,25 +48,18 @@ public final class FTBCompat {
         @Override
         public long extract(ServerPlayer player, ItemStack filterStack, long amount, boolean simulate) {
             if (!matches(player, filterStack) || amount <= 0L) return 0L;
-
             String id = Data.currencyId(filterStack);
             if (id.isEmpty()) return 0L;
-
             long available = Data.countForAutomaticPayment(player, id);
             long extracted = Math.min(available, amount);
             if (extracted <= 0L) return 0L;
-
             if (simulate) return extracted;
-
             return Data.extractForAutomaticPayment(player, id, extracted, false);
         }
 
         @Override
         public void sync(ServerPlayer player) {
-            if (player != null) {
-                Network.sync(player);
-            }
+            if (player != null) Network.sync(player);
         }
     }
 }
-

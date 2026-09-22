@@ -1,8 +1,8 @@
 package dev.xyat.adventuresystems.curios.heartofsteel.client.tooltip;
 
-import dev.xyat.adventuresystems.curios.util.ColorText;
+import dev.xyat.kineticcore.api.text.KineticI18n;
+import dev.xyat.kineticcore.api.runtime.KineticClientRuntime;
 import dev.xyat.adventuresystems.curios.config.CuriosConfig;
-import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
@@ -20,34 +20,34 @@ public class HeartOfSteelTooltip {
         CompoundTag nbt = stack.getTag();
         if (nbt == null || !nbt.hasUUID(OWNER_KEY)) return;
 
-        Player player = Minecraft.getInstance().player;
+        Player player = KineticClientRuntime.localPlayer();
         if (player == null) return;
 
         long currentTime = player.level().getGameTime();
         long nextChargeTime = nbt.getLong(NEXT_CHARGE_KEY);
 
         if (currentTime >= nextChargeTime) {
-            tooltip.add(ColorText.translatable("tip.adventuresystems.curios.heart_of_steel.ready"));
+            tooltip.add(KineticI18n.translatable("tip.adventuresystems.curios.heart_of_steel.ready"));
         } else {
             long remainingSeconds = Math.max(0L, (nextChargeTime - currentTime + 19L) / 20L);
-            tooltip.add(ColorText.translatable("tip.adventuresystems.curios.heart_of_steel.cooldown", remainingSeconds));
+            tooltip.add(KineticI18n.translatable("tip.adventuresystems.curios.heart_of_steel.cooldown", remainingSeconds));
         }
     }
 
     public static void addTooltip(ItemStack stack, List<Component> tooltip) {
-        Player player = Minecraft.getInstance().player;
+        Player player = KineticClientRuntime.localPlayer();
         Data data = data(stack, player);
-        tooltip.add(ColorText.translatable("tip.adventuresystems.curios.heart_of_steel.scaling", "1", oneDecimal(CuriosConfig.hosDamagePerHp * 100.0D)));
-        tooltip.add(ColorText.translatable("tip.adventuresystems.curios.heart_of_steel.stacks", data.stacksText(), data.stacksPerHpText()));
-        tooltip.add(ColorText.translatable("tip.adventuresystems.curios.heart_of_steel.health_bonus", data.totalHealthText(), data.baseHealthText(), data.stackHealthText(), data.healthCapText()));
+        tooltip.add(KineticI18n.translatable("tip.adventuresystems.curios.heart_of_steel.scaling", "1", oneDecimal(CuriosConfig.hosDamagePerHp * 100.0D)));
+        tooltip.add(KineticI18n.translatable("tip.adventuresystems.curios.heart_of_steel.stacks", data.stacksText(), data.stacksPerHpText()));
+        tooltip.add(KineticI18n.translatable("tip.adventuresystems.curios.heart_of_steel.health_bonus", data.totalHealthText(), data.baseHealthText(), data.stackHealthText(), data.healthCapText()));
         Object efficiency = data.stackHealth() >= Math.max(0.0D, CuriosConfig.hosMaxHealthCap)
-                ? ColorText.translatable("tip.adventuresystems.curios.heart_of_steel.max_reached")
+                ? KineticI18n.translatable("tip.adventuresystems.curios.heart_of_steel.max_reached")
                 : CuriosConfig.hosMinGain + "~" + CuriosConfig.hosMaxGain;
-        tooltip.add(ColorText.translatable("tip.adventuresystems.curios.heart_of_steel.health_growth_amount", efficiency));
-        tooltip.add(ColorText.translatable("tip.adventuresystems.curios.heart_of_steel.current_damage_bonus", data.damagePercentText(), data.playerMaxHpText(), data.damageCapText()));
-        tooltip.add(ColorText.translatable("tip.adventuresystems.curios.heart_of_steel.healing_bonus", oneDecimal(CuriosConfig.hosHealMultiplier)));
-        tooltip.add(ColorText.translatable("tip.adventuresystems.curios.heart_of_steel.healing_desc"));
-        tooltip.add(ColorText.translatable("tip.adventuresystems.curios.heart_of_steel.growth_interval", Integer.toString(CuriosConfig.hosGrowthInterval)));
+        tooltip.add(KineticI18n.translatable("tip.adventuresystems.curios.heart_of_steel.health_growth_amount", efficiency));
+        tooltip.add(KineticI18n.translatable("tip.adventuresystems.curios.heart_of_steel.current_damage_bonus", data.damagePercentText(), data.playerMaxHpText(), data.damageCapText()));
+        tooltip.add(KineticI18n.translatable("tip.adventuresystems.curios.heart_of_steel.healing_bonus", oneDecimal(CuriosConfig.hosHealMultiplier)));
+        tooltip.add(KineticI18n.translatable("tip.adventuresystems.curios.heart_of_steel.healing_desc"));
+        tooltip.add(KineticI18n.translatable("tip.adventuresystems.curios.heart_of_steel.growth_interval", Integer.toString(CuriosConfig.hosGrowthInterval)));
     }
 
     private static Data data(ItemStack stack, Player player) {

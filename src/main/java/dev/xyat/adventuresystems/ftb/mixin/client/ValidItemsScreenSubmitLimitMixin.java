@@ -11,7 +11,7 @@ import dev.ftb.mods.ftbquests.client.gui.quests.ValidItemsScreen;
 import dev.ftb.mods.ftbquests.quest.task.ItemTask;
 import dev.xyat.adventuresystems.ftb.api.FTBTaskSubmitHelper;
 import dev.xyat.adventuresystems.ftb.client.gui.FTBSubmitCountScreen;
-import net.minecraft.client.Minecraft;
+import dev.xyat.kineticcore.api.runtime.KineticClientRuntime;
 import net.minecraft.network.chat.Component;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -81,8 +81,10 @@ public abstract class ValidItemsScreenSubmitLimitMixin extends BaseScreen {
                 }
 
                 this.playClickSound();
-                Minecraft minecraft = Minecraft.getInstance();
-                minecraft.setScreen(new FTBSubmitCountScreen(minecraft.screen, adventuresystems_ftb$submitTask));
+                KineticClientRuntime.openScreen(new FTBSubmitCountScreen(
+                        KineticClientRuntime.currentScreen(),
+                        adventuresystems_ftb$submitTask
+                ));
             }
 
             @Override

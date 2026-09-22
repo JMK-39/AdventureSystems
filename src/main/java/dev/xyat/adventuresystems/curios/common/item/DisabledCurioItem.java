@@ -1,5 +1,8 @@
 package dev.xyat.adventuresystems.curios.common.item;
 
+import javax.annotation.Nonnull;
+
+import dev.xyat.kineticcore.api.text.KineticI18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -16,7 +19,7 @@ public class DisabledCurioItem extends Item {
     }
 
     @Override
-    public void appendHoverText(@NotNull ItemStack stack, @Nullable Level level, List<Component> tooltip, @NotNull TooltipFlag flag) {
-        tooltip.add(Component.translatable("tip.adventuresystems.curios.global.disabled"));
+    public void appendHoverText(@NotNull ItemStack stack, @Nullable Level level, @Nonnull List<Component> tooltip, @NotNull TooltipFlag flag) {
+        tooltip.add(KineticI18n.translatable("tip.adventuresystems.curios.global.disabled"));
     }
 }

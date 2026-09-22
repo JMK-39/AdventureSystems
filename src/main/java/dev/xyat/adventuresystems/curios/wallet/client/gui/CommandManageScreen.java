@@ -1,29 +1,26 @@
 package dev.xyat.adventuresystems.curios.wallet.client.gui;
 
-import dev.xyat.kineticcore.api.client.theme.GuiTheme;
-import dev.xyat.kineticcore.api.client.overlay.GuiOverlay;
-import dev.xyat.kineticcore.api.client.selector.ItemSelectorScreen;
+import dev.xyat.kineticcore.api.client.input.KineticMouseButtons;
+import dev.xyat.kineticcore.api.client.command.KineticCommandSuggestions;
+import dev.xyat.kineticcore.api.client.overlay.KineticOverlays;
 import dev.xyat.kineticcore.api.client.screen.KineticScreen;
-import dev.xyat.kineticcore.api.client.widget.KineticWidgets.GridScrollController;
+import dev.xyat.kineticcore.api.client.selector.KineticSelectors;
+import dev.xyat.kineticcore.api.client.theme.GuiTheme;
+import dev.xyat.kineticcore.api.client.widget.button.KineticButtons.StateButton;
+import dev.xyat.kineticcore.api.client.widget.input.KineticTextFields.KineticEditBox;
+import dev.xyat.kineticcore.api.client.widget.scroll.KineticScroll.GridScrollController;
+import dev.xyat.kineticcore.api.runtime.KineticClientRuntime;
+import dev.xyat.kineticcore.api.text.KineticI18n;
 import java.util.ArrayList;
 import java.util.List;
-import net.minecraft.ChatFormatting;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.CommandSuggestions;
-import net.minecraft.client.gui.components.EditBox;
-import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
 import org.jetbrains.annotations.NotNull;
 
-@OnlyIn(Dist.CLIENT)
 final class CommandManageScreen extends KineticScreen {
     private static final int PANEL_WIDTH = 640;
     private static final int PANEL_HEIGHT = 360;
@@ -35,52 +32,86 @@ final class CommandManageScreen extends KineticScreen {
 
     private final Screen parent;
     private final ShopGuiSupport.EditorDraft draft;
+    private final GridScrollController gridScroll = new GridScrollController();
     private int left;
     private int top;
     private int selectedIndex = -1;
-    private final GridScrollController gridScroll = new GridScrollController();
-    private EditBox nameBox;
-    private EditBox commandBox;
-    private Button saveButton;
+    private KineticEditBox nameBox;
+    private KineticEditBox commandBox;
+    private StateButton saveButton;
     private String iconId = "";
-    private CommandSuggestions commandSuggestions;
+    private KineticCommandSuggestions.Session commandSuggestions;
 
     CommandManageScreen(Screen parent, ShopGuiSupport.EditorDraft draft) {
-        super(Component.translatable("gui.adventuresystems.curios.wallet.shop_command_manage_title"));
+        super(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_command_manage_title"));
         this.parent = parent;
+        setParentScreen(parent);
         this.draft = draft;
-        useCanvas(
-                640f,
-                360f,
-                6
-        );
+        useCanvas(640f, 360f, 6);
     }
 
     @Override
     protected void buildUi() {
-        left = (canvasWidth - PANEL_WIDTH) / 2;
-        top = (canvasHeight - PANEL_HEIGHT) / 2;
+        left = (canvasWidth() - PANEL_WIDTH) / 2;
+        top = (canvasHeight() - PANEL_HEIGHT) / 2;
         if (iconId.isBlank()) iconId = fallbackIconId();
 
-        Button iconButton = addRenderableWidget(Button.builder(Component.empty(), b -> openIconSelector()).bounds(iconButtonX(), iconButtonY(), ICON_BUTTON_SIZE, ICON_BUTTON_SIZE).build());
-        iconButton.setTooltip(Tooltip.create(Component.translatable("gui.adventuresystems.curios.wallet.shop_command_icon_tooltip")));
+        addButton(
+                iconButtonX(),
+                iconButtonY(),
+                ICON_BUTTON_SIZE,
+                Component.empty(),
+                KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_command_icon_tooltip"),
+                this::openIconSelector
+        );
 
-        nameBox = new EditBox(font, nameBoxX(), nameBoxY(), nameBoxWidth(), 18, Component.translatable("gui.adventuresystems.curios.wallet.shop_command_name"));
+        nameBox = addTextField(
+                nameBoxX(),
+                nameBoxY(),
+                nameBoxWidth(),
+                KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_command_name"),
+                KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_command_name"),
+                null,
+                KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_command_name_tooltip")
+        );
         nameBox.setMaxLength(64);
-        nameBox.setTooltip(Tooltip.create(Component.translatable("gui.adventuresystems.curios.wallet.shop_command_name_tooltip")));
-        addRenderableWidget(nameBox);
 
-        saveButton = addRenderableWidget(Button.builder(saveButtonText(), b -> saveCommand()).bounds(saveButtonX(), nameBoxY() - 1, 58, 20).build());
-        Button clearButton = addRenderableWidget(Button.builder(Component.translatable("gui.adventuresystems.curios.wallet.shop_command_new"), b -> clearEditor()).bounds(clearButtonX(), nameBoxY() - 1, 54, 20).build());
-        clearButton.setTooltip(Tooltip.create(Component.translatable("gui.adventuresystems.curios.wallet.shop_command_clear_tooltip")));
-        Button doneButton = addRenderableWidget(Button.builder(Component.translatable("gui.done"), b -> Minecraft.getInstance().setScreen(parent)).bounds(left + PANEL_WIDTH - 90, top + 8, 76, 20).build());
-        doneButton.setTooltip(Tooltip.create(Component.translatable("gui.adventuresystems.curios.wallet.shop_command_done_tooltip")));
+        saveButton = addButton(
+                saveButtonX(),
+                nameBoxY() - 1,
+                58,
+                saveButtonText(),
+                null,
+                this::saveCommand
+        );
+        addButton(
+                clearButtonX(),
+                nameBoxY() - 1,
+                54,
+                KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_command_new"),
+                KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_command_clear_tooltip"),
+                this::clearEditor
+        );
+        addButton(
+                left + PANEL_WIDTH - 90,
+                top + 8,
+                76,
+                KineticI18n.translatable("gui.done"),
+                KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_command_done_tooltip"),
+                this::returnToParent
+        );
 
-        commandBox = new EditBox(font, commandBoxX(), commandBoxY(), commandBoxWidth(), 18, Component.translatable("gui.adventuresystems.curios.wallet.shop_command_text"));
+        commandBox = addTextField(
+                commandBoxX(),
+                commandBoxY(),
+                commandBoxWidth(),
+                KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_command_text"),
+                KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_command_text"),
+                null,
+                KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_command_text_tooltip", "")
+        );
         commandBox.setMaxLength(2048);
-        commandBox.setTooltip(Tooltip.create(Component.translatable("gui.adventuresystems.curios.wallet.shop_command_text_tooltip")));
         commandBox.setResponder(this::onCommandEdited);
-        addRenderableWidget(commandBox);
 
         initCommandSuggestions();
         loadSelectedIntoEditor();
@@ -120,43 +151,45 @@ final class CommandManageScreen extends KineticScreen {
     private int commandBoxWidth() { return PANEL_WIDTH - 104; }
 
     private Component saveButtonText() {
-        return Component.translatable(selectedIndex >= 0 ? "gui.adventuresystems.curios.wallet.shop_command_update" : "gui.adventuresystems.curios.wallet.shop_command_add");
+        return KineticI18n.translatable(selectedIndex >= 0
+                ? "gui.adventuresystems.curios.wallet.shop_command_update"
+                : "gui.adventuresystems.curios.wallet.shop_command_add");
+    }
+
+    private Component saveButtonTooltip() {
+        return KineticI18n.translatable(selectedIndex >= 0
+                ? "gui.adventuresystems.curios.wallet.shop_command_update_tooltip"
+                : "gui.adventuresystems.curios.wallet.shop_command_add_tooltip");
     }
 
     private void updateButtons() {
-        if (saveButton != null) {
-            saveButton.setMessage(saveButtonText());
-            saveButton.setTooltip(Tooltip.create(Component.translatable(selectedIndex >= 0
-                    ? "gui.adventuresystems.curios.wallet.shop_command_update_tooltip"
-                    : "gui.adventuresystems.curios.wallet.shop_command_add_tooltip")));
-        }
+        if (saveButton != null) saveButton.setText(saveButtonText());
     }
 
     private void openIconSelector() {
-        Minecraft.getInstance().setScreen(new ItemSelectorScreen(this, selection -> {
+        KineticSelectors.openItemSelector(this, selection -> {
             if (!selection.isItem()) return;
             ItemStack stack = selection.stack();
             String spec = ShopGuiSupport.selectedStackSpec(stack);
             if (!spec.isBlank()) iconId = spec;
-        }));
+        });
     }
 
     private void saveCommand() {
         String command = commandBox == null ? "" : commandBox.getValue().trim();
         String name = nameBox == null ? "" : nameBox.getValue().trim();
         if (name.isBlank()) {
-            GuiOverlay.toast("wallet_command_name_empty", Component.translatable("msg.adventuresystems.curios.wallet.shop_command_name_empty"), GuiOverlay.Position.BOTTOM_CENTER, 2200, 0, -30);
+            KineticOverlays.toast("wallet_command_name_empty", KineticI18n.translatable("msg.adventuresystems.curios.wallet.shop_command_name_empty"), KineticOverlays.Position.BOTTOM_CENTER, 2200, 0, -30);
             return;
         }
         if (command.isBlank()) {
-            GuiOverlay.toast("wallet_command_empty", Component.translatable("msg.adventuresystems.curios.wallet.shop_command_empty"), GuiOverlay.Position.BOTTOM_CENTER, 2200, 0, -30);
+            KineticOverlays.toast("wallet_command_empty", KineticI18n.translatable("msg.adventuresystems.curios.wallet.shop_command_empty"), KineticOverlays.Position.BOTTOM_CENTER, 2200, 0, -30);
             return;
         }
         if (!command.startsWith("/")) {
-            GuiOverlay.toast("wallet_command_slash_required", Component.translatable("msg.adventuresystems.curios.wallet.shop_command_slash_required"), GuiOverlay.Position.BOTTOM_CENTER, 2400, 0, -30);
+            KineticOverlays.toast("wallet_command_slash_required", KineticI18n.translatable("msg.adventuresystems.curios.wallet.shop_command_slash_required"), KineticOverlays.Position.BOTTOM_CENTER, 2400, 0, -30);
             if (commandBox != null) {
-                commandBox.setFocused(true);
-                setFocused(commandBox);
+                focusControl(commandBox);
             }
             return;
         }
@@ -164,11 +197,11 @@ final class CommandManageScreen extends KineticScreen {
             if (i == selectedIndex) continue;
             ShopGuiSupport.CommandDraft existing = draft.commands.get(i);
             if (existing.displayName() != null && existing.displayName().trim().equalsIgnoreCase(name)) {
-                GuiOverlay.toast("wallet_command_name_duplicate", Component.translatable("msg.adventuresystems.curios.wallet.shop_command_name_duplicate"), GuiOverlay.Position.BOTTOM_CENTER, 2200, 0, -30);
+                KineticOverlays.toast("wallet_command_name_duplicate", KineticI18n.translatable("msg.adventuresystems.curios.wallet.shop_command_name_duplicate"), KineticOverlays.Position.BOTTOM_CENTER, 2200, 0, -30);
                 return;
             }
             if (commandCompareKey(existing.command()).equals(commandCompareKey(command))) {
-                GuiOverlay.toast("wallet_command_duplicate", Component.translatable("msg.adventuresystems.curios.wallet.shop_command_duplicate"), GuiOverlay.Position.BOTTOM_CENTER, 2200, 0, -30);
+                KineticOverlays.toast("wallet_command_duplicate", KineticI18n.translatable("msg.adventuresystems.curios.wallet.shop_command_duplicate"), KineticOverlays.Position.BOTTOM_CENTER, 2200, 0, -30);
                 return;
             }
         }
@@ -189,7 +222,7 @@ final class CommandManageScreen extends KineticScreen {
         if (nameBox != null) nameBox.setValue("");
         if (commandBox != null) commandBox.setValue("");
         updateButtons();
-        if (commandSuggestions != null) commandSuggestions.updateCommandInfo();
+        updateCommandSuggestions();
     }
 
     private void loadSelectedIntoEditor() {
@@ -202,13 +235,11 @@ final class CommandManageScreen extends KineticScreen {
         if (nameBox != null) nameBox.setValue(command.displayName());
         if (commandBox != null) commandBox.setValue(commandInputText(command.command()));
         if (commandBox != null) {
-            commandBox.setFocused(true);
-            setFocused(commandBox);
+            focusControl(commandBox);
         }
         updateButtons();
-        if (commandSuggestions != null) commandSuggestions.updateCommandInfo();
+        updateCommandSuggestions();
     }
-
 
     private String commandInputText(String value) {
         if (value == null || value.isBlank()) return "";
@@ -224,42 +255,46 @@ final class CommandManageScreen extends KineticScreen {
     }
 
     private void initCommandSuggestions() {
-        if (minecraft == null || commandBox == null) return;
-        Screen commandSuggestionHost = new Screen(Component.empty()) {
-        };
-        commandSuggestionHost.init(minecraft, canvasWidth, commandBoxY() + 12);
-        commandSuggestions = new CommandSuggestions(minecraft, commandSuggestionHost, commandBox, font, false, true, 0, 8, true, Integer.MIN_VALUE);
+        if (commandBox == null) return;
+        commandSuggestions = KineticCommandSuggestions.create(
+                commandBox,
+                canvasWidth(),
+                canvasHeight(),
+                KineticCommandSuggestions.Options.fieldAligned(false, true, 8, Integer.MIN_VALUE)
+        );
         commandSuggestions.setAllowSuggestions(true);
-        commandSuggestions.updateCommandInfo();
+        commandSuggestions.update();
     }
 
     private void onCommandEdited(String text) {
+        updateCommandSuggestions();
+    }
+
+    private void updateCommandSuggestions() {
         if (commandSuggestions == null) return;
         commandSuggestions.setAllowSuggestions(true);
-        commandSuggestions.updateCommandInfo();
+        commandSuggestions.update();
     }
 
     @Override
     protected void renderCanvasBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        ShopGuiSupport.renderBox(graphics, left, top, PANEL_WIDTH, PANEL_HEIGHT, ShopGuiSupport.PANEL_BG);
-        graphics.drawCenteredString(font, title, left + PANEL_WIDTH / 2, top + 10, ShopGuiSupport.GOLD);
+        GuiTheme.panel(graphics, left, top, PANEL_WIDTH, PANEL_HEIGHT);
+        graphics.drawCenteredString(font, title, left + PANEL_WIDTH / 2, top + 10, GuiTheme.current().text());
 
-        graphics.drawString(font, Component.translatable("gui.adventuresystems.curios.wallet.shop_command_icon_preview"), iconLabelX(), iconButtonY() + 6, ShopGuiSupport.CYAN, true);
-        renderIconButtonBackground(graphics, iconButtonX(), iconButtonY(), GuiTheme.hovering(mouseX, mouseY, iconButtonX(), iconButtonY(), ICON_BUTTON_SIZE, ICON_BUTTON_SIZE));
+        graphics.drawString(font, KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_command_icon_preview"), iconLabelX(), iconButtonY() + 6, GuiTheme.current().mutedText(), true);
+        GuiTheme.itemSlot(graphics, iconButtonX(), iconButtonY(), ICON_BUTTON_SIZE, 4, GuiTheme.hovering(mouseX, mouseY, iconButtonX(), iconButtonY(), ICON_BUTTON_SIZE, ICON_BUTTON_SIZE));
         graphics.renderItem(ShopGuiSupport.stack(iconId), iconPreviewX(), iconPreviewY());
-        graphics.drawString(font, Component.translatable("gui.adventuresystems.curios.wallet.shop_command_name"), nameLabelX(), nameBoxY() + 5, ShopGuiSupport.CYAN, true);
+        graphics.drawString(font, KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_command_name"), nameLabelX(), nameBoxY() + 5, GuiTheme.current().mutedText(), true);
 
-        graphics.drawString(font, Component.translatable("gui.adventuresystems.curios.wallet.shop_command_list"), listX(), listY() - 14, ShopGuiSupport.GOLD, true);
-        graphics.renderOutline(listX(), listY(), listW(), listH(), ShopGuiSupport.CYAN_DARK);
+        graphics.drawString(font, KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_command_list"), listX(), listY() - 14, GuiTheme.current().text(), true);
+        GuiTheme.panelAlt(graphics, listX(), listY(), listW(), listH());
         renderCommandGrid(graphics, mouseX, mouseY);
-        if (draft.commands.isEmpty()) graphics.drawCenteredString(font, Component.translatable("gui.adventuresystems.curios.wallet.shop_command_empty"), left + PANEL_WIDTH / 2, listY() + listH() / 2 - 4, ShopGuiSupport.TEXT_GRAY);
+        if (draft.commands.isEmpty()) {
+            graphics.drawCenteredString(font, KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_command_empty"), left + PANEL_WIDTH / 2, listY() + listH() / 2 - 4, GuiTheme.current().mutedText());
+        }
         renderScrollbar(graphics, mouseX, mouseY);
 
-        graphics.drawString(font, Component.translatable("gui.adventuresystems.curios.wallet.shop_command_text"), commandLabelX(), commandBoxY() + 5, ShopGuiSupport.CYAN, true);
-    }
-
-    private void renderIconButtonBackground(GuiGraphics graphics, int x, int y, boolean hover) {
-        GuiTheme.itemSlot(graphics, x, y, ICON_BUTTON_SIZE, 4, hover);
+        graphics.drawString(font, KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_command_text"), commandLabelX(), commandBoxY() + 5, GuiTheme.current().mutedText(), true);
     }
 
     private void renderCommandGrid(GuiGraphics graphics, int mouseX, int mouseY) {
@@ -270,39 +305,29 @@ final class CommandManageScreen extends KineticScreen {
         int start = firstRow * columns;
         int end = Math.min(draft.commands.size(), start + columns * (visibleGridRows() + 1));
         int usableRight = scrollbarVisible() ? scrollbarX() - 4 : listX() + listW() - 4;
-                enableCanvasScissor(graphics, listX(), listY(), listX() + listW(), listY() + listH());
+        enableCanvasScissor(graphics, listX(), listY(), listX() + listW(), listY() + listH());
         try {
-for (int i = start; i < end; i++) {
-            int local = i - start;
-            int col = local % columns;
-            int row = local / columns;
-            int x = listX() + 4 + col * (GRID_CELL + GRID_GAP);
-            int y = listY() + 4 + row * (GRID_CELL + GRID_GAP) - shift;
-            if (x + GRID_CELL > usableRight) continue;
-            boolean hover = GuiTheme.hovering(mouseX, mouseY, x, y, GRID_CELL, GRID_CELL);
-            boolean selected = i == selectedIndex;
-            ItemStack icon = ShopGuiSupport.stack(draft.commands.get(i).iconId());
-            GuiTheme.itemSlot(graphics, icon, x, y, GRID_CELL, 4, hover);
-            if (selected) {
-                graphics.renderOutline(x, y, GRID_CELL, GRID_CELL, ShopGuiSupport.CYAN);
+            for (int i = start; i < end; i++) {
+                int local = i - start;
+                int col = local % columns;
+                int row = local / columns;
+                int x = listX() + 4 + col * (GRID_CELL + GRID_GAP);
+                int y = listY() + 4 + row * (GRID_CELL + GRID_GAP) - shift;
+                if (x + GRID_CELL > usableRight) continue;
+                boolean hover = GuiTheme.hovering(mouseX, mouseY, x, y, GRID_CELL, GRID_CELL);
+                boolean selected = i == selectedIndex;
+                ItemStack icon = ShopGuiSupport.stack(draft.commands.get(i).iconId());
+                GuiTheme.itemSlot(graphics, x, y, GRID_CELL, GRID_CELL, 4, selected, hover, false);
+                graphics.renderItem(icon, x + 4, y + 4);
             }
-            graphics.renderItem(icon, x + 4, y + 4);
-        }
         } finally {
-            graphics.disableScissor();
+            disableCanvasScissor(graphics);
         }
     }
 
-    private void renderScrollbar(
-            GuiGraphics graphics,
-            int mouseX,
-            int mouseY
-    ) {
-        gridScroll.update(
-                totalGridRows(),
-                visibleGridRows()
-        );
-
+    private void renderScrollbar(GuiGraphics graphics, int mouseX, int mouseY) {
+        gridScroll.update(totalGridRows(), visibleGridRows());
+        if (!gridScroll.canScroll()) return;
         gridScroll.render(
                 graphics,
                 mouseX,
@@ -311,16 +336,13 @@ for (int i = start; i < end; i++) {
                 listY(),
                 SCROLLBAR_WIDTH,
                 listH(),
-                MIN_THUMB_HEIGHT,
-                ShopGuiSupport.SCROLLBAR_TRACK,
-                ShopGuiSupport.SCROLLBAR_THUMB,
-                ShopGuiSupport.SCROLLBAR_HOVER
+                MIN_THUMB_HEIGHT
         );
     }
 
     @Override
     protected void renderCanvasForeground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        if (commandSuggestions == null || commandBox == null || !commandBox.isFocused()) return;
+        if (commandSuggestions == null || commandBox == null || !isControlFocused(commandBox)) return;
         graphics.pose().pushPose();
         graphics.pose().translate(0, 0, 500);
         commandSuggestions.render(graphics, mouseX, mouseY);
@@ -329,59 +351,49 @@ for (int i = start; i < end; i++) {
 
     @Override
     protected void renderTooltips(GuiGraphics graphics, int scaledMouseX, int scaledMouseY, int rawMouseX, int rawMouseY) {
+        if (saveButton != null && GuiTheme.hovering(scaledMouseX, scaledMouseY, saveButton.getX(), saveButton.getY(), saveButton.getWidth(), saveButton.getHeight())) {
+            KineticOverlays.requestTooltip(List.of(saveButtonTooltip()), rawMouseX, rawMouseY);
+            return;
+        }
         int index = commandIndexAt(scaledMouseX, scaledMouseY);
         if (index < 0 || index >= draft.commands.size()) return;
         ShopGuiSupport.CommandDraft command = draft.commands.get(index);
         List<FormattedCharSequence> lines = new ArrayList<>();
         String name = command.displayName() == null || command.displayName().isBlank()
-                ? Component.translatable("gui.adventuresystems.curios.wallet.shop_command_empty_name").getString()
+                ? KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_command_empty_name").getString()
                 : command.displayName();
-        lines.addAll(font.split(Component.literal(name).withStyle(ChatFormatting.GOLD), 280));
-        lines.addAll(font.split(Component.literal(commandInputText(command.command())).withStyle(ChatFormatting.GRAY), 280));
-        GuiOverlay.requestFormattedTooltip(lines, rawMouseX, rawMouseY);
+        lines.addAll(font.split(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_command_tooltip_name", name), 280));
+        lines.addAll(font.split(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_command_tooltip_command", commandInputText(command.command())), 280));
+        KineticOverlays.requestFormattedTooltip(lines, rawMouseX, rawMouseY);
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+    protected boolean canvasKeyPressed(int keyCode, int scanCode, int modifiers) {
         if (commandSuggestions != null) {
             commandSuggestions.setAllowSuggestions(true);
-            commandSuggestions.updateCommandInfo();
+            commandSuggestions.update();
             if (commandSuggestions.keyPressed(keyCode, scanCode, modifiers)) return true;
         }
-        return super.keyPressed(keyCode, scanCode, modifiers);
+        return false;
     }
 
     @Override
     protected boolean canvasMouseClicked(double mouseX, double mouseY, int button) {
         if (commandSuggestions != null && commandSuggestions.mouseClicked(mouseX, mouseY, button)) return true;
-        gridScroll.update(
-                totalGridRows(),
-                visibleGridRows()
-        );
-
-        if (button == 0
-                && gridScroll.beginDrag(
-                        mouseX,
-                        mouseY,
-                        scrollbarX(),
-                        listY(),
-                        SCROLLBAR_WIDTH,
-                        listH(),
-                        MIN_THUMB_HEIGHT,
-                        2
-                )) {
+        gridScroll.update(totalGridRows(), visibleGridRows());
+        if (KineticMouseButtons.isPrimary(button) && gridScroll.beginDrag(mouseX, mouseY, scrollbarX(), listY(), SCROLLBAR_WIDTH, listH(), MIN_THUMB_HEIGHT, 2)) {
             return true;
         }
         if (super.canvasMouseClicked(mouseX, mouseY, button)) return true;
         if (!GuiTheme.hovering(mouseX, mouseY, listX(), listY(), listW(), listH())) return false;
         int index = commandIndexAt((int) mouseX, (int) mouseY);
         if (index < 0 || index >= draft.commands.size()) return false;
-        if (button == 0) {
+        if (KineticMouseButtons.isPrimary(button)) {
             selectedIndex = index;
             loadSelectedIntoEditor();
             return true;
         }
-        if (button == 1) {
+        if (KineticMouseButtons.isSecondary(button)) {
             draft.commands.remove(index);
             if (selectedIndex == index) clearEditor();
             else if (selectedIndex > index) selectedIndex--;
@@ -404,77 +416,36 @@ for (int i = start; i < end; i++) {
     }
 
     @Override
-    protected boolean canvasMouseDragged(
-            double mouseX,
-            double mouseY,
-            int button,
-            double dragX,
-            double dragY
-    ) {
-        if (gridScroll.drag(
-                mouseY,
-                listY(),
-                listH(),
-                MIN_THUMB_HEIGHT
-        )) {
-            return true;
-        }
-
-        return super.canvasMouseDragged(
-                mouseX,
-                mouseY,
-                button,
-                dragX,
-                dragY
-        );
+    protected boolean canvasMouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        if (gridScroll.drag(mouseY, listY(), listH(), MIN_THUMB_HEIGHT)) return true;
+        return super.canvasMouseDragged(mouseX, mouseY, button, dragX, dragY);
     }
 
     @Override
-    protected boolean canvasMouseReleased(
-            double mouseX,
-            double mouseY,
-            int button
-    ) {
+    protected boolean canvasMouseReleased(double mouseX, double mouseY, int button) {
         if (gridScroll.release(button)) return true;
         return super.canvasMouseReleased(mouseX, mouseY, button);
     }
 
     @Override
-    protected boolean canvasMouseScrolled(
-            double mouseX,
-            double mouseY,
-            double delta
-    ) {
-        if (commandSuggestions != null
-                && commandBox != null
-                && commandBox.isFocused()
-                && commandSuggestions.mouseScrolled(
-                        Mth.clamp(delta, -1.0, 1.0)
-                )) {
+    protected boolean canvasMouseScrolled(double mouseX, double mouseY, double delta) {
+        if (commandSuggestions != null && isControlFocused(commandBox) && commandSuggestions.mouseScrolled(Mth.clamp(delta, -1.0, 1.0))) {
             return true;
         }
-
-        if (!GuiTheme.hovering(
-                mouseX,
-                mouseY,
-                listX(),
-                listY(),
-                listW(),
-                listH()
-        )) {
-            return super.canvasMouseScrolled(
-                    mouseX,
-                    mouseY,
-                    delta
-            );
+        if (!GuiTheme.hovering(mouseX, mouseY, listX(), listY(), listW(), listH())) {
+            return super.canvasMouseScrolled(mouseX, mouseY, delta);
         }
-
-        gridScroll.update(
-                totalGridRows(),
-                visibleGridRows()
-        );
-
+        gridScroll.update(totalGridRows(), visibleGridRows());
         return gridScroll.scroll(delta);
     }
-}
 
+    @Override
+    protected boolean handleCloseRequest() {
+        returnToParent();
+        return true;
+    }
+
+    private void returnToParent() {
+        navigateBack();
+    }
+}

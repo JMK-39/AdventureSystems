@@ -1,5 +1,7 @@
 package dev.xyat.adventuresystems.curios.paradiselost.data;
 
+import javax.annotation.Nonnull;
+
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
@@ -101,7 +103,7 @@ public class ParadiseLostSavedData extends SavedData {
      * 保存数据到 NBT
      */
     @Override
-    public @NotNull CompoundTag save(CompoundTag nbt) {
+    public @NotNull CompoundTag save(@Nonnull CompoundTag nbt) {
         CompoundTag maps = new CompoundTag();
         playerDataMap.forEach((uuid, playerData) -> maps.put(uuid.toString(), playerData.save()));
         nbt.put("PlayerData", maps);

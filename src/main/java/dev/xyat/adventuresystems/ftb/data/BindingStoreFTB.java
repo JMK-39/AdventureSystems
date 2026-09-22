@@ -1,11 +1,13 @@
 package dev.xyat.adventuresystems.ftb.data;
 
+import dev.xyat.kineticcore.api.registry.KineticRegistries;
+import dev.xyat.kineticcore.api.resource.KineticResourceIds;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import dev.xyat.adventuresystems.ftb.FtbModule;
 import dev.xyat.adventuresystems.ftb.util.QuestMatchCacheFTB;
-import net.minecraft.client.Minecraft;
+import dev.xyat.kineticcore.api.runtime.KineticPaths;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -13,12 +15,7 @@ import net.minecraft.nbt.TagParser;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.registries.ForgeRegistries;
 
-import java.io.Reader;
-import java.io.Writer;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -30,6 +27,7 @@ import java.util.Map;
 public final class BindingStoreFTB {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Map<String, ItemBindingEntryFTB> BINDINGS = new LinkedHashMap<>();
+    private static final String CONFIG_FILE = "kineticcore/ftb_item_quest_bindings.json";
     private static final Map<String, List<IndexedBinding>> ITEM_INDEX = new HashMap<>();
     private static final Map<String, List<IndexedBinding>> TAG_INDEX = new HashMap<>();
 
@@ -41,13 +39,10 @@ public final class BindingStoreFTB {
         ITEM_INDEX.clear();
         TAG_INDEX.clear();
 
-        Path path = getPath();
-        if (!Files.exists(path)) {
-            return;
-        }
-
-        try (Reader reader = Files.newBufferedReader(path)) {
-            JsonObject root = GSON.fromJson(reader, JsonObject.class);
+        try {
+            String content = String.join("\n", KineticPaths.readConfigLines(CONFIG_FILE));
+            if (content.isBlank()) return;
+            JsonObject root = GSON.fromJson(content, JsonObject.class);
             if (root == null || !root.has("entries") || !root.get("entries").isJsonArray()) {
                 return;
             }
@@ -61,7 +56,7 @@ public final class BindingStoreFTB {
                 putValidated(entry);
             }
         } catch (Exception e) {
-            FtbModule.LOGGER.error("[KT-FTB任务] 读取绑定文件失败: {}", path, e);
+            FtbModule.LOGGER.error("[KT-FTB任务] 读取绑定文件失败: {}", CONFIG_FILE, e);
         } finally {
             rebuildIndex();
         }
@@ -120,17 +115,13 @@ public final class BindingStoreFTB {
     }
 
     public static void save() {
-        Path path = getPath();
         try {
-            Files.createDirectories(path.getParent());
             JsonObject root = new JsonObject();
             root.addProperty("version", 2);
             root.add("entries", GSON.toJsonTree(new ArrayList<>(BINDINGS.values())));
-            try (Writer writer = Files.newBufferedWriter(path)) {
-                GSON.toJson(root, writer);
-            }
+            KineticPaths.writeConfigText(CONFIG_FILE, GSON.toJson(root));
         } catch (Exception e) {
-            FtbModule.LOGGER.error("[KT-FTB任务] 保存绑定文件失败: {}", path, e);
+            FtbModule.LOGGER.error("[KT-FTB任务] 保存绑定文件失败: {}", CONFIG_FILE, e);
         }
     }
 
@@ -310,7 +301,7 @@ public final class BindingStoreFTB {
 
     public static String itemKey(ItemStack stack) {
         if (stack == null || stack.isEmpty()) return "";
-        ResourceLocation id = ForgeRegistries.ITEMS.getKey(stack.getItem());
+        ResourceLocation id = KineticRegistries.items().id(stack.getItem());
         return id == null ? "" : id.toString();
     }
 
@@ -381,7 +372,7 @@ public final class BindingStoreFTB {
     public static boolean isValidItemId(String itemId) {
         if (itemId == null || itemId.isBlank()) return false;
         try {
-            new ResourceLocation(itemId.trim());
+            KineticResourceIds.parse(itemId.trim());
             return true;
         } catch (Throwable ignored) {
             return false;
@@ -391,7 +382,7 @@ public final class BindingStoreFTB {
     public static boolean isValidTagId(String tagId) {
         if (tagId == null || tagId.isBlank()) return false;
         try {
-            new ResourceLocation(tagId.trim());
+            KineticResourceIds.parse(tagId.trim());
             return true;
         } catch (Throwable ignored) {
             return false;
@@ -404,7 +395,7 @@ public final class BindingStoreFTB {
         if (value.startsWith("#")) {
             String tagId = value.substring(1);
             try {
-                ResourceLocation id = new ResourceLocation(tagId);
+                ResourceLocation id = KineticResourceIds.parse(tagId);
                 return stack.getTags().anyMatch(tag -> tag.location().equals(id));
             } catch (Throwable ignored) {
                 return false;
@@ -419,8 +410,8 @@ public final class BindingStoreFTB {
         ItemStack stack = ItemStack.EMPTY;
         try {
             if (value.startsWith("#")) {
-                ResourceLocation tagId = new ResourceLocation(value.substring(1));
-                for (Item item : ForgeRegistries.ITEMS.getValues()) {
+                ResourceLocation tagId = KineticResourceIds.parse(value.substring(1));
+                for (Item item : KineticRegistries.items().values()) {
                     ItemStack temp = new ItemStack(item);
                     if (temp.getTags().anyMatch(tag -> tag.location().equals(tagId))) {
                         stack = temp;
@@ -428,8 +419,8 @@ public final class BindingStoreFTB {
                     }
                 }
             } else {
-                ResourceLocation id = new ResourceLocation(value);
-                Item item = ForgeRegistries.ITEMS.getValue(id);
+                ResourceLocation id = KineticResourceIds.parse(value);
+                Item item = KineticRegistries.items().get(id);
                 if (item != null) stack = new ItemStack(item);
             }
         } catch (Throwable ignored) {
@@ -575,12 +566,6 @@ public final class BindingStoreFTB {
         return clean;
     }
 
-    private static Path getPath() {
-        return Minecraft.getInstance().gameDirectory.toPath()
-                .resolve("config")
-                .resolve("kineticcore")
-                .resolve("ftb_item_quest_bindings.json");
-    }
 
     public enum SaveResult {
         OK,

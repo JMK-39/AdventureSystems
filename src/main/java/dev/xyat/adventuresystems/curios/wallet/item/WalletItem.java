@@ -1,12 +1,13 @@
 package dev.xyat.adventuresystems.curios.wallet.item;
 
-import dev.xyat.adventuresystems.curios.util.ColorText;
+import dev.xyat.kineticcore.api.text.KineticI18n;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import dev.xyat.adventuresystems.curios.wallet.client.Client;
 import dev.xyat.adventuresystems.curios.config.CuriosConfig;
 import dev.xyat.adventuresystems.curios.wallet.network.Network;
 import dev.xyat.adventuresystems.curios.wallet.data.Data;
+import dev.xyat.kineticcore.api.runtime.KineticPlatform;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
@@ -19,8 +20,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Rarity;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.fml.DistExecutor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import top.theillusivec4.curios.api.CuriosApi;
@@ -63,23 +62,23 @@ public class WalletItem extends Item implements ICurioItem {
 
     @Override
     public void appendHoverText(@NotNull ItemStack stack, @Nullable Level level, @NotNull List<Component> tooltip, @NotNull TooltipFlag flag) {
-        tooltip.add(ColorText.translatable("tip.adventuresystems.curios.wallet.title"));
-        tooltip.add(ColorText.translatable("tip.adventuresystems.curios.wallet.desc1", openKeyName(level)));
-        tooltip.add(ColorText.translatable("tip.adventuresystems.curios.wallet.desc2"));
-        tooltip.add(ColorText.translatable("tip.adventuresystems.curios.wallet.desc3", Long.toString(Math.round(CuriosConfig.walletMagnetRange))));
+        tooltip.add(KineticI18n.translatable("tip.adventuresystems.curios.wallet.title"));
+        tooltip.add(KineticI18n.translatable("tip.adventuresystems.curios.wallet.desc1", openKeyName(level)));
+        tooltip.add(KineticI18n.translatable("tip.adventuresystems.curios.wallet.desc2"));
+        tooltip.add(KineticI18n.translatable("tip.adventuresystems.curios.wallet.desc3", Long.toString(Math.round(CuriosConfig.walletMagnetRange))));
         appendClientAmounts(stack, level, tooltip);
     }
 
     private String openKeyName(@Nullable Level level) {
         if (level == null || !level.isClientSide) return "U";
-        String name = DistExecutor.unsafeCallWhenOn(Dist.CLIENT, () -> Client::openKeyName);
+        String name = KineticPlatform.callOnClient(() -> Client::openKeyName, "U");
         if (name == null || name.isEmpty()) return "U";
         return name;
     }
 
     private void appendClientAmounts(@NotNull ItemStack stack, @Nullable Level level, @NotNull List<Component> tooltip) {
         if (level == null || !level.isClientSide) return;
-        DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> Client.appendWalletTooltip(stack, tooltip));
+        KineticPlatform.runOnClient(() -> () -> Client.appendWalletTooltip(stack, tooltip));
     }
 }
 

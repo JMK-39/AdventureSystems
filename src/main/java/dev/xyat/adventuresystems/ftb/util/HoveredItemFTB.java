@@ -1,12 +1,12 @@
 package dev.xyat.adventuresystems.ftb.util;
 
+import dev.xyat.kineticcore.api.runtime.KineticPlatform;
 import dev.xyat.adventuresystems.ftb.mixin.client.AbstractContainerScreenAccessor;
-import net.minecraft.client.Minecraft;
+import dev.xyat.kineticcore.api.runtime.KineticClientRuntime;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.fml.ModList;
 
 public final class HoveredItemFTB {
     private static final long TOOLTIP_CACHE_MS = 1000L;
@@ -26,16 +26,15 @@ public final class HoveredItemFTB {
             return;
         }
 
-        Minecraft mc = Minecraft.getInstance();
-        if (mc.screen == null) {
-            return;
-        }
+        Screen screen = KineticClientRuntime.currentScreen();
+        if (screen == null) return;
+        KineticClientRuntime.CursorPosition mouse = KineticClientRuntime.scaledCursorPosition();
 
         lastTooltipStack = stack.copy();
-        lastTooltipScreen = mc.screen;
+        lastTooltipScreen = screen;
         lastTooltipTime = System.currentTimeMillis();
-        lastTooltipMouseX = scaledMouseX(mc);
-        lastTooltipMouseY = scaledMouseY(mc);
+        lastTooltipMouseX = mouse.x();
+        lastTooltipMouseY = mouse.y();
     }
 
     public static ItemStack getHoveredStack(Screen screen) {
@@ -58,7 +57,7 @@ public final class HoveredItemFTB {
     }
 
     private static ItemStack getJeiHoveredStack() {
-        if (!ModList.get().isLoaded("jei")) {
+        if (!KineticPlatform.isModLoaded("jei")) {
             return ItemStack.EMPTY;
         }
 
@@ -79,9 +78,9 @@ public final class HoveredItemFTB {
             return ItemStack.EMPTY;
         }
 
-        Minecraft mc = Minecraft.getInstance();
-        double mouseX = scaledMouseX(mc);
-        double mouseY = scaledMouseY(mc);
+        KineticClientRuntime.CursorPosition mouse = KineticClientRuntime.scaledCursorPosition();
+        double mouseX = mouse.x();
+        double mouseY = mouse.y();
 
         if (Math.abs(mouseX - lastTooltipMouseX) > TOOLTIP_MOUSE_TOLERANCE || Math.abs(mouseY - lastTooltipMouseY) > TOOLTIP_MOUSE_TOLERANCE) {
             return ItemStack.EMPTY;
@@ -116,10 +115,9 @@ public final class HoveredItemFTB {
     }
 
     private static Slot findSlotByMouse(AbstractContainerScreen<?> screen, AbstractContainerScreenAccessor accessor) {
-        Minecraft mc = Minecraft.getInstance();
-
-        double mouseX = scaledMouseX(mc);
-        double mouseY = scaledMouseY(mc);
+        KineticClientRuntime.CursorPosition mouse = KineticClientRuntime.scaledCursorPosition();
+        double mouseX = mouse.x();
+        double mouseY = mouse.y();
 
         int left = accessor.adventuresystems_ftb$getLeftPos();
         int top = accessor.adventuresystems_ftb$getTopPos();
@@ -138,13 +136,6 @@ public final class HoveredItemFTB {
         return null;
     }
 
-    private static double scaledMouseX(Minecraft mc) {
-        return mc.mouseHandler.xpos() * (double) mc.getWindow().getGuiScaledWidth() / (double) mc.getWindow().getScreenWidth();
-    }
-
-    private static double scaledMouseY(Minecraft mc) {
-        return mc.mouseHandler.ypos() * (double) mc.getWindow().getGuiScaledHeight() / (double) mc.getWindow().getScreenHeight();
-    }
 
     private static boolean isValidSlot(Slot slot) {
         return slot != null && slot.isActive() && slot.hasItem() && !slot.getItem().isEmpty();

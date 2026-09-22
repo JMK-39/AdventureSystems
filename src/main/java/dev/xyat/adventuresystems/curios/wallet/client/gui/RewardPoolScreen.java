@@ -1,29 +1,27 @@
 package dev.xyat.adventuresystems.curios.wallet.client.gui;
 
-import dev.xyat.adventuresystems.curios.util.ColorText;
 import dev.xyat.adventuresystems.curios.wallet.shop.Shop;
+import dev.xyat.kineticcore.api.client.input.KineticMouseButtons;
 import dev.xyat.kineticcore.api.client.theme.GuiTheme;
-import dev.xyat.kineticcore.api.client.overlay.GuiOverlay;
-import dev.xyat.kineticcore.api.client.selector.ItemSelectorScreen;
+import dev.xyat.kineticcore.api.client.overlay.KineticOverlays;
+import dev.xyat.kineticcore.api.client.selector.KineticSelectors;
 import dev.xyat.kineticcore.api.client.screen.KineticScreen;
-import dev.xyat.kineticcore.api.client.widget.KineticWidgets.GridScrollController;
-import dev.xyat.kineticcore.api.client.widget.KineticWidgets.NumericEditBox;
+import dev.xyat.kineticcore.api.client.widget.scroll.KineticScroll.GridScrollController;
+import dev.xyat.kineticcore.api.client.widget.input.KineticNumericFields.NumericEditBox;
+import dev.xyat.kineticcore.api.client.widget.input.KineticTextFields.KineticEditBox;
+import dev.xyat.kineticcore.api.client.widget.button.KineticButtons.StateButton;
+import dev.xyat.kineticcore.api.runtime.KineticClientRuntime;
+import dev.xyat.kineticcore.api.text.KineticI18n;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import net.minecraft.ChatFormatting;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
 import org.jetbrains.annotations.NotNull;
+import dev.xyat.kineticcore.api.client.widget.KineticControl;
 
-@OnlyIn(Dist.CLIENT)
 final class RewardPoolScreen extends KineticScreen {
     private static final int PANEL_WIDTH = 640;
     private static final int PANEL_HEIGHT = 392;
@@ -34,16 +32,18 @@ final class RewardPoolScreen extends KineticScreen {
     private final ShopGuiSupport.EditorDraft draft;
     private final List<NumericEditBox> countBoxes = new ArrayList<>();
     private final List<NumericEditBox> weightBoxes = new ArrayList<>();
-    private EditBox rewardNameBox;
-    private EditBox rewardCommandBox;
+    private final List<StateButton> deleteButtons = new ArrayList<>();
+    private KineticEditBox rewardNameBox;
+    private KineticEditBox rewardCommandBox;
     private int selectedIndex = -1;
     private int left;
     private int top;
     private final GridScrollController listScroll = new GridScrollController();
 
     RewardPoolScreen(Screen parent, ShopGuiSupport.EditorDraft draft) {
-        super(ColorText.translatable(titleKey(draft)));
+        super(KineticI18n.translatable(titleKey(draft)));
         this.parent = parent;
+        setParentScreen(parent);
         this.draft = draft;
         useCanvas(
                 680f,
@@ -54,83 +54,111 @@ final class RewardPoolScreen extends KineticScreen {
 
     @Override
     protected void buildUi() {
-        left = (canvasWidth - PANEL_WIDTH) / 2;
-        top = (canvasHeight - PANEL_HEIGHT) / 2;
-        addRenderableWidget(Button.builder(ColorText.translatable(addItemButtonKey()), button -> openItemSelector()).bounds(left + 14, top + 52, 104, 20).build());
+        left = (canvasWidth() - PANEL_WIDTH) / 2;
+        top = (canvasHeight() - PANEL_HEIGHT) / 2;
+        addButton(left + 14, top + 52, 104, KineticI18n.translatable(addItemButtonKey()), null, this::openItemSelector);
         if (!sellMode()) {
-            addRenderableWidget(Button.builder(ColorText.translatable("gui.adventuresystems.curios.wallet.shop_command_add_reward"), button -> openCommandRewardPicker()).bounds(left + 124, top + 52, 112, 20).build());
+            addButton(left + 124, top + 52, 112, KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_command_add_reward"), null, this::openCommandRewardPicker);
         }
         if (gachaMode()) {
-            addRenderableWidget(Button.builder(ColorText.translatable("gui.adventuresystems.curios.wallet.shop_reward_add_empty"), button -> addEmptyReward()).bounds(left + 242, top + 52, 96, 20).build());
-            addRenderableWidget(Button.builder(ColorText.translatable("gui.adventuresystems.curios.wallet.shop_reward_clear"), button -> { draft.rewards.clear(); rebuildRewardWidgets(); }).bounds(left + 344, top + 52, 66, 20).build());
+            addButton(left + 242, top + 52, 96, KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_reward_add_empty"), null, this::addEmptyReward);
+            addButton(left + 344, top + 52, 66, KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_reward_clear"), null, () -> {
+                draft.rewards.clear();
+                rebuildRewardWidgets();
+            });
         } else {
-            addRenderableWidget(Button.builder(ColorText.translatable("gui.adventuresystems.curios.wallet.shop_reward_clear"), button -> { draft.rewards.clear(); rebuildRewardWidgets(); }).bounds(left + (sellMode() ? 124 : 242), top + 52, 78, 20).build());
+            addButton(left + (sellMode() ? 124 : 242), top + 52, 78, KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_reward_clear"), null, () -> {
+                draft.rewards.clear();
+                rebuildRewardWidgets();
+            });
         }
-        addRenderableWidget(Button.builder(ColorText.translatable("gui.done"), button -> finish()).bounds(left + PANEL_WIDTH - 96, top + 52, 82, 20).build());
+        addButton(left + PANEL_WIDTH - 96, top + 52, 82, KineticI18n.translatable("gui.done"), null, this::finish);
 
-        rewardNameBox = new EditBox(font, listX() + 92, rewardNameInputY(), 216, 18, ColorText.translatable("gui.adventuresystems.curios.wallet.shop_reward_display_name_label"));
+        rewardNameBox = addTextField(
+                listX() + 92,
+                rewardNameInputY(),
+                216,
+                KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_reward_display_name_label"),
+                KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_reward_display_name_label"),
+                null,
+                null
+        );
         rewardNameBox.setMaxLength(64);
         rewardNameBox.setResponder(this::updateSelectedRewardName);
-        addRenderableWidget(rewardNameBox);
 
-        rewardCommandBox = new EditBox(font, listX() + 92, rewardCommandInputY(), listW() - 104, 18, ColorText.translatable("gui.adventuresystems.curios.wallet.shop_reward_command_label"));
+        rewardCommandBox = addTextField(
+                listX() + 92,
+                rewardCommandInputY(),
+                listW() - 104,
+                KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_reward_command_label"),
+                KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_reward_command_label"),
+                null,
+                null
+        );
         rewardCommandBox.setMaxLength(512);
-        rewardCommandBox.visible = false;
-        rewardCommandBox.active = false;
-        addRenderableWidget(rewardCommandBox);
+        rewardCommandBox.setVisible(false);
+        rewardCommandBox.setEnabled(false);
 
         rebuildDraftInputs();
         updateRewardDetailBoxes();
     }
 
     private void rebuildRewardWidgets() {
-        clearWidgets();
-        buildUi();
+        rebuildUi();
     }
 
     private void rebuildDraftInputs() {
         countBoxes.clear();
         weightBoxes.clear();
+        deleteButtons.clear();
         for (int i = 0; i < draft.rewards.size(); i++) {
             final int index = i;
-            ShopGuiSupport.RewardDraft r = draft.rewards.get(i);
-            NumericEditBox countBox = NumericEditBox.integer(
-                    font,
+            ShopGuiSupport.RewardDraft reward = draft.rewards.get(i);
+            NumericEditBox countBox = addIntegerField(
                     0,
                     0,
                     42,
-                    18,
                     Component.empty(),
                     false,
                     1,
-                    64
+                    64,
+                    null
             );
             countBox.setMaxLength(2);
-            countBox.setIntValue(Math.max(1, r.count()));
+            countBox.setIntValue(Math.max(1, reward.count()));
             countBox.setResponder(text -> updateDraftCountFromInput(index, text));
-            countBox.visible = false;
-            countBox.active = false;
+            countBox.setVisible(false);
+            countBox.setEnabled(false);
             countBoxes.add(countBox);
-            addRenderableWidget(countBox);
 
-            NumericEditBox weightBox = NumericEditBox.integer(
-                    font,
+            NumericEditBox weightBox = addIntegerField(
                     0,
                     0,
                     58,
-                    18,
                     Component.empty(),
                     false,
                     1,
-                    999999999
+                    999999999,
+                    null
             );
             weightBox.setMaxLength(9);
-            weightBox.setIntValue(Math.max(1, r.weight()));
+            weightBox.setIntValue(Math.max(1, reward.weight()));
             weightBox.setResponder(text -> updateDraftWeightFromInput(index, text));
-            weightBox.visible = false;
-            weightBox.active = false;
+            weightBox.setVisible(false);
+            weightBox.setEnabled(false);
             weightBoxes.add(weightBox);
-            addRenderableWidget(weightBox);
+
+            StateButton deleteButton = addCompactButton(
+                    0,
+                    0,
+                    38,
+                    KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_reward_delete_short"),
+                    KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_reward_tooltip_delete"),
+                    () -> deleteReward(index)
+            );
+            setControlVisible(deleteButton, false);
+            setControlEnabled(deleteButton, false);
+            deleteButtons.add(deleteButton);
         }
         recalc();
         updateDraftInputPositions();
@@ -144,16 +172,21 @@ final class RewardPoolScreen extends KineticScreen {
             int y = listY() + (i - first) * ROW_HEIGHT - shift + 4;
             boolean visible = i >= first && i <= first + visibleRows();
             ShopGuiSupport.RewardDraft r = draft.rewards.get(i);
-            EditBox countBox = countBoxes.get(i);
+            NumericEditBox countBox = countBoxes.get(i);
             countBox.setX(listX() + 264);
             countBox.setY(y);
-            countBox.visible = visible && !r.empty();
-            countBox.active = visible && !r.empty();
-            EditBox weightBox = weightBoxes.get(i);
+            countBox.setVisible(visible && !r.empty());
+            countBox.setEnabled(visible && !r.empty());
+            NumericEditBox weightBox = weightBoxes.get(i);
             weightBox.setX(listX() + 338);
             weightBox.setY(y);
-            weightBox.visible = visible && gachaMode();
-            weightBox.active = visible && gachaMode();
+            weightBox.setVisible(visible && gachaMode());
+            weightBox.setEnabled(visible && gachaMode());
+            StateButton deleteButton = deleteButtons.get(i);
+            deleteButton.setX(deleteX());
+            deleteButton.setY(y);
+            setControlVisible(deleteButton, visible);
+            setControlEnabled(deleteButton, visible);
         }
     }
 
@@ -196,32 +229,39 @@ final class RewardPoolScreen extends KineticScreen {
     }
 
     private void openItemSelector() {
-        Minecraft.getInstance().setScreen(new ItemSelectorScreen(this, selection -> {
+        KineticSelectors.openItemSelector(this, selection -> {
             if (!selection.isItem()) return;
             ItemStack stack = selection.stack();
             String spec = ShopGuiSupport.selectedStackSpec(stack);
             if (!spec.isBlank()) {
-                draft.rewards.add(new ShopGuiSupport.RewardDraft(spec, Math.max(1, Math.min(64, stack.getCount())), gachaMode() ? 10 : 1, false, 0.0D, "", ""));
+                draft.rewards.add(new ShopGuiSupport.RewardDraft(
+                        spec,
+                        Math.max(1, Math.min(64, stack.getCount())),
+                        gachaMode() ? 10 : 1,
+                        false,
+                        0.0D,
+                        "",
+                        ""
+                ));
                 selectedIndex = draft.rewards.size() - 1;
                 rebuildRewardWidgets();
             }
-        }));
+        });
     }
-
 
     private void openCommandRewardPicker() {
         syncSelectedRewardFromDetailBoxes();
         syncDraftsFromInputs();
-        Minecraft.getInstance().setScreen(new CommandRewardPickerScreen(this, draft, gachaMode()));
+        KineticClientRuntime.openScreen(new CommandRewardPickerScreen(this, draft, gachaMode()));
     }
     private void addEmptyReward() {
         if (!gachaMode()) {
-            GuiOverlay.toast("currency_wallet_choice_no_empty", ColorText.translatable(choiceMode() ? "msg.adventuresystems.curios.wallet.shop_choice_no_empty" : "msg.adventuresystems.curios.wallet.shop_sell_choice_no_empty"), GuiOverlay.Position.BOTTOM_CENTER, 2200, 0, -30);
+            KineticOverlays.toast("currency_wallet_choice_no_empty", KineticI18n.translatable(choiceMode() ? "msg.adventuresystems.curios.wallet.shop_choice_no_empty" : "msg.adventuresystems.curios.wallet.shop_sell_choice_no_empty"), KineticOverlays.Position.BOTTOM_CENTER, 2200, 0, -30);
             return;
         }
         for (ShopGuiSupport.RewardDraft r : draft.rewards) {
             if (r.empty()) {
-                GuiOverlay.toast("currency_wallet_reward_empty_exists", ColorText.translatable("msg.adventuresystems.curios.wallet.shop_empty_reward_exists"), GuiOverlay.Position.BOTTOM_CENTER, 2200, 0, -30);
+                KineticOverlays.toast("currency_wallet_reward_empty_exists", KineticI18n.translatable("msg.adventuresystems.curios.wallet.shop_empty_reward_exists"), KineticOverlays.Position.BOTTOM_CENTER, 2200, 0, -30);
                 return;
             }
         }
@@ -250,29 +290,29 @@ final class RewardPoolScreen extends KineticScreen {
     private void finish() {
         syncSelectedRewardFromDetailBoxes();
         syncDraftsFromInputs();
-        Minecraft.getInstance().setScreen(parent);
+        navigateBack();
     }
 
     @Override
     public void renderCanvasBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        ShopGuiSupport.renderBox(graphics, left, top, PANEL_WIDTH, PANEL_HEIGHT, 0xFF101010);
-        graphics.drawCenteredString(font, title, left + PANEL_WIDTH / 2, top + 8, ShopGuiSupport.GOLD);
-        graphics.drawString(font, ColorText.translatable(primaryHintKey()), left + 14, top + 27, ShopGuiSupport.CYAN, true);
-        graphics.drawString(font, ColorText.translatable(secondaryHintKey()), left + 14, top + 39, ShopGuiSupport.TEXT_GRAY, true);
+        GuiTheme.panel(graphics, left, top, PANEL_WIDTH, PANEL_HEIGHT);
+        graphics.drawCenteredString(font, title, left + PANEL_WIDTH / 2, top + 8, GuiTheme.current().text());
+        graphics.drawString(font, KineticI18n.translatable(primaryHintKey()), left + 14, top + 27, GuiTheme.current().text(), true);
+        graphics.drawString(font, KineticI18n.translatable(secondaryHintKey()), left + 14, top + 39, GuiTheme.current().mutedText(), true);
         updateDraftInputPositions();
 
-        graphics.drawString(font, ColorText.translatable("gui.adventuresystems.curios.wallet.shop_reward_column_name"), listX() + 6, listY() - 13, ShopGuiSupport.TEXT_GRAY, true);
-        graphics.drawString(font, ColorText.translatable("gui.adventuresystems.curios.wallet.shop_reward_column_count"), listX() + 264, listY() - 13, ShopGuiSupport.TEXT_GRAY, true);
+        graphics.drawString(font, KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_reward_column_name"), listX() + 6, listY() - 13, GuiTheme.current().mutedText(), true);
+        graphics.drawString(font, KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_reward_column_count"), listX() + 264, listY() - 13, GuiTheme.current().mutedText(), true);
         if (gachaMode()) {
-            graphics.drawString(font, ColorText.translatable("gui.adventuresystems.curios.wallet.shop_reward_column_weight"), listX() + 338, listY() - 13, ShopGuiSupport.TEXT_GRAY, true);
-            graphics.drawString(font, ColorText.translatable("gui.adventuresystems.curios.wallet.shop_reward_column_chance"), listX() + 416, listY() - 13, ShopGuiSupport.TEXT_GRAY, true);
+            graphics.drawString(font, KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_reward_column_weight"), listX() + 338, listY() - 13, GuiTheme.current().mutedText(), true);
+            graphics.drawString(font, KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_reward_column_chance"), listX() + 416, listY() - 13, GuiTheme.current().mutedText(), true);
         } else {
-            graphics.drawString(font, ColorText.translatable("gui.adventuresystems.curios.wallet.shop_choice_column_note"), listX() + 338, listY() - 13, ShopGuiSupport.TEXT_GRAY, true);
+            graphics.drawString(font, KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_choice_column_note"), listX() + 338, listY() - 13, GuiTheme.current().mutedText(), true);
         }
-        graphics.renderOutline(listX(), listY(), listW(), listH(), ShopGuiSupport.CYAN_DARK);
+        GuiTheme.panelAlt(graphics, listX(), listY(), listW(), listH());
 
         if (draft.rewards.isEmpty()) {
-            graphics.drawCenteredString(font, ColorText.translatable(emptyListKey()), left + PANEL_WIDTH / 2, listY() + listH() / 2 - 4, ShopGuiSupport.RED);
+            graphics.drawCenteredString(font, KineticI18n.translatable(emptyListKey()), left + PANEL_WIDTH / 2, listY() + listH() / 2 - 4, GuiTheme.current().text());
             return;
         }
         listScroll.update(draft.rewards.size(), visibleRows());
@@ -283,7 +323,7 @@ for (int i = start; i < Math.min(draft.rewards.size(), start + visibleRows() + 1
             renderRewardRow(graphics, mouseX, mouseY, i);
         }
         } finally {
-            graphics.disableScissor();
+            disableCanvasScissor(graphics);
         }
         renderScrollbar(graphics, mouseX, mouseY);
     }
@@ -293,30 +333,35 @@ for (int i = start; i < Math.min(draft.rewards.size(), start + visibleRows() + 1
         int contentW = listW() - scrollbarReserve();
         ShopGuiSupport.RewardDraft r = draft.rewards.get(index);
         boolean hover = GuiTheme.hovering(mouseX, mouseY, listX(), y, contentW, ROW_HEIGHT);
-        graphics.fill(listX() + 1, y + 1, listX() + contentW - 1, y + ROW_HEIGHT - 1, hover ? ShopGuiSupport.ROW_HOVER : ShopGuiSupport.ROW_BG);
-        if (index == selectedIndex) graphics.renderOutline(listX(), y, contentW, ROW_HEIGHT, ShopGuiSupport.CYAN);
+        GuiTheme.stateSurface(
+                graphics,
+                listX() + 1,
+                y + 1,
+                contentW - 2,
+                ROW_HEIGHT - 2,
+                GuiTheme.Surface.PANEL_ALT,
+                index == selectedIndex,
+                hover,
+                false
+        );
         if (!r.empty()) {
             ItemStack stack = ShopGuiSupport.stack(r.itemId());
-            GuiTheme.itemSlot(graphics, stack, listX() + 5, y + 4, 18, 4, hover);
+            GuiTheme.itemSlot(graphics, listX() + 5, y + 4, 18, 4, hover);
             graphics.renderItem(stack, listX() + 6, y + 5);
         }
         String name = rewardDisplayName(r);
         int nameX = r.empty() ? listX() + 8 : listX() + 28;
-        int nameColor = r.empty() ? ShopGuiSupport.CYAN : r.command().isBlank() ? ShopGuiSupport.TEXT_WHITE : ShopGuiSupport.GOLD;
         int nameWidth = r.empty() ? 228 : 205;
-        graphics.drawString(font, GuiTheme.trim(font, name, nameWidth), nameX, y + 8, nameColor, true);
-        if (r.empty()) graphics.drawString(font, "-", listX() + 276, y + 8, ShopGuiSupport.TEXT_GRAY, true);
+        graphics.drawString(font, GuiTheme.trim(font, name, nameWidth), nameX, y + 8, GuiTheme.current().text(), true);
+        if (r.empty()) graphics.drawString(font, "-", listX() + 276, y + 8, GuiTheme.current().mutedText(), true);
         if (gachaMode()) {
-            graphics.drawString(font, Component.literal(ShopGuiSupport.percent(r.chance())), listX() + 416, y + 8, ShopGuiSupport.CYAN, true);
+            graphics.drawString(font, Component.literal(ShopGuiSupport.percent(r.chance())), listX() + 416, y + 8, GuiTheme.current().text(), true);
         } else {
-            graphics.drawString(font, ColorText.translatable(sellMode() ? "gui.adventuresystems.curios.wallet.shop_sell_choice_note_ready" : "gui.adventuresystems.curios.wallet.shop_choice_note_ready"), listX() + 338, y + 8, ShopGuiSupport.CYAN, true);
+            graphics.drawString(font, KineticI18n.translatable(sellMode() ? "gui.adventuresystems.curios.wallet.shop_sell_choice_note_ready" : "gui.adventuresystems.curios.wallet.shop_choice_note_ready"), listX() + 338, y + 8, GuiTheme.current().text(), true);
         }
         if (!r.command().isBlank()) {
-            graphics.drawString(font, ColorText.translatable("gui.adventuresystems.curios.wallet.shop_reward_command_marker"), deleteX() - 44, y + 8, ShopGuiSupport.GOLD, true);
+            graphics.drawString(font, KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_reward_command_marker"), deleteX() - 44, y + 8, GuiTheme.current().text(), true);
         }
-        boolean deleteHover = GuiTheme.hovering(mouseX, mouseY, deleteX(), y + 4, 38, 18);
-        graphics.fill(deleteX(), y + 4, deleteX() + 38, y + 22, deleteHover ? 0xAA993333 : 0x88553333);
-        graphics.drawCenteredString(font, ColorText.translatable("gui.adventuresystems.curios.wallet.shop_reward_delete_short"), deleteX() + 19, y + 9, ShopGuiSupport.TEXT_WHITE);
     }
 
     private void renderScrollbar(
@@ -339,10 +384,7 @@ for (int i = start; i < Math.min(draft.rewards.size(), start + visibleRows() + 1
                 listY(),
                 SCROLLBAR_WIDTH,
                 listH(),
-                MIN_THUMB_HEIGHT,
-                ShopGuiSupport.SCROLLBAR_TRACK,
-                ShopGuiSupport.SCROLLBAR_THUMB,
-                ShopGuiSupport.SCROLLBAR_HOVER
+                MIN_THUMB_HEIGHT
         );
     }
 
@@ -350,11 +392,11 @@ for (int i = start; i < Math.min(draft.rewards.size(), start + visibleRows() + 1
     protected void renderTooltips(GuiGraphics graphics, int scaledMouseX, int scaledMouseY, int rawMouseX, int rawMouseY) {
         ItemStack stack = hoveredRewardItem(scaledMouseX, scaledMouseY);
         if (!stack.isEmpty()) {
-            GuiOverlay.requestItemTooltip(stack, rawMouseX, rawMouseY);
+            KineticOverlays.requestItemTooltip(stack, rawMouseX, rawMouseY);
             return;
         }
         List<Component> tooltip = rewardTooltipAt(scaledMouseX, scaledMouseY);
-        if (!tooltip.isEmpty()) GuiOverlay.requestTooltip(tooltip, rawMouseX, rawMouseY);
+        if (!tooltip.isEmpty()) KineticOverlays.requestTooltip(tooltip, rawMouseX, rawMouseY);
     }
 
     private ItemStack hoveredRewardItem(int mouseX, int mouseY) {
@@ -376,31 +418,41 @@ for (int i = start; i < Math.min(draft.rewards.size(), start + visibleRows() + 1
         else if (gachaMode() && GuiTheme.hovering(mouseX, mouseY, left + 242, top + 52, 96, 20)) addRewardTooltip(tooltip, "gui.adventuresystems.curios.wallet.shop_reward_add_empty", "gui.adventuresystems.curios.wallet.shop_reward_tooltip_add_empty");
         else if (GuiTheme.hovering(mouseX, mouseY, gachaMode() ? left + 344 : left + (sellMode() ? 124 : 242), top + 52, gachaMode() ? 66 : 78, 20)) addRewardTooltip(tooltip, "gui.adventuresystems.curios.wallet.shop_reward_clear", clearTooltipKey());
         else if (GuiTheme.hovering(mouseX, mouseY, left + PANEL_WIDTH - 96, top + 52, 82, 20)) addRewardTooltip(tooltip, "gui.done", "gui.adventuresystems.curios.wallet.shop_reward_tooltip_done");
-        else if (scrollbarVisible() && GuiTheme.hovering(mouseX, mouseY, scrollbarX(), listY(), SCROLLBAR_WIDTH, listH())) tooltip.add(ColorText.translatable("gui.adventuresystems.curios.wallet.shop_scrollbar_tip").withStyle(ChatFormatting.GOLD));
+        else if (scrollbarVisible() && GuiTheme.hovering(mouseX, mouseY, scrollbarX(), listY(), SCROLLBAR_WIDTH, listH())) tooltip.add(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_scrollbar_tip"));
         if (tooltip.isEmpty() && GuiTheme.hovering(mouseX, mouseY, listX(), listY(), listW() - scrollbarReserve(), listH())) {
             int shift = listScroll.visualShift(ROW_HEIGHT);
             int row = (mouseY - listY() + shift) / ROW_HEIGHT;
             int index = listScroll.smoothIndexOffset() + row;
             if (index >= 0 && index < draft.rewards.size()) {
                 ShopGuiSupport.RewardDraft reward = draft.rewards.get(index);
-                tooltip.add(Component.literal(rewardDisplayName(reward)).withStyle(ChatFormatting.GOLD));
-                if (!reward.command().isBlank()) tooltip.add(ColorText.translatable("gui.adventuresystems.curios.wallet.shop_reward_command_tooltip").withStyle(ChatFormatting.YELLOW));
+                tooltip.add(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_tooltip_name", rewardDisplayName(reward)));
+                if (!reward.command().isBlank()) tooltip.add(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_reward_command_tooltip"));
                 if (gachaMode()) {
-                    tooltip.add(ColorText.translatable("gui.adventuresystems.curios.wallet.shop_reward_tooltip_weight", reward.weight()).withStyle(ChatFormatting.YELLOW));
-                    tooltip.add(ColorText.translatable("gui.adventuresystems.curios.wallet.shop_reward_tooltip_chance", ShopGuiSupport.percent(reward.chance())).withStyle(ChatFormatting.AQUA));
+                    tooltip.add(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_reward_tooltip_weight", reward.weight()));
+                    tooltip.add(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_reward_tooltip_chance", ShopGuiSupport.percent(reward.chance())));
                 } else {
-                    tooltip.add(ColorText.translatable(sellMode() ? "gui.adventuresystems.curios.wallet.shop_sell_choice_note_ready" : "gui.adventuresystems.curios.wallet.shop_choice_note_ready").withStyle(ChatFormatting.AQUA));
+                    tooltip.add(KineticI18n.translatable(sellMode() ? "gui.adventuresystems.curios.wallet.shop_sell_choice_note_ready" : "gui.adventuresystems.curios.wallet.shop_choice_note_ready"));
                 }
-                if (!reward.empty()) tooltip.add(ColorText.translatable(sellMode() ? "gui.adventuresystems.curios.wallet.shop_sell_choice_tooltip_count" : "gui.adventuresystems.curios.wallet.shop_reward_tooltip_count", Math.max(1, reward.count())));
-                if (GuiTheme.hovering(mouseX, mouseY, deleteX(), listY() + row * ROW_HEIGHT - shift + 4, 38, 18)) tooltip.add(ColorText.translatable("gui.adventuresystems.curios.wallet.shop_reward_tooltip_delete").withStyle(ChatFormatting.RED));
+                if (!reward.empty()) tooltip.add(KineticI18n.translatable(sellMode() ? "gui.adventuresystems.curios.wallet.shop_sell_choice_tooltip_count" : "gui.adventuresystems.curios.wallet.shop_reward_tooltip_count", Math.max(1, reward.count())));
             }
         }
         return tooltip;
     }
 
     private void addRewardTooltip(List<Component> tooltip, String titleKey, String bodyKey) {
-        tooltip.add(ColorText.translatable(titleKey).withStyle(ChatFormatting.GOLD));
-        tooltip.add(ColorText.translatable(bodyKey));
+        tooltip.add(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_tooltip_name", KineticI18n.translatable(titleKey)));
+        tooltip.add(KineticI18n.translatable(bodyKey));
+    }
+
+    private void deleteReward(int index) {
+        if (index < 0 || index >= draft.rewards.size()) return;
+        syncSelectedRewardFromDetailBoxes();
+        syncDraftsFromInputs();
+        draft.rewards.remove(index);
+        if (selectedIndex == index) selectedIndex = -1;
+        else if (selectedIndex > index) selectedIndex--;
+        listScroll.update(draft.rewards.size(), visibleRows());
+        rebuildRewardWidgets();
     }
 
     @Override
@@ -411,7 +463,7 @@ for (int i = start; i < Math.min(draft.rewards.size(), start + visibleRows() + 1
                 visibleRows()
         );
 
-        if (button == 0
+        if (KineticMouseButtons.isPrimary(button)
                 && listScroll.beginDrag(
                         mouseX,
                         mouseY,
@@ -425,22 +477,12 @@ for (int i = start; i < Math.min(draft.rewards.size(), start + visibleRows() + 1
             return true;
         }
         if (super.canvasMouseClicked(mouseX, mouseY, button)) return true;
-        if (button != 0) return false;
+        if (!KineticMouseButtons.isPrimary(button)) return false;
         if (!GuiTheme.hovering(mouseX, mouseY, listX(), listY(), listW() - scrollbarReserve(), listH())) return false;
         int shift = listScroll.visualShift(ROW_HEIGHT);
         int row = (int) ((mouseY - listY() + shift) / ROW_HEIGHT);
         int index = listScroll.smoothIndexOffset() + row;
         if (index < 0 || index >= draft.rewards.size()) return false;
-        if (GuiTheme.hovering(mouseX, mouseY, deleteX(), listY() + row * ROW_HEIGHT - shift + 4, 38, 18)) {
-            syncSelectedRewardFromDetailBoxes();
-            syncDraftsFromInputs();
-            draft.rewards.remove(index);
-            if (selectedIndex == index) selectedIndex = -1;
-            else if (selectedIndex > index) selectedIndex--;
-            listScroll.update(draft.rewards.size(), visibleRows());
-            rebuildRewardWidgets();
-            return true;
-        }
         syncSelectedRewardFromDetailBoxes();
         selectedIndex = index;
         updateRewardDetailBoxes();
@@ -519,8 +561,9 @@ for (int i = start; i < Math.min(draft.rewards.size(), start + visibleRows() + 1
     }
 
     @Override
-    public void onClose() {
+    protected boolean handleCloseRequest() {
         finish();
+        return true;
     }
 
 
@@ -569,7 +612,7 @@ for (int i = start; i < Math.min(draft.rewards.size(), start + visibleRows() + 1
     private String rewardDisplayName(ShopGuiSupport.RewardDraft reward) {
         if (reward == null) return "";
         if (reward.displayName() != null && !reward.displayName().isBlank()) return reward.displayName();
-        if (reward.empty()) return ColorText.translatable("gui.adventuresystems.curios.wallet.shop_gacha_empty").getString();
+        if (reward.empty()) return KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_gacha_empty").getString();
         return ShopGuiSupport.stackName(reward.itemId());
     }
 
@@ -589,12 +632,12 @@ for (int i = start; i < Math.min(draft.rewards.size(), start + visibleRows() + 1
     private void updateRewardDetailBoxes() {
         boolean active = false;
         if (rewardNameBox != null) {
-            rewardNameBox.visible = active;
-            rewardNameBox.active = active;
+            rewardNameBox.setVisible(active);
+            rewardNameBox.setEnabled(active);
         }
         if (rewardCommandBox != null) {
-            rewardCommandBox.visible = false;
-            rewardCommandBox.active = false;
+            rewardCommandBox.setVisible(false);
+            rewardCommandBox.setEnabled(false);
         }
         if (!active) {
             if (rewardNameBox != null) rewardNameBox.setValue("");
@@ -622,5 +665,21 @@ for (int i = start; i < Math.min(draft.rewards.size(), start + visibleRows() + 1
     private int scrollbarX() { return listX() + listW() - SCROLLBAR_WIDTH - 3; }
     private int scrollbarReserve() { return listScroll.canScroll() ? 16 : 0; }
     private boolean scrollbarVisible() { return listScroll.canScroll(); }
+    private static boolean isControlVisible(KineticControl control) {
+        return control != null && control.isVisible();
+    }
+
+    private static boolean isControlEnabled(KineticControl control) {
+        return control != null && control.isEnabled();
+    }
+
+    private static void setControlVisible(KineticControl control, boolean visible) {
+        if (control != null) control.setVisible(visible);
+    }
+
+    private static void setControlEnabled(KineticControl control, boolean enabled) {
+        if (control != null) control.setEnabled(enabled);
+    }
+
 }
 

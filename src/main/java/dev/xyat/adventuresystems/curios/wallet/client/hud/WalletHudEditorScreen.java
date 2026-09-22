@@ -1,29 +1,25 @@
 package dev.xyat.adventuresystems.curios.wallet.client.hud;
 
-import dev.xyat.kineticcore.api.client.selector.HudPositionEditor;
-import dev.xyat.kineticcore.config.client.KTConfigScreen;
-import dev.xyat.kineticcore.config.client.KTConfigApi;
 import dev.xyat.adventuresystems.curios.config.CuriosConfig;
 import dev.xyat.adventuresystems.curios.config.CuriosConfigGui;
 import dev.xyat.adventuresystems.curios.wallet.data.CurrencyType;
 import dev.xyat.adventuresystems.curios.wallet.data.Data;
-import net.minecraft.ChatFormatting;
-import net.minecraft.client.Minecraft;
+import dev.xyat.kineticcore.api.client.screen.KineticNativeScreen;
+import dev.xyat.kineticcore.api.client.selector.HudPositionEditor;
+import dev.xyat.kineticcore.api.config.client.KTConfigApi;
+import dev.xyat.kineticcore.api.resource.KineticResourceIds;
+import dev.xyat.kineticcore.api.runtime.KineticClientRuntime;
+import dev.xyat.kineticcore.api.text.KineticI18n;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
-import dev.xyat.kineticcore.api.client.screen.KineticNativeScreen;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /** Drag-and-scale editor for the currency wallet HUD. */
-@OnlyIn(Dist.CLIENT)
 public final class WalletHudEditorScreen extends KineticNativeScreen {
     private static final double MIN_SCALE = 0.1D;
     private static final double DEFAULT_SCALE = 0.75D;
@@ -35,8 +31,9 @@ public final class WalletHudEditorScreen extends KineticNativeScreen {
     private boolean draftConfigured;
 
     public WalletHudEditorScreen(Screen parent) {
-        super(Component.translatable("screen.adventuresystems.wallet_hud.editor.title"));
+        super(KineticI18n.translatable("screen.adventuresystems.wallet_hud.editor.title"));
         this.parent = parent;
+        setParentScreen(parent);
         reserveStandaloneDraft();
         this.previewCurrencies = createPreviewCurrencies();
         for (int i = 0; i < previewCurrencies.size(); i++) {
@@ -45,7 +42,7 @@ public final class WalletHudEditorScreen extends KineticNativeScreen {
     }
 
     @Override
-    protected void init() {
+    protected void buildUi() {
         int previewWidth = Hud.contentWidth(previewCurrencies.size());
         int previewHeight = Hud.contentHeight(previewCurrencies.size());
         double initialScale = Math.max(MIN_SCALE, CuriosConfig.walletHudScale);
@@ -71,79 +68,64 @@ public final class WalletHudEditorScreen extends KineticNativeScreen {
         }
 
         editor.addControlButtons(
-                this::addRenderableWidget,
-                Component.translatable("gui.kineticcore.hud_editor.save"),
-                Component.translatable("gui.kineticcore.hud_editor.reset"),
-                Component.translatable("gui.kineticcore.hud_editor.cancel"),
+                button -> addControl(button, null),
+                KineticI18n.translatable("gui.kineticcore.hud_editor.save"),
+                KineticI18n.translatable("gui.kineticcore.hud_editor.reset"),
+                KineticI18n.translatable("gui.kineticcore.hud_editor.cancel"),
                 this::saveAndClose,
                 this::closeWithoutSaving
         );
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        renderBackground(graphics);
+    protected void renderNativeBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         editor.render(
                 graphics,
                 font,
                 mouseX,
                 mouseY,
                 title,
-                Component.translatable("screen.kineticcore.hud_editor.instruction_scale"),
-                Component.translatable(
+                KineticI18n.translatable("screen.kineticcore.hud_editor.instruction_scale"),
+                KineticI18n.translatable(
                         "screen.kineticcore.hud_editor.position_scale",
-                        Component.literal(String.valueOf(currentOffsetX())).withStyle(ChatFormatting.AQUA),
-                        Component.literal(String.valueOf(currentOffsetY())).withStyle(ChatFormatting.AQUA),
+                        Component.literal(String.valueOf(currentOffsetX())),
+                        Component.literal(String.valueOf(currentOffsetY())),
                         Component.literal(String.valueOf(Math.round(editor.getScale() * 100.0D)))
-                                .withStyle(ChatFormatting.YELLOW)
                 ),
                 (g, x, y, mx, my) -> Hud.renderCells(
                         g, font, previewCurrencies, previewBalances, x, y)
         );
-        super.render(graphics, mouseX, mouseY, partialTick);
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (editor.mouseClicked(mouseX, mouseY, button)) {
-            return true;
-        }
-        return super.mouseClicked(mouseX, mouseY, button);
+    protected boolean nativeMouseClicked(double mouseX, double mouseY, int button) {
+        return editor.mouseClicked(mouseX, mouseY, button);
     }
 
     @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
-        if (editor.mouseDragged(mouseX, mouseY, button)) return true;
-        return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+    protected boolean nativeMouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        return editor.mouseDragged(mouseX, mouseY, button);
     }
 
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        if (editor.mouseReleased(button)) {
-            return true;
-        }
-        return super.mouseReleased(mouseX, mouseY, button);
+    protected boolean nativeMouseReleased(double mouseX, double mouseY, int button) {
+        return editor.mouseReleased(button);
     }
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double scrollDelta) {
-        if (editor.mouseScrolled(mouseX, mouseY, scrollDelta)) {
-            return true;
-        }
-        return super.mouseScrolled(mouseX, mouseY, scrollDelta);
+    protected boolean nativeMouseScrolled(double mouseX, double mouseY, double scrollDelta) {
+        return editor.mouseScrolled(mouseX, mouseY, scrollDelta);
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (editor.keyPressed(keyCode, hasShiftDown())) {
-            return true;
-        }
-        return super.keyPressed(keyCode, scanCode, modifiers);
+    protected boolean nativeKeyPressed(int keyCode, int scanCode, int modifiers) {
+        return editor.keyPressed(keyCode, hasShiftDown());
     }
 
     @Override
-    public void onClose() {
+    protected boolean handleCloseRequest() {
         closeWithoutSaving();
+        return true;
     }
 
     @Override
@@ -158,18 +140,17 @@ public final class WalletHudEditorScreen extends KineticNativeScreen {
         CuriosConfig.saveClientSettings();
         KTConfigApi.notifySaved(CuriosConfigGui.HUD_PAGE_ID);
         commitDraft();
-        if (parent instanceof KTConfigScreen configScreen) {
-            configScreen.refreshFromSource();
-        }
+        KTConfigApi.refreshScreenFromSource(parent);
         closeScreen();
     }
 
     private void closeWithoutSaving() {
+        discardDraft();
         closeScreen();
     }
 
     private void closeScreen() {
-        Minecraft.getInstance().setScreen(parent);
+        navigateBack();
     }
 
     private int currentOffsetX() {
@@ -195,7 +176,7 @@ public final class WalletHudEditorScreen extends KineticNativeScreen {
     }
 
     private static CurrencyType currency(String id) {
-        ResourceLocation location = new ResourceLocation(id);
+        ResourceLocation location = KineticResourceIds.parse(id);
         return new CurrencyType(location.toString(), location, 1L);
     }
 

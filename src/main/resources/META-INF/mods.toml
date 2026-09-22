@@ -14,7 +14,7 @@ Adventure systems for Curios, wallets, FTB quest interaction, and contextual tip
 [[dependencies.adventuresystems]]
 modId="forge"
 mandatory=true
-versionRange="[47.4.0,)"
+versionRange="[47.4.2,)"
 ordering="NONE"
 side="BOTH"
 
@@ -28,7 +28,7 @@ side="BOTH"
 [[dependencies.adventuresystems]]
 modId="kineticcore"
 mandatory=true
-versionRange="[26.9.8,)"
+versionRange="[26.9.23,)"
 ordering="AFTER"
 side="BOTH"
 

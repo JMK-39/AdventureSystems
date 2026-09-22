@@ -4,39 +4,34 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import dev.xyat.adventuresystems.tips.TipsModule;
 import dev.xyat.adventuresystems.tips.api.HelpTip;
+import dev.xyat.kineticcore.api.resource.KineticResourceIds;
+import dev.xyat.kineticcore.api.runtime.KineticPaths;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.TagParser;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.fml.loading.FMLPaths;
 
-import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.AtomicMoveNotSupportedException;
-import java.nio.file.StandardCopyOption;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 public class ConfigLoader {
     public static final Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
-    private static final Path CONFIG_DIR = FMLPaths.CONFIGDIR.get().resolve("kineticcore/tips");
+    private static final String CONFIG_DIR = "kineticcore/tips/";
 
     public static List<HelpTip.JsonModel.Entry> getRawEntriesForLanguage(String languageCode) {
         ensureDefaultFiles();
-        Path targetFile = resolveReadFile(languageCode);
-
-        if (Files.exists(targetFile)) {
-            try (Reader reader = Files.newBufferedReader(targetFile, StandardCharsets.UTF_8)) {
-                HelpTip.JsonModel model = GSON.fromJson(reader, HelpTip.JsonModel.class);
-                if (model != null && model.tips != null && areValidEntries(model.tips)) {
-                    return new ArrayList<>(model.tips);
-                }
-            } catch (Exception e) {
-                TipsModule.LOGGER.error("TipsConfig: Failed to read raw entries", e);
+        String targetFile = resolveReadFile(languageCode);
+        try {
+            if (!KineticPaths.configFileExists(targetFile)) return new ArrayList<>();
+            HelpTip.JsonModel model = GSON.fromJson(KineticPaths.readConfigText(targetFile), HelpTip.JsonModel.class);
+            if (model != null && model.tips != null && areValidEntries(model.tips)) {
+                return new ArrayList<>(model.tips);
             }
+        } catch (Exception exception) {
+            TipsModule.LOGGER.error("TipsConfig: Failed to read raw entries", exception);
         }
         return new ArrayList<>();
     }
@@ -44,9 +39,7 @@ public class ConfigLoader {
     public static List<HelpTip.JsonModel.Entry> fromJson(String json) {
         try {
             HelpTip.JsonModel model = GSON.fromJson(json == null ? "" : json, HelpTip.JsonModel.class);
-            if (model == null || model.tips == null || !areValidEntries(model.tips)) {
-                return null;
-            }
+            if (model == null || model.tips == null || !areValidEntries(model.tips)) return null;
             return new ArrayList<>(model.tips);
         } catch (RuntimeException exception) {
             return null;
@@ -54,9 +47,7 @@ public class ConfigLoader {
     }
 
     public static String toJson(List<HelpTip.JsonModel.Entry> entries) {
-        if (!areValidEntries(entries)) {
-            throw new IllegalArgumentException("Invalid tip entries");
-        }
+        if (!areValidEntries(entries)) throw new IllegalArgumentException("Invalid tip entries");
         HelpTip.JsonModel model = new HelpTip.JsonModel();
         model.tips = new ArrayList<>(entries);
         return GSON.toJson(model);
@@ -67,25 +58,13 @@ public class ConfigLoader {
             TipsModule.LOGGER.error("TipsConfig: Refusing to save invalid tip entries");
             return false;
         }
-
         ensureDefaultFiles();
-        Path targetFile = CONFIG_DIR.resolve("tips_" + normalizeLanguageCode(languageCode) + ".json");
-        Path tempFile = targetFile.resolveSibling(targetFile.getFileName() + ".tmp");
+        String targetFile = fileForLanguage(languageCode);
         try {
-            if (!Files.exists(CONFIG_DIR)) Files.createDirectories(CONFIG_DIR);
-            Files.writeString(tempFile, toJson(entries), StandardCharsets.UTF_8);
-            try {
-                Files.move(tempFile, targetFile, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
-            } catch (AtomicMoveNotSupportedException ignored) {
-                Files.move(tempFile, targetFile, StandardCopyOption.REPLACE_EXISTING);
-            }
+            KineticPaths.writeConfigTextsAtomic(Map.of(targetFile, toJson(entries)));
             return true;
-        } catch (IOException e) {
-            TipsModule.LOGGER.error("TipsConfig: Failed to save config", e);
-            try {
-                Files.deleteIfExists(tempFile);
-            } catch (IOException ignored) {
-            }
+        } catch (IOException exception) {
+            TipsModule.LOGGER.error("TipsConfig: Failed to save config", exception);
             return false;
         }
     }
@@ -96,24 +75,24 @@ public class ConfigLoader {
             if (entry == null || entry.text == null || entry.text.isBlank() || entry.text.length() > 32767) return false;
             if (!("any".equals(entry.stage) || "loading".equals(entry.stage) || "game".equals(entry.stage))) return false;
             if (entry.time < 250 || entry.time > 3_600_000) return false;
-            if (!isValidConditions(entry.conditions)) return false;
+            if (hasInvalidConditions(entry.conditions)) return false;
         }
         return true;
     }
 
-    private static boolean isValidConditions(HelpTip.JsonModel.Conditions conditions) {
-        if (conditions == null) return true;
-        if (!isOptionalResourceLocation(conditions.biome)
-                || !isOptionalResourceLocation(conditions.structure)
-                || !isOptionalResourceLocation(conditions.advancement)
-                || !isOptionalResourceLocation(conditions.dimension)) {
-            return false;
+    private static boolean hasInvalidConditions(HelpTip.JsonModel.Conditions conditions) {
+        if (conditions == null) return false;
+        if (isInvalidOptionalResourceLocation(conditions.biome)
+                || isInvalidOptionalResourceLocation(conditions.structure)
+                || isInvalidOptionalResourceLocation(conditions.advancement)
+                || isInvalidOptionalResourceLocation(conditions.dimension)) {
+            return true;
         }
-        return isValidItemChecks(conditions.items) && isValidItemChecks(conditions.curios);
+        return !isValidItemChecks(conditions.items) || !isValidItemChecks(conditions.curios);
     }
 
-    private static boolean isOptionalResourceLocation(String value) {
-        return value == null || value.isBlank() || ResourceLocation.tryParse(value.trim()) != null;
+    private static boolean isInvalidOptionalResourceLocation(String value) {
+        return value != null && !value.isBlank() && KineticResourceIds.tryParse(value.trim()) == null;
     }
 
     private static boolean isValidItemChecks(List<HelpTip.JsonModel.ItemCheck> checks) {
@@ -121,9 +100,9 @@ public class ConfigLoader {
         if (checks.size() > 256) return false;
         for (HelpTip.JsonModel.ItemCheck check : checks) {
             if (check == null || check.id == null) return false;
-            ResourceLocation id = ResourceLocation.tryParse(check.id.trim());
+            ResourceLocation id = KineticResourceIds.tryParse(check.id.trim());
             if (id == null) return false;
-            String mode = check.nbtMode == null ? "NONE" : check.nbtMode.toUpperCase();
+            String mode = check.nbtMode == null ? "NONE" : check.nbtMode.toUpperCase(Locale.ROOT);
             if (!("NONE".equals(mode) || "WEAK".equals(mode) || "STRONG".equals(mode))) return false;
             if (check.nbt != null && check.nbt.length() > 32767) return false;
             if (check.nbt != null && !check.nbt.isBlank()) {
@@ -167,21 +146,19 @@ public class ConfigLoader {
 
     private static List<HelpTip.ItemMatcher> parseItems(List<HelpTip.JsonModel.ItemCheck> checks) {
         List<HelpTip.ItemMatcher> list = new ArrayList<>();
-        if (checks != null) {
-            for (HelpTip.JsonModel.ItemCheck c : checks) {
-                if (c.id == null || c.id.isEmpty()) continue;
-                CompoundTag tag = null;
-                try {
-                    if (c.nbt != null && !c.nbt.isEmpty()) tag = TagParser.parseTag(c.nbt);
-                } catch (Exception ignored) {}
-
-                // 解析模式
-                HelpTip.NbtMode mode = HelpTip.NbtMode.NONE;
-                if ("WEAK".equalsIgnoreCase(c.nbtMode)) mode = HelpTip.NbtMode.WEAK;
-                else if ("STRONG".equalsIgnoreCase(c.nbtMode)) mode = HelpTip.NbtMode.STRONG;
-
-                list.add(new HelpTip.ItemMatcher(c.id, tag, mode));
+        if (checks == null) return list;
+        for (HelpTip.JsonModel.ItemCheck check : checks) {
+            if (check.id == null || check.id.isEmpty()) continue;
+            CompoundTag tag = null;
+            try {
+                if (check.nbt != null && !check.nbt.isEmpty()) tag = TagParser.parseTag(check.nbt);
+            } catch (Exception ignored) {
             }
+
+            HelpTip.NbtMode mode = HelpTip.NbtMode.NONE;
+            if ("WEAK".equalsIgnoreCase(check.nbtMode)) mode = HelpTip.NbtMode.WEAK;
+            else if ("STRONG".equalsIgnoreCase(check.nbtMode)) mode = HelpTip.NbtMode.STRONG;
+            list.add(new HelpTip.ItemMatcher(check.id, tag, mode));
         }
         return list;
     }
@@ -192,21 +169,28 @@ public class ConfigLoader {
         return value.isEmpty() ? "en_us" : value;
     }
 
-    private static Path resolveReadFile(String languageCode) {
-        Path requested = CONFIG_DIR.resolve("tips_" + normalizeLanguageCode(languageCode) + ".json");
-        if (Files.exists(requested)) return requested;
-        return CONFIG_DIR.resolve("tips_en_us.json");
+    private static String fileForLanguage(String languageCode) {
+        return CONFIG_DIR + "tips_" + normalizeLanguageCode(languageCode) + ".json";
+    }
+
+    private static String resolveReadFile(String languageCode) {
+        String requested = fileForLanguage(languageCode);
+        if (KineticPaths.configFileExists(requested)) return requested;
+        return CONFIG_DIR + "tips_en_us.json";
     }
 
     private static void ensureDefaultFiles() {
         try {
-            if (!Files.exists(CONFIG_DIR)) Files.createDirectories(CONFIG_DIR);
-            Path cnFile = CONFIG_DIR.resolve("tips_zh_cn.json");
-            if (!Files.exists(cnFile)) Files.writeString(cnFile, getDefaultJsonCN(), StandardCharsets.UTF_8);
-            Path enFile = CONFIG_DIR.resolve("tips_en_us.json");
-            if (!Files.exists(enFile)) Files.writeString(enFile, getDefaultJsonEN(), StandardCharsets.UTF_8);
-        } catch (IOException e) {
-            TipsModule.LOGGER.error("TipsConfig: Failed to init default files", e);
+            String chinese = CONFIG_DIR + "tips_zh_cn.json";
+            String english = CONFIG_DIR + "tips_en_us.json";
+            if (!KineticPaths.configFileExists(chinese)) {
+                KineticPaths.writeConfigText(chinese, getDefaultJsonCN());
+            }
+            if (!KineticPaths.configFileExists(english)) {
+                KineticPaths.writeConfigText(english, getDefaultJsonEN());
+            }
+        } catch (IOException exception) {
+            TipsModule.LOGGER.error("TipsConfig: Failed to init default files", exception);
         }
     }
 

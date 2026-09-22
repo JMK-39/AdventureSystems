@@ -3,12 +3,12 @@ package dev.xyat.adventuresystems.ftb.client;
 import dev.xyat.adventuresystems.ftb.network.FTBSubmitLimitNetwork;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import net.minecraft.client.Minecraft;
+import dev.xyat.kineticcore.api.runtime.KineticClientRuntime;
 
 public final class FTBVirtualItemClientState {
     private static final long QUERY_INTERVAL_MS = 250L;
     private static final Map<Long, State> STATES = new ConcurrentHashMap<>();
-    private static Object connection;
+    private static long connectionRevision = Long.MIN_VALUE;
 
     private FTBVirtualItemClientState() {
     }
@@ -41,12 +41,12 @@ public final class FTBVirtualItemClientState {
     }
 
     private static void ensureSession() {
-        Object currentConnection = Minecraft.getInstance().getConnection();
-        if (currentConnection == connection) return;
+        long currentRevision = KineticClientRuntime.connectionRevision();
+        if (currentRevision == connectionRevision) return;
         synchronized (FTBVirtualItemClientState.class) {
-            if (currentConnection != connection) {
+            if (currentRevision != connectionRevision) {
                 STATES.clear();
-                connection = currentConnection;
+                connectionRevision = currentRevision;
             }
         }
     }

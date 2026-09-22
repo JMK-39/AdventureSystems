@@ -1,12 +1,14 @@
 package dev.xyat.adventuresystems.curios.wallet.event;
 
-import dev.xyat.adventuresystems.curios.CuriosModule;
 import dev.xyat.adventuresystems.curios.config.CuriosConfig;
 import dev.xyat.adventuresystems.curios.wallet.compat.rs.RefinedStorageCompat;
 import dev.xyat.adventuresystems.curios.wallet.data.Data;
 import dev.xyat.adventuresystems.curios.wallet.network.Network;
-import java.util.List;
-import java.util.Optional;
+import dev.xyat.kineticcore.api.event.KineticEventPriority;
+import dev.xyat.kineticcore.api.player.event.KineticPlayerEvents;
+import dev.xyat.kineticcore.api.runtime.KineticPlatform;
+import dev.xyat.kineticcore.api.server.event.KineticServerEvents;
+import dev.xyat.kineticcore.api.world.event.KineticWorldEvents;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
@@ -16,23 +18,31 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.entity.player.EntityItemPickupEvent;
-import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.event.entity.player.PlayerInteractEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.ModList;
-import net.minecraftforge.fml.common.Mod;
 
-@Mod.EventBusSubscriber(modid = CuriosModule.MODID)
-public class WalletModule {
+import java.util.List;
+import java.util.Optional;
+
+public final class WalletModule {
     private static final String HAD_WALLET_KEY = "adventuresystems_currency_wallet_had_wallet";
 
-    @SubscribeEvent
-    public static void onLogin(PlayerEvent.PlayerLoggedInEvent event) {
-        if (!(event.getEntity() instanceof ServerPlayer serverPlayer)) return;
-        if (serverPlayer.level().isClientSide) return;
+    private WalletModule() {
+    }
 
+    public static void install() {
+        KineticServerEvents.onPlayerLogin(KineticEventPriority.NORMAL, WalletModule::onLogin);
+        KineticServerEvents.onPlayerTick(
+                KineticEventPriority.NORMAL,
+                KineticServerEvents.TickPhase.END,
+                WalletModule::onPlayerTick
+        );
+        KineticPlayerEvents.onRightClickBlock(KineticEventPriority.NORMAL, WalletModule::onRightClickBlock);
+        KineticPlayerEvents.onRightClickItem(KineticEventPriority.NORMAL, WalletModule::onRightClickItem);
+        KineticWorldEvents.onItemPickup(KineticEventPriority.NORMAL, WalletModule::onPickup);
+        KineticServerEvents.onPlayerClone(KineticEventPriority.NORMAL, WalletModule::onClone);
+        KineticServerEvents.onPlayerLogout(KineticEventPriority.NORMAL, WalletModule::onLogout);
+    }
+
+    private static void onLogin(ServerPlayer serverPlayer) {
         CompoundTag data = serverPlayer.getPersistentData();
         data.putBoolean(HAD_WALLET_KEY, false);
 
@@ -51,13 +61,8 @@ public class WalletModule {
         }
     }
 
-    @SubscribeEvent
-    public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
-        if (event.phase != TickEvent.Phase.END) return;
+    private static void onPlayerTick(ServerPlayer serverPlayer) {
         if (!CuriosConfig.enableCurrencyWallet) return;
-        Player player = event.player;
-        if (!(player instanceof ServerPlayer serverPlayer)) return;
-        if (serverPlayer.level().isClientSide) return;
 
         Optional<ItemStack> wallet = Data.equippedWallet(serverPlayer);
         boolean equipped = wallet.isPresent();
@@ -105,25 +110,23 @@ public class WalletModule {
         }
     }
 
-
-    @SubscribeEvent
-    public static void onRightClickBlock(PlayerInteractEvent.RightClickBlock event) {
+    private static void onRightClickBlock(KineticPlayerEvents.RightClickBlockContext event) {
         if (!CuriosConfig.enableCurrencyWallet) return;
-        if (!(event.getEntity() instanceof ServerPlayer player)) return;
-        if (!(player.level() instanceof ServerLevel level)) return;
-        ItemStack stack = event.getItemStack();
+        if (!(event.player() instanceof ServerPlayer player)) return;
+        if (!(event.level() instanceof ServerLevel level)) return;
+        ItemStack stack = event.stack();
         if (!Data.isWalletStack(stack)) return;
 
         if (!player.isShiftKeyDown()) {
-            event.setCanceled(true);
+            event.cancel();
             toggleMagnet(player, stack);
             return;
         }
 
-        BlockPos pos = event.getPos();
-        if (!ModList.get().isLoaded("refinedstorage")) return;
+        BlockPos pos = event.pos();
+        if (!KineticPlatform.isModLoaded("refinedstorage")) return;
         if (!RefinedStorageCompat.isController(level, pos)) return;
-        event.setCanceled(true);
+        event.cancel();
         if (!RefinedStorageCompat.canBind(level, pos)) {
             Network.toast(player, "msg.adventuresystems.curios.wallet.rs_bind_fail");
             return;
@@ -133,14 +136,13 @@ public class WalletModule {
         Network.sync(player);
     }
 
-    @SubscribeEvent
-    public static void onRightClickItem(PlayerInteractEvent.RightClickItem event) {
+    private static void onRightClickItem(KineticPlayerEvents.RightClickItemContext event) {
         if (!CuriosConfig.enableCurrencyWallet) return;
-        if (!(event.getEntity() instanceof ServerPlayer player)) return;
+        if (!(event.player() instanceof ServerPlayer player)) return;
         if (player.isShiftKeyDown()) return;
-        ItemStack stack = event.getItemStack();
+        ItemStack stack = event.stack();
         if (!Data.isWalletStack(stack)) return;
-        event.setCanceled(true);
+        event.cancel();
         toggleMagnet(player, stack);
     }
 
@@ -150,40 +152,33 @@ public class WalletModule {
         Network.sync(player);
     }
 
-    @SubscribeEvent
-    public static void onPickup(EntityItemPickupEvent event) {
+    private static void onPickup(KineticWorldEvents.ItemPickupContext event) {
         if (!CuriosConfig.enableCurrencyWallet) return;
-        Player player = event.getEntity();
-        if (!(player instanceof ServerPlayer serverPlayer)) return;
+        if (!(event.player() instanceof ServerPlayer serverPlayer)) return;
         Optional<ItemStack> wallet = Data.equippedWallet(serverPlayer);
         if (wallet.isEmpty()) return;
         ItemStack walletStack = wallet.get();
         if (Data.isMagnetDisabled(walletStack)) return;
-        ItemEntity itemEntity = event.getItem();
+        ItemEntity itemEntity = event.item();
         if (!Data.isCurrencyItem(itemEntity.getItem())) return;
         if (Data.depositStack(serverPlayer, walletStack, itemEntity.getItem())) {
-            event.setCanceled(true);
+            event.cancel();
             itemEntity.discard();
             serverPlayer.playNotifySound(SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.2f, 1.6f);
             Network.sync(serverPlayer);
         }
     }
 
-    @SubscribeEvent
-    public static void onClone(PlayerEvent.Clone event) {
-        Data.copy(event.getOriginal(), event.getEntity());
+    private static void onClone(ServerPlayer original, ServerPlayer current, boolean wasDeath) {
+        Data.copy(original, current);
     }
 
-    @SubscribeEvent
-    public static void onLogout(PlayerEvent.PlayerLoggedOutEvent event) {
-        event.getEntity().getPersistentData().putBoolean(HAD_WALLET_KEY, false);
-        if (event.getEntity() instanceof ServerPlayer serverPlayer) {
-            Network.hide(serverPlayer);
-        }
+    private static void onLogout(ServerPlayer serverPlayer) {
+        serverPlayer.getPersistentData().putBoolean(HAD_WALLET_KEY, false);
+        Network.hide(serverPlayer);
     }
 
     public static boolean hasWallet(Player player) {
         return Data.hasWallet(player);
     }
 }
-

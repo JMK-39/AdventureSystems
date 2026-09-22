@@ -1,5 +1,7 @@
 package dev.xyat.adventuresystems.curios.wallet.data;
 
+import dev.xyat.kineticcore.api.registry.KineticRegistries;
+import dev.xyat.kineticcore.api.resource.KineticResourceIds;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import net.minecraft.nbt.CompoundTag;
@@ -8,7 +10,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraftforge.registries.ForgeRegistries;
 
 public final class StackCodec {
     private static final String STACK64_MARK = "#stack64:";
@@ -44,7 +45,7 @@ public final class StackCodec {
         int count = countFromItemText(itemText);
         String id = idFromItemText(itemText);
         try {
-            Item item = ForgeRegistries.ITEMS.getValue(new ResourceLocation(id));
+            Item item = KineticRegistries.items().get(KineticResourceIds.parse(id));
             if (item == null || item == Items.AIR) return ItemStack.EMPTY;
             ItemStack stack = new ItemStack(item, safeCount(count, item.getMaxStackSize()));
             if (tag != null && !tag.isEmpty()) stack.setTag(tag.copy());
@@ -62,7 +63,7 @@ public final class StackCodec {
 
     public static String toConfigString(ItemStack stack, int count) {
         if (stack == null || stack.isEmpty()) return "";
-        ResourceLocation id = ForgeRegistries.ITEMS.getKey(stack.getItem());
+        ResourceLocation id = KineticRegistries.items().id(stack.getItem());
         if (id == null) return "";
         int safeCount = safeCount(count, stack.getMaxStackSize());
         String base = id + "*" + safeCount;

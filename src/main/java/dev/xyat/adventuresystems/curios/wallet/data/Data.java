@@ -1,5 +1,7 @@
 package dev.xyat.adventuresystems.curios.wallet.data;
 
+import dev.xyat.kineticcore.api.registry.KineticRegistries;
+import dev.xyat.kineticcore.api.resource.KineticResourceIds;
 import dev.xyat.adventuresystems.curios.config.CuriosConfig;
 import dev.xyat.adventuresystems.curios.init.Items;
 import java.math.BigInteger;
@@ -19,7 +21,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.registries.ForgeRegistries;
 import top.theillusivec4.curios.api.CuriosApi;
 
 public final class Data {
@@ -52,12 +53,12 @@ public final class Data {
 
     public static boolean isCurrencyItem(ItemStack stack) {
         if (stack.isEmpty()) return false;
-        ResourceLocation id = ForgeRegistries.ITEMS.getKey(stack.getItem());
+        ResourceLocation id = KineticRegistries.items().id(stack.getItem());
         return id != null && currencyCache().currencyMap().containsKey(id.toString());
     }
 
     public static String currencyId(ItemStack stack) {
-        ResourceLocation id = ForgeRegistries.ITEMS.getKey(stack.getItem());
+        ResourceLocation id = KineticRegistries.items().id(stack.getItem());
         return id == null ? "" : id.toString();
     }
 
@@ -399,7 +400,7 @@ public final class Data {
 
     private static CurrencyCache buildCurrencyCache() {
         LinkedHashMap<String, CurrencyType> currencies = new LinkedHashMap<>();
-        int limit = Math.max(1, Math.min(10, CuriosConfig.walletMaxCurrencyTypes));
+        int limit = Math.max(1, CuriosConfig.walletMaxCurrencyTypes);
         for (String line : CuriosConfig.walletCurrencyDefinitions) {
             if (currencies.size() >= limit) break;
             Optional<CurrencyType> parsed = CurrencyType.parse(line);
@@ -451,7 +452,7 @@ public final class Data {
         int arrow = id.indexOf("->");
         if (arrow >= 0) id = id.substring(0, arrow).trim();
         try {
-            return new ResourceLocation(id).toString();
+            return KineticResourceIds.parse(id).toString();
         } catch (Exception ignored) {
             return "";
         }

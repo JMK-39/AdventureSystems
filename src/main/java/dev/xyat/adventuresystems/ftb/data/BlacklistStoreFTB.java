@@ -1,21 +1,17 @@
 package dev.xyat.adventuresystems.ftb.data;
 
+import dev.xyat.kineticcore.api.registry.KineticRegistries;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import dev.xyat.adventuresystems.ftb.FtbModule;
-import net.minecraft.client.Minecraft;
+import dev.xyat.kineticcore.api.runtime.KineticPaths;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.TagParser;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.registries.ForgeRegistries;
 
-import java.io.Reader;
-import java.io.Writer;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -27,6 +23,7 @@ import java.util.Set;
 public final class BlacklistStoreFTB {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Set<String> BLACKLIST = new LinkedHashSet<>();
+    private static final String CONFIG_FILE = "kineticcore/ftb_item_blacklist.json";
     private static final Set<String> MOD_INDEX = new HashSet<>();
     private static final Set<String> TAG_INDEX = new HashSet<>();
     private static final Set<String> ITEM_INDEX = new HashSet<>();
@@ -37,13 +34,13 @@ public final class BlacklistStoreFTB {
 
     public static void load() {
         BLACKLIST.clear();
-        Path path = getPath();
-        if (!Files.exists(path)) {
-            rebuildIndex();
-            return;
-        }
-        try (Reader reader = Files.newBufferedReader(path)) {
-            JsonArray array = GSON.fromJson(reader, JsonArray.class);
+        try {
+            String content = String.join("\n", KineticPaths.readConfigLines(CONFIG_FILE));
+            if (content.isBlank()) {
+                rebuildIndex();
+                return;
+            }
+            JsonArray array = GSON.fromJson(content, JsonArray.class);
             if (array != null) {
                 for (JsonElement element : array) {
                     if (element != null && element.isJsonPrimitive()) {
@@ -62,16 +59,12 @@ public final class BlacklistStoreFTB {
     }
 
     public static void save() {
-        Path path = getPath();
         try {
-            Files.createDirectories(path.getParent());
             JsonArray array = new JsonArray();
             for (String entry : BLACKLIST) {
                 array.add(entry);
             }
-            try (Writer writer = Files.newBufferedWriter(path)) {
-                GSON.toJson(array, writer);
-            }
+            KineticPaths.writeConfigText(CONFIG_FILE, GSON.toJson(array));
         } catch (Exception e) {
             FtbModule.LOGGER.error("[KT-FTB任务物品] 保存黑名单文件失败", e);
         }
@@ -124,7 +117,7 @@ public final class BlacklistStoreFTB {
 
         if (ITEM_INDEX.contains(id)) return true;
 
-        ResourceLocation rl = ForgeRegistries.ITEMS.getKey(stack.getItem());
+        ResourceLocation rl = KineticRegistries.items().id(stack.getItem());
         String modid = rl != null ? rl.getNamespace() : "";
         if (!modid.isEmpty() && MOD_INDEX.contains(modid)) return true;
 
@@ -175,10 +168,4 @@ public final class BlacklistStoreFTB {
         save();
     }
 
-    private static Path getPath() {
-        return Minecraft.getInstance().gameDirectory.toPath()
-                .resolve("config")
-                .resolve("kineticcore")
-                .resolve("ftb_item_blacklist.json");
-    }
 }

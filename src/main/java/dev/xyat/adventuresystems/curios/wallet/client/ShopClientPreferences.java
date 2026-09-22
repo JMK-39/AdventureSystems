@@ -1,10 +1,11 @@
 package dev.xyat.adventuresystems.curios.wallet.client;
 
+import dev.xyat.kineticcore.api.runtime.KineticPaths;
+import dev.xyat.kineticcore.api.runtime.KineticClientRuntime;
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import com.electronwill.nightconfig.core.io.WritingMode;
 import dev.xyat.adventuresystems.curios.CuriosModule;
 import dev.xyat.adventuresystems.curios.wallet.shop.Shop;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -13,15 +14,10 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import net.minecraft.client.Minecraft;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.fml.loading.FMLPaths;
 
-@OnlyIn(Dist.CLIENT)
 public final class ShopClientPreferences {
-    private static final Path CONFIG_DIR = FMLPaths.CONFIGDIR.get().resolve("kineticcore");
-    private static final Path CONFIG_PATH = CONFIG_DIR.resolve("currency_wallet_shop_client.toml");
+    private static final String CONFIG_FILE = "kineticcore/currency_wallet_shop_client.toml";
+    private static final Path CONFIG_PATH = KineticPaths.configFile(CONFIG_FILE);
     private static final Map<String, Set<String>> FAVORITES = new HashMap<>();
     private static CommentedFileConfig configData;
     private static boolean loaded;
@@ -84,22 +80,22 @@ public final class ShopClientPreferences {
     }
 
     private static String playerKey() {
-        Minecraft minecraft = Minecraft.getInstance();
-        if (minecraft.player == null) return "local";
-        return minecraft.player.getUUID().toString().replace("-", "");
+        var player = KineticClientRuntime.localPlayer();
+        if (player == null) return "local";
+        return player.getUUID().toString().replace("-", "");
     }
 
     private static void ensureLoaded() {
         if (loaded) return;
         loaded = true;
         try {
-            if (!Files.exists(CONFIG_DIR)) Files.createDirectories(CONFIG_DIR);
+            KineticPaths.ensureConfigDirectory("kineticcore");
             configData = CommentedFileConfig.builder(CONFIG_PATH)
                     .sync()
                     .preserveInsertionOrder()
                     .writingMode(WritingMode.REPLACE)
                     .build();
-            if (Files.exists(CONFIG_PATH)) configData.load();
+            if (KineticPaths.configFileExists(CONFIG_FILE)) configData.load();
         } catch (Exception exception) {
             configData = null;
             CuriosModule.LOGGER.error("Failed to load currency wallet shop client preferences", exception);

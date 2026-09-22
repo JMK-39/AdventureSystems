@@ -1,8 +1,10 @@
 package dev.xyat.adventuresystems.curios.common.client.tooltip;
 
-import dev.xyat.adventuresystems.curios.util.ColorText;
-import com.mojang.datafixers.util.Either;
-import net.minecraft.client.Minecraft;
+import dev.xyat.kineticcore.api.text.KineticI18n;
+import dev.xyat.kineticcore.api.client.tooltip.KineticItemTooltips;
+import dev.xyat.kineticcore.api.registry.KineticRegistries;
+import dev.xyat.kineticcore.api.resource.KineticResourceIds;
+import dev.xyat.kineticcore.api.runtime.KineticClientRuntime;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
@@ -13,8 +15,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.client.event.RenderTooltipEvent;
-import net.minecraftforge.registries.ForgeRegistries;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -25,15 +25,15 @@ public class TooltipHelper {
 
     /** 添加基础操作提示 */
     public static void addHints(List<Component> tooltip) {
-        tooltip.add(ColorText.translatable("tip.adventuresystems.curios.global.hold_shift"));
-        tooltip.add(ColorText.translatable("tip.adventuresystems.curios.global.hold_alt"));
+        tooltip.add(KineticI18n.translatable("tip.adventuresystems.curios.global.hold_shift"));
+        tooltip.add(KineticI18n.translatable("tip.adventuresystems.curios.global.hold_alt"));
     }
 
     /** 添加灵魂绑定状态 */
     public static void addBindingTooltip(ItemStack stack, List<Component> tooltip) {
         CompoundTag nbt = stack.getTag();
         if (nbt == null || !nbt.hasUUID("adventuresystems_owner_id")) {
-            tooltip.add(ColorText.translatable("tip.adventuresystems.curios.global.unbound"));
+            tooltip.add(KineticI18n.translatable("tip.adventuresystems.curios.global.unbound"));
             return;
         }
 
@@ -41,27 +41,27 @@ public class TooltipHelper {
         String ownerName = nbt.getString("owner_name");
         if (ownerName.isEmpty()) ownerName = "Unknown";
 
-        Player player = Minecraft.getInstance().player;
+        Player player = KineticClientRuntime.localPlayer();
         if (player != null) {
             if (player.getUUID().equals(ownerId)) {
-                tooltip.add(ColorText.translatable("tip.adventuresystems.curios.global.bound_to", ownerName));
+                tooltip.add(KineticI18n.translatable("tip.adventuresystems.curios.global.bound_to", ownerName));
             } else {
-                tooltip.add(ColorText.translatable("tip.adventuresystems.curios.global.void_binding"));
+                tooltip.add(KineticI18n.translatable("tip.adventuresystems.curios.global.void_binding"));
             }
         }
     }
 
     /** 获取并添加排斥图标 */
-    public static void appendConflictIcons(RenderTooltipEvent.GatherComponents event, List<String> conflicts) {
+    public static void appendConflictIcons(KineticItemTooltips.GatherContext event, List<String> conflicts) {
         List<ItemStack> icons = new ArrayList<>();
         for (String id : conflicts) {
-            Item item = ForgeRegistries.ITEMS.getValue(new ResourceLocation(id));
+            Item item = KineticRegistries.items().get(KineticResourceIds.parse(id));
             if (item != null && item != net.minecraft.world.item.Items.AIR) {
                 icons.add(new ItemStack(item));
             }
         }
         if (!icons.isEmpty()) {
-            event.getTooltipElements().add(Either.right(new ConflictTooltipData(icons)));
+            event.addComponent(new ConflictTooltipData(icons));
         }
     }
 

@@ -1,25 +1,24 @@
 package dev.xyat.adventuresystems.curios.levitationbackpack.event;
 
-import dev.xyat.adventuresystems.curios.CuriosModule;
 import dev.xyat.adventuresystems.curios.config.CuriosConfig;
 import dev.xyat.adventuresystems.curios.init.Items;
+import dev.xyat.kineticcore.api.entity.event.KineticLivingEvents;
+import dev.xyat.kineticcore.api.event.KineticEventPriority;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.event.entity.living.LivingKnockBackEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
 import top.theillusivec4.curios.api.CuriosApi;
 
-@Mod.EventBusSubscriber(modid = CuriosModule.MODID)
-public class KnockbackImmunityHandler {
+public final class KnockbackImmunityHandler {
+    private KnockbackImmunityHandler() {
+    }
 
-    @SubscribeEvent
-    public static void onKnockback(LivingKnockBackEvent event) {
-        if (!CuriosConfig.enableLevitationBackpack) return;
+    public static void install() {
+        KineticLivingEvents.onKnockback(KineticEventPriority.NORMAL, KnockbackImmunityHandler::onKnockback);
+    }
 
-        if (event.getEntity() instanceof Player player) {
-            if (player.getAbilities().flying && hasLevitationBackpack(player)) {
-                event.setCanceled(true);
-            }
+    private static void onKnockback(KineticLivingEvents.KnockbackContext event) {
+        if (!CuriosConfig.enableLevitationBackpack || !CuriosConfig.levitationKnockbackImmunity) return;
+        if (event.entity() instanceof Player player && player.getAbilities().flying && hasLevitationBackpack(player)) {
+            event.cancel();
         }
     }
 

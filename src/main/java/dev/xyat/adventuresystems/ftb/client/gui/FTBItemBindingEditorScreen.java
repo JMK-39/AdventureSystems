@@ -1,13 +1,17 @@
 package dev.xyat.adventuresystems.ftb.client.gui;
 
-import dev.xyat.kineticcore.api.client.overlay.GuiOverlay;
-import com.mojang.blaze3d.systems.RenderSystem;
+import dev.xyat.kineticcore.api.client.input.KineticMouseButtons;
+import dev.xyat.kineticcore.api.client.overlay.KineticOverlays;
 import dev.xyat.kineticcore.api.client.search.KineticSearch;
 import dev.xyat.kineticcore.api.client.theme.GuiTheme;
-import dev.xyat.kineticcore.api.client.selector.ItemSelectorScreen;
+import dev.xyat.kineticcore.api.client.selector.KineticSelectors;
 import dev.xyat.kineticcore.api.client.screen.KineticScreen;
-import dev.xyat.kineticcore.api.client.widget.KineticWidgets.Scroll;
-import dev.xyat.kineticcore.config.client.KTConfigApi;
+import dev.xyat.kineticcore.api.client.widget.scroll.KineticScroll;
+import dev.xyat.kineticcore.api.client.widget.button.KineticButtons.StateButton;
+import dev.xyat.kineticcore.api.client.widget.input.KineticTextFields.KineticEditBox;
+import dev.xyat.kineticcore.api.config.client.KTConfigApi;
+import dev.xyat.kineticcore.api.runtime.KineticClientRuntime;
+import dev.xyat.kineticcore.api.text.KineticI18n;
 import dev.xyat.adventuresystems.ftb.client.hud.FTBToastUtil;
 import dev.xyat.adventuresystems.ftb.client.FTBConfigGui;
 import dev.xyat.adventuresystems.ftb.data.BindingStoreFTB;
@@ -15,11 +19,7 @@ import dev.xyat.adventuresystems.ftb.data.FavoritesStoreFTB;
 import dev.xyat.adventuresystems.ftb.data.ItemBindingEntryFTB;
 import dev.xyat.adventuresystems.ftb.data.RefFTB;
 import dev.xyat.adventuresystems.ftb.util.BridgeFTB;
-import net.minecraft.ChatFormatting;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
@@ -39,9 +39,7 @@ public class FTBItemBindingEditorScreen extends KineticScreen {
     private static final int ROW_H = 22;
     private static final int ITEM_SLOT = 22;
     private static final int SCROLL_W = 4;
-    private static final int FAVORITE_ON_COLOR = 0xFF55FF55;
-    private static final int FAVORITE_OFF_COLOR = 0xFFCFCFCF;
-
+    
     private final Screen parent;
     private final List<RefFTB> allTasks = new ArrayList<>();
     private final List<RefFTB> visibleTasks = new ArrayList<>();
@@ -50,7 +48,7 @@ public class FTBItemBindingEditorScreen extends KineticScreen {
     private final LinkedHashSet<Long> selectedQuestIds = new LinkedHashSet<>();
     private final Map<Long, RefFTB> taskById = new LinkedHashMap<>();
 
-    private EditBox searchBox;
+    private KineticEditBox searchBox;
     private ItemStack selectedStack = ItemStack.EMPTY;
 
     private int leftX;
@@ -75,22 +73,22 @@ public class FTBItemBindingEditorScreen extends KineticScreen {
     private boolean taskScrolling;
     private boolean boundScrolling;
     private boolean itemScrolling;
-    private final Scroll.State taskScrollState = new Scroll.State();
-    private final Scroll.State boundScrollState = new Scroll.State();
-    private final Scroll.State itemScrollState = new Scroll.State();
+    private final KineticScroll.State taskScrollState = new KineticScroll.State();
+    private final KineticScroll.State boundScrollState = new KineticScroll.State();
+    private final KineticScroll.State itemScrollState = new KineticScroll.State();
     private boolean dirty;
     private long favoriteQuestId;
-    private Button saveButton;
+    private StateButton saveButton;
 
     public FTBItemBindingEditorScreen(Screen parent) {
-        super(Component.translatable("screen.adventuresystems.ftb.editor"));
+        super(KineticI18n.translatable("screen.adventuresystems.ftb.editor"));
         this.parent = parent;
+        setParentScreen(parent);
         useCanvas(
                 760f,
                 430f,
                 6
         );
-        this.minScale = 0.5f;
         configureStandaloneDraft(this::captureBindingSnapshot, this::restoreBindingSnapshot);
     }
 
@@ -135,39 +133,44 @@ public class FTBItemBindingEditorScreen extends KineticScreen {
 
         int topY = 10;
         this.leftX = 14;
-        int panelTotalW = this.canvasWidth - this.leftX * 2 - GAP;
+        int panelTotalW = canvasWidth() - this.leftX * 2 - GAP;
         this.leftW = Math.max(220, panelTotalW / 2);
         this.rightW = this.leftW;
         this.rightX = this.leftX + this.leftW + GAP;
         this.panelY = PANEL_TOP;
-        this.panelH = this.canvasHeight - this.panelY - PANEL_BOTTOM_PAD;
+        this.panelH = canvasHeight() - this.panelY - PANEL_BOTTOM_PAD;
 
         int buttonW = 70;
-        int closeX = this.canvasWidth - 14 - buttonW;
+        int closeX = canvasWidth() - 14 - buttonW;
         int clearX = closeX - GAP - 80;
         int blacklistX = clearX - GAP - 70;
 
-        this.searchBox = new EditBox(this.font, this.leftX, topY, 220, 20, Component.translatable("placeholder.adventuresystems.ftb.task.search"));
+        this.searchBox = addTextField(
+                this.leftX,
+                topY,
+                220,
+                KineticI18n.translatable("placeholder.adventuresystems.ftb.task.search"),
+                KineticI18n.translatable("placeholder.adventuresystems.ftb.task.search"),
+                null,
+                null
+        );
         this.searchBox.setMaxLength(128);
         this.searchBox.setResponder(this::refreshTaskFilter);
-        this.addRenderableWidget(this.searchBox);
-
-        this.addRenderableWidget(Button.builder(Component.translatable("button.adventuresystems.ftb.blacklist"), button -> {
-            if (this.minecraft != null) this.minecraft.setScreen(new FTBBlacklistScreen(this));
-        }).bounds(blacklistX, topY, 70, 20).build());
-
-        this.addRenderableWidget(Button.builder(Component.translatable("button.adventuresystems.ftb.clear"), button -> clearSelectedBinding())
-                .bounds(clearX, topY, 80, 20).build());
-
-        this.addRenderableWidget(Button.builder(Component.translatable("gui.done"), button -> onClose())
-                .bounds(closeX, topY, buttonW, 20).build());
+        addButton(blacklistX, topY, 70, KineticI18n.translatable("button.adventuresystems.ftb.blacklist"), null,
+                () -> KineticClientRuntime.openScreen(new FTBBlacklistScreen(this)));
+        addButton(clearX, topY, 80, KineticI18n.translatable("button.adventuresystems.ftb.clear"), null, this::clearSelectedBinding);
+        addButton(closeX, topY, buttonW, KineticI18n.translatable("gui.done"), null, this::onClose);
 
         refreshLayoutValues();
 
-        this.saveButton = Button.builder(Component.translatable("button.adventuresystems.ftb.save"), button -> saveCurrentBinding())
-                .bounds(selectedItemIconX() + ITEM_SLOT + 8, selectedItemIconY() + 1, 52, 20)
-                .build();
-        this.addRenderableWidget(this.saveButton);
+        this.saveButton = addButton(
+                selectedItemIconX() + ITEM_SLOT + 8,
+                selectedItemIconY() + 1,
+                52,
+                KineticI18n.translatable("button.adventuresystems.ftb.save"),
+                null,
+                this::saveCurrentBinding
+        );
 
         updateItemScroll();
         refreshTaskFilter(this.searchBox.getValue());
@@ -243,14 +246,13 @@ public class FTBItemBindingEditorScreen extends KineticScreen {
     }
 
     private void openItemSelector() {
-        Minecraft.getInstance().setScreen(new ItemSelectorScreen(this, selection -> {
+        KineticSelectors.openItemSelector(this, selection -> {
             if (selection != null && selection.isItem()) {
                 selectStack(selection.stack());
             } else {
-                FTBToastUtil.showQuick("adventuresystems_binding_item_only", Component.translatable("msg.adventuresystems.ftb.item.only"));
+                FTBToastUtil.showQuick("adventuresystems_binding_item_only", KineticI18n.translatable("msg.adventuresystems.ftb.item.only"));
             }
-            Minecraft.getInstance().setScreen(this);
-        }));
+        });
     }
 
     private void selectStack(ItemStack stack) {
@@ -284,7 +286,7 @@ public class FTBItemBindingEditorScreen extends KineticScreen {
     private void addTask(RefFTB ref) {
         if (ref == null) return;
         if (selectedStack.isEmpty()) {
-            FTBToastUtil.showQuick("adventuresystems_binding_select_item_first", Component.translatable("msg.adventuresystems.ftb.item.first"));
+            FTBToastUtil.showQuick("adventuresystems_binding_select_item_first", KineticI18n.translatable("msg.adventuresystems.ftb.item.first"));
             return;
         }
         if (selectedQuestIds.add(ref.id())) {
@@ -321,7 +323,7 @@ public class FTBItemBindingEditorScreen extends KineticScreen {
     private void setFavoriteTask(RefFTB ref) {
         if (ref == null) return;
         if (selectedStack.isEmpty()) {
-            FTBToastUtil.showQuick("adventuresystems_binding_select_item_first", Component.translatable("msg.adventuresystems.ftb.item.first"));
+            FTBToastUtil.showQuick("adventuresystems_binding_select_item_first", KineticI18n.translatable("msg.adventuresystems.ftb.item.first"));
             return;
         }
         boolean changed = selectedQuestIds.add(ref.id());
@@ -351,7 +353,7 @@ public class FTBItemBindingEditorScreen extends KineticScreen {
 
     private void clearSelectedBinding() {
         if (selectedStack.isEmpty()) {
-            FTBToastUtil.showQuick("adventuresystems_binding_select_item_first", Component.translatable("msg.adventuresystems.ftb.item.first"));
+            FTBToastUtil.showQuick("adventuresystems_binding_select_item_first", KineticI18n.translatable("msg.adventuresystems.ftb.item.first"));
             return;
         }
         if (!selectedQuestIds.isEmpty()) {
@@ -365,7 +367,7 @@ public class FTBItemBindingEditorScreen extends KineticScreen {
 
     private void saveCurrentBinding() {
         if (selectedStack.isEmpty()) {
-            FTBToastUtil.showQuick("adventuresystems_binding_select_item_first", Component.translatable("msg.adventuresystems.ftb.item.first"));
+            FTBToastUtil.showQuick("adventuresystems_binding_select_item_first", KineticI18n.translatable("msg.adventuresystems.ftb.item.first"));
             return;
         }
 
@@ -381,43 +383,35 @@ public class FTBItemBindingEditorScreen extends KineticScreen {
             KTConfigApi.notifySaved(FTBConfigGui.PAGE_ID);
         } else {
             updateSaveButton();
-            FTBToastUtil.showQuick("adventuresystems_binding_failed", Component.translatable("msg.adventuresystems.ftb.failed"));
+            FTBToastUtil.showQuick("adventuresystems_binding_failed", KineticI18n.translatable("msg.adventuresystems.ftb.failed"));
         }
     }
 
     private void updateSaveButton() {
         if (saveButton == null) return;
-        saveButton.visible = !selectedStack.isEmpty();
-        saveButton.active = !selectedStack.isEmpty() && dirty;
+        saveButton.setVisible(!selectedStack.isEmpty());
+        saveButton.setEnabled(!selectedStack.isEmpty() && dirty);
     }
 
     @Override
     protected void renderCanvasBackground(@NotNull GuiGraphics g, int mx, int my, float pt) {
-        GuiTheme.shadow(g, canvasWidth, canvasHeight);
-        g.fillGradient(0, 0, this.canvasWidth, this.canvasHeight, 0xFF222222, 0xFF111111);
-        g.drawCenteredString(font, title, this.canvasWidth / 2, 15, 0xFFFFAA00);
-        GuiTheme.panel(g, leftX, panelY, leftW, panelH, 0xEE151515, 0xFF666666);
-        GuiTheme.panel(g, rightX, panelY, rightW, panelH, 0xEE151515, 0xFF666666);
+        GuiTheme.shadow(g, canvasWidth(), canvasHeight());
+        GuiTheme.canvasBackground(g, canvasWidth(), canvasHeight());
+        g.drawCenteredString(font, title, canvasWidth() / 2, 15, GuiTheme.current().text());
+        GuiTheme.panel(g, leftX, panelY, leftW, panelH);
+        GuiTheme.panel(g, rightX, panelY, rightW, panelH);
     }
 
     @Override
     protected void renderCanvasForeground(@NotNull GuiGraphics g, int mx, int my, float pt) {
-        renderSearchPlaceholder(g);
         renderLeftTasks(g, mx, my);
         renderRightPanel(g, mx, my);
-    }
-
-
-    private void renderSearchPlaceholder(GuiGraphics g) {
-        if (searchBox == null) return;
-        if (!searchBox.getValue().isEmpty() || searchBox.isFocused()) return;
-        g.drawString(font, Component.translatable("placeholder.adventuresystems.ftb.task.search"), searchBox.getX() + 5, searchBox.getY() + 6, 0xFFAAAAAA, false);
     }
 
     private void renderLeftTasks(GuiGraphics g, int mx, int my) {
         int titleX = leftX + 8;
         int titleY = panelY + 8;
-        g.drawString(font, Component.translatable("label.adventuresystems.ftb.tasks", number(visibleTasks.size(), ChatFormatting.GREEN), number(allTasks.size(), ChatFormatting.YELLOW)), titleX, titleY, 0xFF55FFFF, false);
+        g.drawString(font, KineticI18n.translatable("label.adventuresystems.ftb.tasks", number(visibleTasks.size()), number(allTasks.size())), titleX, titleY, GuiTheme.current().text(), false);
 
         int listX = leftX + 6;
         int listY = panelY + 26;
@@ -435,41 +429,40 @@ public class FTBItemBindingEditorScreen extends KineticScreen {
             int y = listY + row * ROW_H - taskShift;
             boolean selected = selectedQuestIds.contains(ref.id());
             boolean hover = mx >= listX && mx < listX + listW && my >= y && my < y + ROW_H;
-            int bg = selected ? 0x6633AA33 : hover ? 0x44FFFFFF : 0x22000000;
-            g.fill(listX, y, listX + listW, y + ROW_H - 1, bg);
+            GuiTheme.stateSurface(g, listX, y, listW, ROW_H - 1, GuiTheme.Surface.PANEL_ALT, selected, hover, false);
             String titleText = GuiTheme.trim(font, cleanTaskTitle(ref), listW - 8);
             Component subText = buildTaskChapterLine(ref);
-            g.drawString(font, titleText, listX + 4, y + 3, 0xFFFFFFFF, false);
-            g.drawString(font, subText, listX + 4, y + 13, 0xFFFFAA00, false);
+            g.drawString(font, titleText, listX + 4, y + 3, GuiTheme.current().text(), false);
+            g.drawString(font, subText, listX + 4, y + 13, GuiTheme.current().text(), false);
         }
 
-        g.disableScissor();
+        disableCanvasScissor(g);
         if (taskMaxScroll > 0) {
             int trackH = rows * ROW_H;
-            int thumbH = Scroll.calculateThumbHeight(trackH, rows, visibleTasks.size(), 20);
-            Scroll.renderScrollbar(g, mx, my, leftX + leftW - 12, listY, SCROLL_W, trackH, thumbH, taskMaxScroll, smoothTaskScroll, taskScrolling);
+            int thumbH = KineticScroll.stateThumbHeight(trackH, rows, visibleTasks.size(), 20);
+            KineticScroll.renderScrollbarState(g, mx, my, leftX + leftW - 12, listY, SCROLL_W, trackH, thumbH, taskMaxScroll, smoothTaskScroll, taskScrolling);
         }
     }
 
     private void renderRightPanel(GuiGraphics g, int mx, int my) {
         int headerX = rightX + 8;
         int headerY = panelY + 8;
-        Component selectedLabel = Component.translatable("label.adventuresystems.ftb.item");
-        g.drawString(font, selectedLabel, headerX, headerY, 0xFF55FFFF, false);
+        Component selectedLabel = KineticI18n.translatable("label.adventuresystems.ftb.item");
+        g.drawString(font, selectedLabel, headerX, headerY, GuiTheme.current().text(), false);
 
-        drawItemSlot(g, selectedItemIconX(), selectedItemIconY(), selectedStack, mx, my, 0xFF444444);
+        drawItemSlot(g, selectedItemIconX(), selectedItemIconY(), selectedStack, mx, my, false);
         if (selectedStack.isEmpty()) {
-            g.drawString(font, Component.translatable("tip.adventuresystems.ftb.item.choose"), selectedItemIconX() + ITEM_SLOT + 8, selectedItemIconY() + 7, 0xFFFFFF55, false);
+            g.drawString(font, KineticI18n.translatable("tip.adventuresystems.ftb.item.choose"), selectedItemIconX() + ITEM_SLOT + 8, selectedItemIconY() + 7, GuiTheme.current().text(), false);
         }
 
-        g.drawString(font, Component.translatable("label.adventuresystems.ftb.custom.items", number(explicitEntries.size(), ChatFormatting.GREEN)), headerX, panelY + 30, 0xFFFFAA00, false);
+        g.drawString(font, KineticI18n.translatable("label.adventuresystems.ftb.custom.items", number(explicitEntries.size())), headerX, panelY + 30, GuiTheme.current().text(), false);
         renderExplicitItemGrid(g, mx, my);
 
-        g.drawString(font, Component.translatable("label.adventuresystems.ftb.bound.tasks", number(boundTasks.size(), ChatFormatting.GREEN)), headerX, boundY - 18, 0xFF55FFFF, false);
+        g.drawString(font, KineticI18n.translatable("label.adventuresystems.ftb.bound.tasks", number(boundTasks.size())), headerX, boundY - 18, GuiTheme.current().text(), false);
         renderBoundTasks(g, mx, my);
 
         if (!selectedStack.isEmpty() && boundTasks.isEmpty() && !dirty) {
-            g.drawString(font, Component.translatable("tip.adventuresystems.ftb.default"), rightX + 8, boundY + boundH + 1, 0xFF55FF55, false);
+            g.drawString(font, KineticI18n.translatable("tip.adventuresystems.ftb.default"), rightX + 8, boundY + boundH + 1, GuiTheme.current().text(), false);
         }
     }
 
@@ -481,8 +474,7 @@ public class FTBItemBindingEditorScreen extends KineticScreen {
         int visible = (itemGridRows + 1) * itemGridCols;
         int end = Math.min(explicitEntries.size(), start + visible);
         int gridW = itemGridCols * ITEM_SLOT;
-        g.fill(itemGridX - 2, itemGridY - 2, itemGridX + gridW + SCROLL_W + 5, itemGridY + itemGridH + 2, 0xFF000000);
-        g.fill(itemGridX - 1, itemGridY - 1, itemGridX + gridW + SCROLL_W + 4, itemGridY + itemGridH + 1, 0xFF2A2A2A);
+        GuiTheme.panelAlt(g, itemGridX - 2, itemGridY - 2, gridW + SCROLL_W + 7, itemGridH + 4);
 
         enableCanvasScissor(g, itemGridX, itemGridY, itemGridX + gridW, itemGridY + itemGridH);
         for (int i = start; i < end; i++) {
@@ -493,13 +485,13 @@ public class FTBItemBindingEditorScreen extends KineticScreen {
             int y = itemGridY + row * ITEM_SLOT - itemShift;
             ItemStack stack = entry.createDisplayStack();
             boolean selected = !selectedStack.isEmpty() && BindingStoreFTB.exactKeyForStack(selectedStack).equals(entry.key);
-            drawItemSlot(g, x, y, stack, mx, my, selected ? 0xFF55AA55 : 0xFF333333);
+            drawItemSlot(g, x, y, stack, mx, my, selected);
         }
 
-        g.disableScissor();
+        disableCanvasScissor(g);
         if (itemMaxScroll > 0) {
-            int thumbH = Scroll.calculateThumbHeight(itemGridH, itemGridRows, Math.max(itemGridRows, (int) Math.ceil((double) explicitEntries.size() / itemGridCols)), 18);
-            Scroll.renderScrollbar(g, mx, my, itemGridX + gridW + 3, itemGridY, SCROLL_W, itemGridH, thumbH, itemMaxScroll, smoothItemScroll, itemScrolling);
+            int thumbH = KineticScroll.stateThumbHeight(itemGridH, itemGridRows, Math.max(itemGridRows, (int) Math.ceil((double) explicitEntries.size() / itemGridCols)), 18);
+            KineticScroll.renderScrollbarState(g, mx, my, itemGridX + gridW + 3, itemGridY, SCROLL_W, itemGridH, thumbH, itemMaxScroll, smoothItemScroll, itemScrolling);
         }
     }
 
@@ -511,53 +503,54 @@ public class FTBItemBindingEditorScreen extends KineticScreen {
         int start = (int) Math.floor(smoothBoundScroll + 1.0E-6D);
         int boundShift = (int) Math.round((smoothBoundScroll - start) * ROW_H);
         int end = Math.min(boundTasks.size(), start + rows + 1);
-        g.fill(listX - 2, boundY - 2, listX + listW + SCROLL_W + 6, boundY + rows * ROW_H + 2, 0xFF000000);
-        g.fill(listX - 1, boundY - 1, listX + listW + SCROLL_W + 5, boundY + rows * ROW_H + 1, 0xFF2A2A2A);
+        GuiTheme.panelAlt(g, listX - 2, boundY - 2, listW + SCROLL_W + 8, rows * ROW_H + 4);
 
         enableCanvasScissor(g, listX, boundY, listX + listW, boundY + rows * ROW_H);
         for (int i = start; i < end; i++) {
             RefFTB ref = boundTasks.get(i);
             int y = boundY + (i - start) * ROW_H - boundShift;
             boolean hover = mx >= listX && mx < listX + listW && my >= y && my < y + ROW_H;
-            g.fill(listX, y, listX + listW, y + ROW_H - 1, hover ? 0x44FFFFFF : 0x22000000);
+            GuiTheme.stateSurface(g, listX, y, listW, ROW_H - 1, GuiTheme.Surface.PANEL_ALT, false, hover, false);
             boolean favorite = ref.id() == favoriteQuestId;
-            Component star = Component.literal(favorite ? "★" : "☆");
+            Component star = KineticI18n.translatable(favorite
+                    ? "label.adventuresystems.ftb.favorite.marker_on"
+                    : "label.adventuresystems.ftb.favorite.marker_off");
             int starW = font.width(star) + 8;
             String titleText = GuiTheme.trim(font, cleanTaskTitle(ref), listW - 8 - starW);
             Component subText = buildTaskChapterLine(ref);
-            g.drawString(font, titleText, listX + 4, y + 3, 0xFFFFFFFF, false);
-            g.drawString(font, subText, listX + 4, y + 13, 0xFFFFAA00, false);
-            g.drawString(font, star, listX + listW - starW + 2, y + 3, favorite ? FAVORITE_ON_COLOR : FAVORITE_OFF_COLOR, false);
+            g.drawString(font, titleText, listX + 4, y + 3, GuiTheme.current().text(), false);
+            g.drawString(font, subText, listX + 4, y + 13, GuiTheme.current().text(), false);
+            g.drawString(font, star, listX + listW - starW + 2, y + 3, GuiTheme.current().text(), false);
         }
 
-        g.disableScissor();
+        disableCanvasScissor(g);
         if (boundMaxScroll > 0) {
             int trackH = rows * ROW_H;
-            int thumbH = Scroll.calculateThumbHeight(trackH, rows, boundTasks.size(), 20);
-            Scroll.renderScrollbar(g, mx, my, listX + listW + 4, boundY, SCROLL_W, trackH, thumbH, boundMaxScroll, smoothBoundScroll, boundScrolling);
+            int thumbH = KineticScroll.stateThumbHeight(trackH, rows, boundTasks.size(), 20);
+            KineticScroll.renderScrollbarState(g, mx, my, listX + listW + 4, boundY, SCROLL_W, trackH, thumbH, boundMaxScroll, smoothBoundScroll, boundScrolling);
         }
     }
 
     private String cleanTaskTitle(RefFTB ref) {
         String title = ref == null ? "" : cleanFtbText(ref.title());
-        return title.isBlank() ? Component.translatable("label.adventuresystems.ftb.task.unnamed").getString() : title;
+        return title.isBlank() ? KineticI18n.translatable("label.adventuresystems.ftb.task.unnamed").getString() : title;
     }
 
     private Component buildTaskChapterLine(RefFTB ref) {
         String chapter = ref == null ? "" : cleanFtbText(ref.chapter());
         if (chapter.isBlank()) {
-            chapter = Component.translatable("label.adventuresystems.ftb.chapter.unknown").getString();
+            chapter = KineticI18n.translatable("label.adventuresystems.ftb.chapter.unknown").getString();
         }
         String code = ref == null ? "" : ref.code();
-        return Component.translatable(
+        return KineticI18n.translatable(
                 "label.adventuresystems.ftb.quest.chapter.id",
-                Component.literal(chapter).withStyle(ChatFormatting.GOLD),
-                Component.literal(code).withStyle(ChatFormatting.AQUA)
+                Component.literal(chapter),
+                Component.literal(code)
         );
     }
 
-    private static Component number(long value, ChatFormatting color) {
-        return Component.literal(String.valueOf(value)).withStyle(color);
+    private static Component number(long value) {
+        return Component.literal(String.valueOf(value));
     }
 
     private String cleanFtbText(String value) {
@@ -566,22 +559,17 @@ public class FTBItemBindingEditorScreen extends KineticScreen {
     }
 
     private int selectedItemIconX() {
-        return rightX + 8 + font.width(Component.translatable("label.adventuresystems.ftb.item")) + 8;
+        return rightX + 8 + font.width(KineticI18n.translatable("label.adventuresystems.ftb.item")) + 8;
     }
 
     private int selectedItemIconY() {
         return panelY + 4;
     }
 
-    private void drawItemSlot(GuiGraphics g, int x, int y, ItemStack stack, int mx, int my, int borderColor) {
+    private void drawItemSlot(GuiGraphics g, int x, int y, ItemStack stack, int mx, int my, boolean selected) {
         boolean hovered = mx >= x && mx < x + ITEM_SLOT && my >= y && my < y + ITEM_SLOT;
-        GuiTheme.itemSlot(g, stack, x, y, ITEM_SLOT, 4, hovered);
-        g.renderOutline(x, y, ITEM_SLOT, ITEM_SLOT, borderColor);
-        if (!stack.isEmpty()) {
-            RenderSystem.enableDepthTest();
-            g.renderItem(stack, x + 3, y + 3);
-            RenderSystem.disableDepthTest();
-        }
+        GuiTheme.itemSlot(g, x, y, ITEM_SLOT, ITEM_SLOT, 4, selected, hovered, false);
+        GuiTheme.item(g, this.font, stack, x, y, ITEM_SLOT, 1.0F, false);
     }
 
     @Override
@@ -589,27 +577,27 @@ public class FTBItemBindingEditorScreen extends KineticScreen {
         RefFTB taskRef = taskAt(smx, smy);
         if (taskRef != null) {
             Component tip = selectedQuestIds.contains(taskRef.id())
-                    ? Component.translatable("tip.adventuresystems.ftb.task.remove")
-                    : Component.translatable("tip.adventuresystems.ftb.task.add");
-            GuiOverlay.requestTooltip(List.of(tip), mx, my);
+                    ? KineticI18n.translatable("tip.adventuresystems.ftb.task.remove")
+                    : KineticI18n.translatable("tip.adventuresystems.ftb.task.add");
+            KineticOverlays.requestTooltip(List.of(tip), mx, my);
             return;
         }
         RefFTB boundRef = boundAt(smx, smy);
         if (boundRef != null) {
-            GuiOverlay.requestTooltip(List.of(
-                    Component.translatable("tip.adventuresystems.ftb.task.remove"),
-                    Component.translatable("tip.adventuresystems.ftb.favorite.desc")
+            KineticOverlays.requestTooltip(List.of(
+                    KineticI18n.translatable("tip.adventuresystems.ftb.task.remove"),
+                    KineticI18n.translatable("tip.adventuresystems.ftb.favorite.desc")
             ), mx, my);
             return;
         }
         if (isInside(smx, smy, selectedItemIconX(), selectedItemIconY(), ITEM_SLOT, ITEM_SLOT)) {
-            GuiOverlay.requestTooltip(List.of(Component.translatable("button.adventuresystems.ftb.item.select")), mx, my);
+            KineticOverlays.requestTooltip(List.of(KineticI18n.translatable("button.adventuresystems.ftb.item.select")), mx, my);
         }
     }
 
     @Override
     protected boolean canvasMouseClicked(double mx, double my, int btn) {
-        if (btn == 0) {
+        if (KineticMouseButtons.isPrimary(btn)) {
             if (clickScrollbars(mx, my)) return true;
 
             if (isInside(mx, my, selectedItemIconX(), selectedItemIconY(), ITEM_SLOT, ITEM_SLOT)) {
@@ -634,7 +622,7 @@ public class FTBItemBindingEditorScreen extends KineticScreen {
                 selectEntry(entry);
                 return true;
             }
-        } else if (btn == 1) {
+        } else if (KineticMouseButtons.isSecondary(btn)) {
             RefFTB bound = boundAt((int) mx, (int) my);
             if (bound != null) {
                 setFavoriteTask(bound);
@@ -676,7 +664,7 @@ public class FTBItemBindingEditorScreen extends KineticScreen {
 
     @Override
     protected boolean canvasMouseReleased(double mx, double my, int btn) {
-        if (btn == 0) {
+        if (KineticMouseButtons.isPrimary(btn)) {
             taskScrolling = false;
             boundScrolling = false;
             itemScrolling = false;
@@ -686,7 +674,7 @@ public class FTBItemBindingEditorScreen extends KineticScreen {
 
     @Override
     protected boolean canvasMouseDragged(double mx, double my, int btn, double dx, double dy) {
-        if (btn == 0) {
+        if (KineticMouseButtons.isPrimary(btn)) {
             if (taskScrolling) {
                 updateTaskScroll(my);
                 return true;
@@ -706,15 +694,15 @@ public class FTBItemBindingEditorScreen extends KineticScreen {
     @Override
     protected boolean canvasMouseScrolled(double mx, double my, double delta) {
         if (isInside(mx, my, leftX, panelY + 26, leftW, visibleTaskRows() * ROW_H) && taskMaxScroll > 0) {
-            taskScroll = taskScrollState.wheel(taskScroll, delta, 1.0D / 3.0D, taskMaxScroll);
+            taskScroll = taskScrollState.wheel(taskScroll, delta, 1.0D, taskMaxScroll);
             return true;
         }
         if (isInside(mx, my, itemGridX, itemGridY, itemGridCols * ITEM_SLOT + SCROLL_W + 4, itemGridH) && itemMaxScroll > 0) {
-            itemScroll = itemScrollState.wheel(itemScroll, delta, 1.0D / 3.0D, itemMaxScroll);
+            itemScroll = itemScrollState.wheel(itemScroll, delta, 1.0D, itemMaxScroll);
             return true;
         }
         if (isInside(mx, my, rightX, boundY, rightW, visibleBoundRows() * ROW_H) && boundMaxScroll > 0) {
-            boundScroll = boundScrollState.wheel(boundScroll, delta, 1.0D / 3.0D, boundMaxScroll);
+            boundScroll = boundScrollState.wheel(boundScroll, delta, 1.0D, boundMaxScroll);
             return true;
         }
         return super.canvasMouseScrolled(mx, my, delta);
@@ -723,23 +711,23 @@ public class FTBItemBindingEditorScreen extends KineticScreen {
     private void updateTaskScroll(double my) {
         int rows = visibleTaskRows();
         int trackH = rows * ROW_H;
-        int thumbH = Scroll.calculateThumbHeight(trackH, rows, visibleTasks.size(), 20);
-        taskScroll = Scroll.calculateScrollOffset(my, panelY + 26, trackH, thumbH, taskMaxScroll);
+        int thumbH = KineticScroll.stateThumbHeight(trackH, rows, visibleTasks.size(), 20);
+        taskScroll = KineticScroll.stateOffsetFromPointer(my, panelY + 26, trackH, thumbH, taskMaxScroll);
         taskScrollState.snap(taskScroll, taskMaxScroll);
     }
 
     private void updateBoundScroll(double my) {
         int rows = visibleBoundRows();
         int trackH = rows * ROW_H;
-        int thumbH = Scroll.calculateThumbHeight(trackH, rows, boundTasks.size(), 20);
-        boundScroll = Scroll.calculateScrollOffset(my, boundY, trackH, thumbH, boundMaxScroll);
+        int thumbH = KineticScroll.stateThumbHeight(trackH, rows, boundTasks.size(), 20);
+        boundScroll = KineticScroll.stateOffsetFromPointer(my, boundY, trackH, thumbH, boundMaxScroll);
         boundScrollState.snap(boundScroll, boundMaxScroll);
     }
 
     private void updateItemScroll(double my) {
         int totalRows = Math.max(itemGridRows, (int) Math.ceil((double) explicitEntries.size() / Math.max(1, itemGridCols)));
-        int thumbH = Scroll.calculateThumbHeight(itemGridH, itemGridRows, totalRows, 18);
-        itemScroll = Scroll.calculateScrollOffset(my, itemGridY, itemGridH, thumbH, itemMaxScroll);
+        int thumbH = KineticScroll.stateThumbHeight(itemGridH, itemGridRows, totalRows, 18);
+        itemScroll = KineticScroll.stateOffsetFromPointer(my, itemGridY, itemGridH, thumbH, itemMaxScroll);
         itemScrollState.snap(itemScroll, itemMaxScroll);
     }
 
@@ -787,7 +775,8 @@ public class FTBItemBindingEditorScreen extends KineticScreen {
     }
 
     @Override
-    public void onClose() {
-        Minecraft.getInstance().setScreen(parent);
+    protected boolean handleCloseRequest() {
+        navigateBack();
+        return true;
     }
 }

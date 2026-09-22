@@ -1,6 +1,5 @@
 package dev.xyat.adventuresystems.ftb.event;
 
-import com.mojang.blaze3d.platform.InputConstants;
 import dev.xyat.adventuresystems.ftb.client.FTBClientConfig;
 import dev.xyat.adventuresystems.ftb.client.ItemClientModuleFTB;
 import dev.xyat.adventuresystems.ftb.client.KeyMappingsFTB;
@@ -12,26 +11,30 @@ import dev.xyat.adventuresystems.ftb.data.RefFTB;
 import dev.xyat.adventuresystems.ftb.util.BridgeFTB;
 import dev.xyat.adventuresystems.ftb.util.HoveredItemFTB;
 import dev.xyat.adventuresystems.ftb.util.ResolverFTB;
-import net.minecraft.ChatFormatting;
-import net.minecraft.client.Minecraft;
+import dev.xyat.kineticcore.api.client.tooltip.KineticItemTooltips;
+import dev.xyat.kineticcore.api.runtime.KineticClientRuntime;
+import dev.xyat.kineticcore.api.text.KineticI18n;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.client.event.ScreenEvent;
-import net.minecraftforge.event.entity.player.ItemTooltipEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 import java.util.List;
 
 public final class ClientEventsFTB {
+    private static boolean installed;
+
     private ClientEventsFTB() {
     }
 
-    @SubscribeEvent
-    public static void onItemTooltip(ItemTooltipEvent event) {
-        if (!ItemClientModuleFTB.isEnabled()) return;
+    public static void install() {
+        if (installed) return;
+        installed = true;
+        KineticItemTooltips.onBuild(ClientEventsFTB::onItemTooltip);
+    }
 
-        ItemStack stack = event.getItemStack();
-        if (stack.isEmpty()) return;
+    private static void onItemTooltip(ItemStack stack, List<Component> lines) {
+        if (!ItemClientModuleFTB.isEnabled()) return;
+        if (stack == null || stack.isEmpty()) return;
 
         HoveredItemFTB.rememberTooltipStack(stack);
 
@@ -42,17 +45,13 @@ public final class ClientEventsFTB {
         int count = refs.size();
         if (count == 0) return;
 
-        Component singleKeyName = KeyMappingsFTB.OPEN_QUEST.getTranslatedKeyMessage().copy().withStyle(ChatFormatting.GOLD);
-
-        event.getToolTip().add(Component.translatable(
-                "tip.adventuresystems.ftb.open",
-                singleKeyName
-        ));
+        Component singleKeyName = KeyMappingsFTB.OPEN_QUEST.translatedKeyMessage().copy();
+        lines.add(KineticI18n.translatable("tip.adventuresystems.ftb.open", singleKeyName));
 
         if (count > 1) {
-            Component multiKeyName = KeyMappingsFTB.OPEN_QUEST_MULTI.getTranslatedKeyMessage().copy().withStyle(ChatFormatting.GOLD);
-            Component countText = Component.literal(String.valueOf(count)).withStyle(ChatFormatting.GOLD);
-            event.getToolTip().add(Component.translatable(
+            Component multiKeyName = KeyMappingsFTB.OPEN_QUEST_MULTI.translatedKeyMessage().copy();
+            Component countText = Component.literal(String.valueOf(count));
+            lines.add(KineticI18n.translatable(
                     "tip.adventuresystems.ftb.open.list",
                     multiKeyName,
                     countText
@@ -60,44 +59,39 @@ public final class ClientEventsFTB {
         }
     }
 
-    @SubscribeEvent
-    public static void onScreenKeyPressed(ScreenEvent.KeyPressed.Pre event) {
-        if (!ItemClientModuleFTB.isEnabled()) return;
-        if (FTBClientConfig.shouldSkipTaskJump()) return;
+    public static boolean handleOpenPress(boolean multi) {
+        if (!ItemClientModuleFTB.isEnabled()) return false;
+        if (FTBClientConfig.shouldSkipTaskJump()) return false;
 
-        InputConstants.Key inputKey = InputConstants.getKey(event.getKeyCode(), event.getScanCode());
+        Screen screen = KineticClientRuntime.currentScreen();
+        if (screen == null) return false;
 
-        boolean isMulti = KeyMappingsFTB.OPEN_QUEST_MULTI.isActiveAndMatches(inputKey);
-        boolean isSingle = KeyMappingsFTB.OPEN_QUEST.isActiveAndMatches(inputKey);
+        ItemStack hovered = HoveredItemFTB.getHoveredStack(screen);
+        if (hovered.isEmpty()) return false;
+        if (BlacklistStoreFTB.isBlacklisted(hovered)) return false;
 
-        if (isMulti || isSingle) {
-            ItemStack hovered = HoveredItemFTB.getHoveredStack(event.getScreen());
-            if (hovered.isEmpty()) return;
-
-            if (BlacklistStoreFTB.isBlacklisted(hovered)) return;
-
-            List<RefFTB> refs = ResolverFTB.findQuestRefs(hovered);
-            if (refs.isEmpty()) {
-                FTBToastUtil.showQuick("adventuresystems.ftb.no.quest", Component.translatable("msg.adventuresystems.ftb.no.quest"));
-                event.setCanceled(true);
-                return;
-            }
-
-            if (isMulti && refs.size() > 1) {
-                Minecraft.getInstance().setScreen(new SelectScreenFTB(event.getScreen(), hovered.copy(), refs));
-            } else {
-                long favId = FavoritesStoreFTB.getFavorite(hovered);
-                long targetId = refs.get(0).id();
-                for (RefFTB ref : refs) {
-                    if (ref.id() == favId) {
-                        targetId = favId;
-                        break;
-                    }
-                }
-                BridgeFTB.openQuest(targetId);
-            }
-
-            event.setCanceled(true);
+        List<RefFTB> refs = ResolverFTB.findQuestRefs(hovered);
+        if (refs.isEmpty()) {
+            FTBToastUtil.showQuick(
+                    "adventuresystems.ftb.no.quest",
+                    KineticI18n.translatable("msg.adventuresystems.ftb.no.quest")
+            );
+            return true;
         }
+
+        if (multi && refs.size() > 1) {
+            KineticClientRuntime.openScreen(new SelectScreenFTB(screen, hovered.copy(), refs));
+        } else {
+            long favId = FavoritesStoreFTB.getFavorite(hovered);
+            long targetId = refs.get(0).id();
+            for (RefFTB ref : refs) {
+                if (ref.id() == favId) {
+                    targetId = favId;
+                    break;
+                }
+            }
+            BridgeFTB.openQuest(targetId);
+        }
+        return true;
     }
 }
