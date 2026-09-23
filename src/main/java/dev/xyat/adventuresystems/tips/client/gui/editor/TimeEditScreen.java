@@ -3,7 +3,6 @@ package dev.xyat.adventuresystems.tips.client.gui.editor;
 import dev.xyat.kineticcore.api.client.screen.KineticNativeScreen;
 import dev.xyat.kineticcore.api.client.theme.GuiTheme;
 import dev.xyat.kineticcore.api.client.widget.input.KineticNumericFields.NumericEditBox;
-import dev.xyat.kineticcore.api.runtime.KineticClientRuntime;
 import dev.xyat.kineticcore.api.text.KineticI18n;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -65,7 +64,6 @@ public class TimeEditScreen extends KineticNativeScreen {
         }
         int ms = (int) Math.round(seconds * 1000.0D);
         onSave.accept(ms);
-        closeToParent();
     }
 
     @Override

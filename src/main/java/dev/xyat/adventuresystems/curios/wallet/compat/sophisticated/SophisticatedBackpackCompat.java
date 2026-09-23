@@ -1,6 +1,7 @@
 package dev.xyat.adventuresystems.curios.wallet.compat.sophisticated;
 
 import dev.xyat.kineticcore.api.runtime.KineticPlatform;
+import dev.xyat.adventuresystems.curios.wallet.storage.WalletMaterialMatcher;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -32,7 +33,7 @@ public final class SophisticatedBackpackCompat {
             InventoryHandler handler = wrapper.get().getInventoryHandler();
             for (int slot = 0; slot < handler.getSlots(); slot++) {
                 ItemStack current = handler.getStackInSlot(slot);
-                if (ItemStack.isSameItemSameTags(current, target)) {
+                if (WalletMaterialMatcher.matches(current, target)) {
                     total = safeAdd(total, current.getCount());
                 }
             }
@@ -51,7 +52,7 @@ public final class SophisticatedBackpackCompat {
             InventoryHandler handler = wrapper.get().getInventoryHandler();
             for (int slot = 0; slot < handler.getSlots() && remaining > 0L; slot++) {
                 ItemStack current = handler.getStackInSlot(slot);
-                if (!ItemStack.isSameItemSameTags(current, target)) continue;
+                if (!WalletMaterialMatcher.matches(current, target)) continue;
                 int step = (int) Math.min(current.getCount(), Math.min(Integer.MAX_VALUE, remaining));
                 ItemStack extracted = handler.extractItem(slot, step, simulate);
                 int got = extracted.isEmpty() ? 0 : extracted.getCount();

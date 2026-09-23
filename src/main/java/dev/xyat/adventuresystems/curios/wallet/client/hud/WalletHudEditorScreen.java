@@ -8,7 +8,6 @@ import dev.xyat.kineticcore.api.client.screen.KineticNativeScreen;
 import dev.xyat.kineticcore.api.client.selector.HudPositionEditor;
 import dev.xyat.kineticcore.api.config.client.KTConfigApi;
 import dev.xyat.kineticcore.api.resource.KineticResourceIds;
-import dev.xyat.kineticcore.api.runtime.KineticClientRuntime;
 import dev.xyat.kineticcore.api.text.KineticI18n;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -72,7 +71,7 @@ public final class WalletHudEditorScreen extends KineticNativeScreen {
                 KineticI18n.translatable("gui.kineticcore.hud_editor.save"),
                 KineticI18n.translatable("gui.kineticcore.hud_editor.reset"),
                 KineticI18n.translatable("gui.kineticcore.hud_editor.cancel"),
-                this::saveAndClose,
+                this::save,
                 this::closeWithoutSaving
         );
     }
@@ -133,7 +132,7 @@ public final class WalletHudEditorScreen extends KineticNativeScreen {
         return false;
     }
 
-    private void saveAndClose() {
+    private void save() {
         CuriosConfig.walletHudOffsetX = currentOffsetX();
         CuriosConfig.walletHudOffsetY = currentOffsetY();
         CuriosConfig.walletHudScale = editor.getScale();
@@ -141,7 +140,6 @@ public final class WalletHudEditorScreen extends KineticNativeScreen {
         KTConfigApi.notifySaved(CuriosConfigGui.HUD_PAGE_ID);
         commitDraft();
         KTConfigApi.refreshScreenFromSource(parent);
-        closeScreen();
     }
 
     private void closeWithoutSaving() {

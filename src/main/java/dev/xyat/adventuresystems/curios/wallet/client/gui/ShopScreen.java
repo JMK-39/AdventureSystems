@@ -2168,7 +2168,6 @@ public class ShopScreen extends KineticScreen {
         }
         if (isOutsideChoiceOverlay(mouseX, mouseY)) {
             closeChoiceOverlay();
-            return;
         }
     }
 
@@ -2634,7 +2633,11 @@ public class ShopScreen extends KineticScreen {
     }
 
     private int modeEntryCount() {
-        String key = mode == Shop.Mode.BUY ? "Buy" : "Sell";
+        return entryCount(mode);
+    }
+
+    int entryCount(Shop.Mode entryMode) {
+        String key = entryMode == Shop.Mode.BUY ? "Buy" : "Sell";
         return shopTag == null ? 0 : shopTag.getList(key, Tag.TAG_COMPOUND).size();
     }
 
@@ -3519,12 +3522,8 @@ public class ShopScreen extends KineticScreen {
             return false;
         }
 
-        if (entry.totalLimit() > 0
-                && totalRemaining(entry) <= 1) {
-            return false;
-        }
-
-        return true;
+        return entry.totalLimit() <= 0
+                || totalRemaining(entry) > 1;
     }
 
     private int detailAmountInputY() {

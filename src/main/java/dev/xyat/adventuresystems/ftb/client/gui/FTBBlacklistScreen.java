@@ -13,7 +13,6 @@ import dev.xyat.kineticcore.api.client.widget.selection.KineticTabs.ItemGridItem
 import dev.xyat.kineticcore.api.client.widget.selection.KineticTabs.ItemGridMarker;
 import dev.xyat.kineticcore.api.client.widget.selection.KineticTabs.ScrollableItemGrid;
 import dev.xyat.kineticcore.api.registry.KineticRegistries;
-import dev.xyat.kineticcore.api.runtime.KineticClientRuntime;
 import dev.xyat.kineticcore.api.text.KineticI18n;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -44,7 +43,7 @@ public class FTBBlacklistScreen extends KineticScreen {
     protected void buildUi() {
         reloadEntries();
         addButton(14, 10, 100, KineticI18n.translatable("button.adventuresystems.ftb.blacklist.add"), null, this::openSelector);
-        addButton(canvasWidth() - 74, 10, 60, KineticI18n.translatable("button.adventuresystems.ftb.save"), null, this::saveAndClose);
+        addButton(canvasWidth() - 74, 10, 60, KineticI18n.translatable("button.adventuresystems.ftb.save"), null, this::save);
         itemGrid = addScrollableItemGrid(
                 14,
                 36,
@@ -160,14 +159,17 @@ public class FTBBlacklistScreen extends KineticScreen {
         return BindingStoreFTB.createDisplayStack(parts[0], parts.length > 1 ? parts[1] : "");
     }
 
-    private void saveAndClose() {
+    private void save() {
         commitDraft();
-        navigateBack();
     }
 
     @Override
     protected boolean handleCloseRequest() {
         navigateBack();
         return true;
+    }
+
+    public Screen getParent() {
+        return parent;
     }
 }

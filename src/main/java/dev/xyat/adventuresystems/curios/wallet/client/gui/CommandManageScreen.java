@@ -9,7 +9,6 @@ import dev.xyat.kineticcore.api.client.theme.GuiTheme;
 import dev.xyat.kineticcore.api.client.widget.button.KineticButtons.StateButton;
 import dev.xyat.kineticcore.api.client.widget.input.KineticTextFields.KineticEditBox;
 import dev.xyat.kineticcore.api.client.widget.scroll.KineticScroll.GridScrollController;
-import dev.xyat.kineticcore.api.runtime.KineticClientRuntime;
 import dev.xyat.kineticcore.api.text.KineticI18n;
 import java.util.ArrayList;
 import java.util.List;
@@ -342,7 +341,7 @@ final class CommandManageScreen extends KineticScreen {
 
     @Override
     protected void renderCanvasForeground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        if (commandSuggestions == null || commandBox == null || !isControlFocused(commandBox)) return;
+        if (commandSuggestions == null || !isControlFocused(commandBox)) return;
         graphics.pose().pushPose();
         graphics.pose().translate(0, 0, 500);
         commandSuggestions.render(graphics, mouseX, mouseY);
@@ -372,7 +371,7 @@ final class CommandManageScreen extends KineticScreen {
         if (commandSuggestions != null) {
             commandSuggestions.setAllowSuggestions(true);
             commandSuggestions.update();
-            if (commandSuggestions.keyPressed(keyCode, scanCode, modifiers)) return true;
+            return commandSuggestions.keyPressed(keyCode, scanCode, modifiers);
         }
         return false;
     }
@@ -447,5 +446,9 @@ final class CommandManageScreen extends KineticScreen {
 
     private void returnToParent() {
         navigateBack();
+    }
+
+    public Screen getParent() {
+        return parent;
     }
 }

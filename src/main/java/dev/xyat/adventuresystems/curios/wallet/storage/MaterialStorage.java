@@ -68,7 +68,7 @@ public final class MaterialStorage {
         Snapshot before = snapshot(player, target, useBackpack, useRs);
         long remaining = amount;
         long fromBackpack = 0L;
-        if (useBackpack && remaining > 0L && before.hasBackpack()) {
+        if (useBackpack && before.hasBackpack()) {
             fromBackpack = SophisticatedBackpackCompat.extract(player, target, remaining, false);
             remaining -= fromBackpack;
         }
@@ -114,7 +114,7 @@ public final class MaterialStorage {
         long count = 0L;
         for (int i = 0; i < inventory.getContainerSize(); i++) {
             ItemStack stack = inventory.getItem(i);
-            if (ItemStack.isSameItemSameTags(stack, target)) count = safeAdd(count, stack.getCount());
+            if (WalletMaterialMatcher.matches(stack, target)) count = safeAdd(count, stack.getCount());
         }
         return count;
     }
@@ -123,7 +123,7 @@ public final class MaterialStorage {
         long remaining = amount;
         for (int i = 0; i < inventory.getContainerSize() && remaining > 0L; i++) {
             ItemStack stack = inventory.getItem(i);
-            if (!ItemStack.isSameItemSameTags(stack, target)) continue;
+            if (!WalletMaterialMatcher.matches(stack, target)) continue;
             int remove = (int) Math.min(stack.getCount(), remaining);
             stack.shrink(remove);
             remaining -= remove;

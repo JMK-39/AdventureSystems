@@ -9,7 +9,6 @@ import dev.xyat.kineticcore.api.client.theme.GuiTheme;
 import dev.xyat.kineticcore.api.client.widget.input.KineticTextFields.KineticEditBox;
 import dev.xyat.kineticcore.api.client.widget.selection.KineticTabs.ActionItem;
 import dev.xyat.kineticcore.api.client.widget.selection.KineticTabs.ScrollableActionList;
-import dev.xyat.kineticcore.api.runtime.KineticClientRuntime;
 import dev.xyat.kineticcore.api.text.KineticI18n;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -148,5 +147,9 @@ public class SelectScreenFTB extends KineticScreen {
     protected boolean handleCloseRequest() {
         navigateBack();
         return true;
+    }
+
+    public Screen getParent() {
+        return parent;
     }
 }

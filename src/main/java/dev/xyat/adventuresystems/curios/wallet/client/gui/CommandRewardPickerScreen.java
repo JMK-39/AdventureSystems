@@ -5,13 +5,11 @@ import dev.xyat.kineticcore.api.client.overlay.KineticOverlays;
 import dev.xyat.kineticcore.api.client.screen.KineticScreen;
 import dev.xyat.kineticcore.api.client.theme.GuiTheme;
 import dev.xyat.kineticcore.api.client.widget.scroll.KineticScroll.GridScrollController;
-import dev.xyat.kineticcore.api.runtime.KineticClientRuntime;
 import dev.xyat.kineticcore.api.text.KineticI18n;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
@@ -232,4 +230,8 @@ final class CommandRewardPickerScreen extends KineticScreen {
     private int scrollbarX() { return listX() + listW() - SCROLLBAR_WIDTH - 4; }
     private int cellX(int col) { return gridX() + col * CELL_STEP; }
     private int cellY(int row) { return gridY() + row * CELL_STEP; }
+
+    public Screen getParent() {
+        return parent;
+    }
 }

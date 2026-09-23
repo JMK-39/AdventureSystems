@@ -6,7 +6,6 @@ import dev.xyat.kineticcore.api.client.overlay.KineticOverlays;
 import dev.xyat.kineticcore.api.client.screen.KineticScreen;
 import dev.xyat.kineticcore.api.client.theme.GuiTheme;
 import dev.xyat.kineticcore.api.client.widget.scroll.KineticScroll.GridScrollController;
-import dev.xyat.kineticcore.api.runtime.KineticClientRuntime;
 import dev.xyat.kineticcore.api.text.KineticI18n;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -197,5 +196,9 @@ final class CurrencyPickerScreen extends KineticScreen {
 
     private void returnToParent() {
         navigateBack();
+    }
+
+    public Screen getParent() {
+        return parent;
     }
 }

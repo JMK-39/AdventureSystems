@@ -10,7 +10,6 @@ import dev.xyat.kineticcore.api.client.theme.GuiTheme;
 import dev.xyat.kineticcore.api.client.widget.input.KineticTextFields.KineticEditBox;
 import dev.xyat.kineticcore.api.client.widget.selection.KineticTabs.ItemActionItem;
 import dev.xyat.kineticcore.api.client.widget.selection.KineticTabs.ScrollableItemActionList;
-import dev.xyat.kineticcore.api.runtime.KineticClientRuntime;
 import dev.xyat.kineticcore.api.text.KineticI18n;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -59,7 +58,7 @@ public class ItemBlacklistScreenFTB extends KineticScreen {
         );
         searchBox.setResponder(value -> applySearch());
         addButton(LIST_X, 54, 100, KineticI18n.translatable("button.adventuresystems.ftb_item.add_blacklist"), null, this::openSelector);
-        addButton(LIST_X + 470, 54, 100, KineticI18n.translatable("button.adventuresystems.ftb.save"), null, this::saveAndClose);
+        addButton(LIST_X + 470, 54, 100, KineticI18n.translatable("button.adventuresystems.ftb.save"), null, this::save);
         listWidget = addScrollableItemActionList(
                 LIST_X,
                 LIST_Y,
@@ -148,14 +147,17 @@ public class ItemBlacklistScreenFTB extends KineticScreen {
         );
     }
 
-    private void saveAndClose() {
+    private void save() {
         commitDraft();
-        navigateBack();
     }
 
     @Override
     protected boolean handleCloseRequest() {
         navigateBack();
         return true;
+    }
+
+    public Screen getParent() {
+        return parent;
     }
 }

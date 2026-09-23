@@ -573,9 +573,11 @@ final class ShopEntryEditorScreen extends KineticScreen {
             return;
         }
         String rewardsText = (draft.gacha || draft.selectable) ? draft.buildRewardsText() : "";
+        if (draft.index < 0) {
+            draft.index = parent.entryCount(draft.mode);
+        }
         Network.sendSaveShopEntry(draft.mode, draft.index, draft.itemId, draft.currencyId, draft.price, draft.count, draft.dailyLimit, draft.totalLimit, draft.buildQuestText(), draft.gacha, rewardsText);
         commitDraft();
-        navigateBack();
     }
 
     private void cancelAndReturn() {

@@ -8,7 +8,6 @@ import dev.xyat.kineticcore.api.client.search.KineticSearch;
 import dev.xyat.kineticcore.api.client.theme.GuiTheme;
 import dev.xyat.kineticcore.api.client.widget.input.KineticTextFields.KineticEditBox;
 import dev.xyat.kineticcore.api.client.widget.scroll.KineticScroll.GridScrollController;
-import dev.xyat.kineticcore.api.runtime.KineticClientRuntime;
 import dev.xyat.kineticcore.api.text.KineticI18n;
 import java.util.ArrayList;
 import java.util.List;
@@ -276,6 +275,10 @@ final class QuestPickerScreen extends KineticScreen {
     private int scrollbarX() { return listX() + listW() - SCROLLBAR_WIDTH - 3; }
     private int scrollbarReserve() { return listScroll.canScroll() ? 16 : 0; }
     private boolean scrollbarVisible() { return listScroll.canScroll(); }
+
+    public Screen getParent() {
+        return parent;
+    }
 
     private record QuestOption(long id, String code, String title, String chapter) {
         String displayTitle() {

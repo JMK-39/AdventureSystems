@@ -647,7 +647,6 @@ public class TipEditorScreen extends KineticNativeScreen {
         if (success) {
             KTConfigApi.notifySaved(TipsConfigGui.EDITOR_PAGE_ID);
             commitDraft();
-            navigateBack();
         } else {
             KineticOverlays.toast(KineticI18n.translatable("msg.adventuresystems.tips.tips.save_failed"));
         }

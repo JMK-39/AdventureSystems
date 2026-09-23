@@ -2,6 +2,7 @@ package dev.xyat.adventuresystems.curios.wallet.compat.rs;
 
 import dev.xyat.kineticcore.api.runtime.KineticPlatform;
 import dev.xyat.kineticcore.api.registry.KineticRegistries;
+import dev.xyat.adventuresystems.curios.wallet.storage.WalletMaterialMatcher;
 import com.refinedmods.refinedstorage.api.IRSAPI;
 import com.refinedmods.refinedstorage.api.RSAPIInject;
 import com.refinedmods.refinedstorage.api.network.INetwork;
@@ -41,10 +42,14 @@ public class RefinedStorageCompat {
         if (target == null || target.isEmpty()) return 0L;
         INetwork network = network(level, pos);
         if (network == null || !network.canRun()) return 0L;
-        ItemStack extracted = network.extractItem(target.copy(), Integer.MAX_VALUE, IComparer.COMPARE_NBT, Action.SIMULATE);
-        if (extracted.isEmpty()) return 0L;
-        int count = extracted.getCount();
-        return count < 0 ? 0L : count;
+        long total = 0L;
+        for (ItemStack variant : WalletMaterialMatcher.exactVariants(target)) {
+            ItemStack extracted = network.extractItem(variant, Integer.MAX_VALUE, IComparer.COMPARE_NBT, Action.SIMULATE);
+            if (!extracted.isEmpty() && extracted.getCount() > 0) {
+                total = safeAdd(total, extracted.getCount());
+            }
+        }
+        return total;
     }
 
     public static long extract(ServerLevel level, BlockPos pos, ItemStack target, long amount, boolean simulate) {
@@ -53,14 +58,18 @@ public class RefinedStorageCompat {
         if (network == null || !network.canRun()) return 0L;
         long remaining = amount;
         long extractedTotal = 0L;
-        while (remaining > 0L) {
-            int step = (int) Math.min(Integer.MAX_VALUE, remaining);
-            ItemStack extracted = network.extractItem(target.copy(), step, IComparer.COMPARE_NBT, simulate ? Action.SIMULATE : Action.PERFORM);
-            int got = extracted.isEmpty() ? 0 : extracted.getCount();
-            if (got == 0) break;
-            extractedTotal = safeAdd(extractedTotal, got);
-            remaining = remaining - got;
-            if (simulate) break;
+        for (ItemStack variant : WalletMaterialMatcher.exactVariants(target)) {
+            while (remaining > 0L) {
+                int step = (int) Math.min(Integer.MAX_VALUE, remaining);
+                ItemStack extracted = network.extractItem(variant, step, IComparer.COMPARE_NBT,
+                        simulate ? Action.SIMULATE : Action.PERFORM);
+                int got = extracted.isEmpty() ? 0 : extracted.getCount();
+                if (got == 0) break;
+                extractedTotal = safeAdd(extractedTotal, got);
+                remaining -= got;
+                if (simulate) break;
+            }
+            if (remaining <= 0L) break;
         }
         return extractedTotal;
     }
