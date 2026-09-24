@@ -10,7 +10,7 @@ import dev.xyat.kineticcore.api.client.selector.KineticSelectors;
 import dev.xyat.kineticcore.api.client.theme.GuiTheme;
 import dev.xyat.kineticcore.api.client.widget.selection.KineticTabs.ItemGridDensity;
 import dev.xyat.kineticcore.api.client.widget.selection.KineticTabs.ItemGridItem;
-import dev.xyat.kineticcore.api.client.widget.selection.KineticTabs.ItemGridMarker;
+import dev.xyat.kineticcore.api.client.widget.selection.KineticTabs.ItemGridOutline;
 import dev.xyat.kineticcore.api.client.widget.selection.KineticTabs.ScrollableItemGrid;
 import dev.xyat.kineticcore.api.registry.KineticRegistries;
 import dev.xyat.kineticcore.api.text.KineticI18n;
@@ -71,8 +71,7 @@ public class FTBBlacklistScreen extends KineticScreen {
                     true,
                     false,
                     false,
-                    true,
-                    ItemGridMarker.WARNING
+                    ItemGridOutline.WARNING
             ));
         }
         return items;
