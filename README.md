@@ -107,7 +107,6 @@ All paths below are relative to the game/server directory:
 
 Open the shared configuration center with **F6**. Client pages such as HUD/navigation preferences are separate from server-authoritative mechanics and content. Accessory module switches require restarting; follow each page's apply notice for other settings. A client-side file edit does not override a remote server's rules. Player progression and wallet state are also runtime/save data, so copying the configuration directory alone is not a complete player-data backup.
 
-[Back to language selection](#adventure-systems)
 
 ---
 
@@ -215,5 +214,3 @@ kubejs:monster_coin|10000
 | `config/kineticcore/tips/tips_<语言>.json` | 各语言提示内容，包括 `en_us`、`zh_cn`。 |
 
 默认按 **F6** 打开统一配置中心。HUD、任务导航等客户端页面，与服务器控制的机制和内容分开管理。饰品模块开关需要重启，其他设置应遵守页面的生效提示；修改客户端文件不会覆盖远程服务器规则。玩家成长和钱包状态还涉及运行时及存档数据，仅复制配置目录不等于完整备份玩家数据。
-
-[返回语言选择](#adventure-systems)
