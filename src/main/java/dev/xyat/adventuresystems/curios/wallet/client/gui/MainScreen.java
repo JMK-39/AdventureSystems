@@ -112,20 +112,22 @@ public class MainScreen extends KineticScreen {
         rowButtons.clear();
         for (Row row : rows) {
             if (row.exchange()) {
-                StateButton once = addCompactButton(
+                StateButton once = addCompactHighZButton(
                         0,
                         0,
                         38,
                         KineticI18n.translatable("gui.adventuresystems.curios.wallet.exchange_one"),
                         KineticI18n.translatable("gui.adventuresystems.curios.wallet.tooltip_convert_one"),
+                        200,
                         () -> Network.sendConvertOne(row.from, row.to)
                 );
-                StateButton all = addCompactButton(
+                StateButton all = addCompactHighZButton(
                         0,
                         0,
                         38,
                         KineticI18n.translatable("gui.adventuresystems.curios.wallet.exchange_all"),
                         KineticI18n.translatable("gui.adventuresystems.curios.wallet.tooltip_convert_all"),
+                        200,
                         () -> Network.sendConvertAll(row.from, row.to)
                 );
                 setControlVisible(once, false);
@@ -134,12 +136,13 @@ public class MainScreen extends KineticScreen {
                 setControlEnabled(all, false);
                 rowButtons.add(new RowButtons(once, all));
             } else {
-                StateButton withdraw = addCompactButton(
+                StateButton withdraw = addCompactHighZButton(
                         0,
                         0,
                         62,
                         KineticI18n.translatable("gui.adventuresystems.curios.wallet.withdraw_64"),
                         KineticI18n.translatable("gui.adventuresystems.curios.wallet.tooltip_withdraw"),
+                        200,
                         () -> Network.sendWithdraw(row.from)
                 );
                 setControlVisible(withdraw, false);
@@ -184,14 +187,6 @@ public class MainScreen extends KineticScreen {
     protected void renderCanvasBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         GuiTheme.panel(graphics, left, top, PANEL_WIDTH, PANEL_HEIGHT);
         graphics.drawCenteredString(font, title, left + PANEL_WIDTH / 2, top + 8, GuiTheme.current().text());
-        graphics.drawString(
-                font,
-                KineticI18n.translatable("gui.adventuresystems.curios.wallet.expand_hint"),
-                left + 14,
-                top + 44,
-                GuiTheme.current().mutedText(),
-                true
-        );
         updateActionButtonPositions();
     }
 
