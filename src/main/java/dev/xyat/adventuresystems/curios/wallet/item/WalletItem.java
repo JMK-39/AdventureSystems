@@ -30,8 +30,15 @@ import java.util.List;
 import java.util.UUID;
 
 public class WalletItem extends Item implements ICurioItem {
+    private static final String ITEM_NAME_KEY = "item.adventuresystems.currency_wallet";
+
     public WalletItem() {
         super(new Properties().stacksTo(1).rarity(Rarity.RARE).fireResistant());
+    }
+
+    @Override
+    public @NotNull Component getName(@NotNull ItemStack stack) {
+        return KineticI18n.translatable(ITEM_NAME_KEY);
     }
 
     @Override

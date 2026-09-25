@@ -701,7 +701,7 @@
   "gui.adventuresystems.curios.wallet.shop_balance_amount": "§6%s",
   "gui.adventuresystems.curios.wallet.shop_balance_delta_positive": "§a%s",
   "gui.adventuresystems.curios.wallet.shop_balance_delta_negative": "§c%s",
-  "gui.adventuresystems.curios.wallet.shop_cell_price_ready": "§0%s",
+  "gui.adventuresystems.curios.wallet.shop_cell_price_ready": "§a%s",
   "gui.adventuresystems.curios.wallet.shop_cell_price_blocked": "§c%s",
   "gui.adventuresystems.curios.wallet.shop_detail_name_ready": "§f%s",
   "gui.adventuresystems.curios.wallet.shop_detail_name_locked": "§c%s",
