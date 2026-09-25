@@ -14,12 +14,12 @@ Adventure Systems connects equipment progression, a configurable currency econom
 | --- | --- |
 | Minecraft | 1.20.1 |
 | Forge | 47.4.2+ for Minecraft 1.20.1 |
-| KineticCore | 26.9.23+ |
+| KineticCore | 26.9.24+ |
 | Curios API | 5.10.0+ |
 | FTB Library, FTB Quests, FTB Teams | Required by this branch's mod metadata |
 | Refined Storage, Sophisticated Backpacks, JEI | Optional integrations |
 
-Install the mod and required dependencies on both client and server. Mod ID: `adventuresystems`; license: LGPLv3. The default currency definitions refer to KubeJS items, but KubeJS is not a declared requirement: you can replace those definitions with existing items.
+Install the mod and its required dependencies on both client and server. The starter currency list points to KubeJS items, but KubeJS itself is optional; replace those IDs with items already present in your pack if you do not use KubeJS.
 
 ### Accessories and progression
 
@@ -107,10 +107,6 @@ All paths below are relative to the game/server directory:
 
 Open the shared configuration center with **F6**. Client pages such as HUD/navigation preferences are separate from server-authoritative mechanics and content. Accessory module switches require restarting; follow each page's apply notice for other settings. A client-side file edit does not override a remote server's rules. Player progression and wallet state are also runtime/save data, so copying the configuration directory alone is not a complete player-data backup.
 
-### Source references
-
-[Accessory and currency settings](src/main/java/dev/xyat/adventuresystems/curios/config/CuriosConfig.java) · [Shop behavior](src/main/java/dev/xyat/adventuresystems/curios/wallet/shop/Shop.java) · [Batch-submission eligibility](src/main/java/dev/xyat/adventuresystems/ftb/api/FTBTaskSubmitHelper.java) · [Tip conditions](src/main/java/dev/xyat/adventuresystems/tips/api/HelpTip.java)
-
 [Back to language selection](#adventure-systems)
 
 ---
@@ -127,12 +123,12 @@ Adventure Systems 将装备成长、货币经济、FTB 任务快捷交互和情�
 | --- | --- |
 | Minecraft | 1.20.1 |
 | Forge | 对应 1.20.1 分支的 47.4.2+ |
-| KineticCore | 26.9.23+ |
+| KineticCore | 26.9.24+ |
 | Curios API | 5.10.0+ |
 | FTB Library、FTB Quests、FTB Teams | 当前分支元数据声明为必需 |
 | Refined Storage、Sophisticated Backpacks、JEI | 可选联动 |
 
-客户端和服务端均应安装本模组及必要前置。模组 ID 为 `adventuresystems`，许可证为 LGPLv3。默认货币引用 KubeJS 物品，但 KubeJS 不是声明的硬性前置，也可以改用已有物品作为货币。
+客户端和服务端均应安装本模组及必要前置。初始货币列表引用 KubeJS 物品，但 KubeJS 本身不是必须安装的前置；不使用 KubeJS 时，可将货币 ID 改为整合包中已有的物品。
 
 ### 饰品与成长
 
@@ -219,9 +215,5 @@ kubejs:monster_coin|10000
 | `config/kineticcore/tips/tips_<语言>.json` | 各语言提示内容，包括 `en_us`、`zh_cn`。 |
 
 默认按 **F6** 打开统一配置中心。HUD、任务导航等客户端页面，与服务器控制的机制和内容分开管理。饰品模块开关需要重启，其他设置应遵守页面的生效提示；修改客户端文件不会覆盖远程服务器规则。玩家成长和钱包状态还涉及运行时及存档数据，仅复制配置目录不等于完整备份玩家数据。
-
-### 源码对照
-
-[饰品与货币设置](src/main/java/dev/xyat/adventuresystems/curios/config/CuriosConfig.java) · [商店行为](src/main/java/dev/xyat/adventuresystems/curios/wallet/shop/Shop.java) · [批量提交条件](src/main/java/dev/xyat/adventuresystems/ftb/api/FTBTaskSubmitHelper.java) · [提示条件](src/main/java/dev/xyat/adventuresystems/tips/api/HelpTip.java)
 
 [返回语言选择](#adventure-systems)
