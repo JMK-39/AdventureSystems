@@ -3,51 +3,38 @@ package dev.xyat.adventuresystems.curios.wallet.client.gui;
 import dev.xyat.adventuresystems.curios.wallet.data.CurrencyType;
 import dev.xyat.adventuresystems.curios.wallet.data.Data;
 import dev.xyat.adventuresystems.curios.wallet.network.Network;
-import dev.xyat.kineticcore.api.client.input.KineticMouseButtons;
-import dev.xyat.kineticcore.api.client.overlay.KineticOverlays;
-import dev.xyat.kineticcore.api.client.screen.KineticScreen;
-import dev.xyat.kineticcore.api.client.theme.GuiTheme;
-import dev.xyat.kineticcore.api.client.widget.button.KineticButtons.StateButton;
-import dev.xyat.kineticcore.api.client.widget.scroll.KineticScroll.GridScrollController;
-import dev.xyat.kineticcore.api.registry.KineticRegistries;
-import dev.xyat.kineticcore.api.resource.KineticResourceIds;
+import dev.xyat.kineticcore.api.client.gui.page.KineticPage;
+import dev.xyat.kineticcore.api.client.gui.input.MouseInput;
+import dev.xyat.kineticcore.api.client.gui.render.KineticGraphics;
+import dev.xyat.kineticcore.api.client.gui.theme.KineticTheme;
+import dev.xyat.kineticcore.api.client.gui.ui.KineticUi;
+import dev.xyat.kineticcore.api.client.gui.widget.KineticButton;
+import dev.xyat.kineticcore.api.client.gui.widget.list.KineticRowList;
 import dev.xyat.kineticcore.api.text.KineticI18n;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Set;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
-import org.jetbrains.annotations.NotNull;
-import dev.xyat.kineticcore.api.client.widget.KineticControl;
 
-public class MainScreen extends KineticScreen {
-    private static final int PANEL_WIDTH = 430;
-    private static final int PANEL_HEIGHT = 270;
-    private static final int CURRENCY_ROW_HEIGHT = 40;
-    private static final int EXCHANGE_ROW_HEIGHT = 30;
-    private static final int SCROLLBAR_WIDTH = 4;
-    private static final int SCROLLBAR_MIN_THUMB = 18;
-
+public class MainScreen extends KineticPage {
     private CompoundTag balances;
-    private int left;
-    private int top;
-    private final GridScrollController listScroll = new GridScrollController();
     private boolean hudCurrencyVisible;
-    private StateButton hudButton;
-    private final List<Row> rows = new ArrayList<>();
-    private final List<RowButtons> rowButtons = new ArrayList<>();
     private final Set<String> expandedCurrencies = new HashSet<>();
+    private final List<Row> rows = new ArrayList<>();
+    private final List<KineticButton> rowActions = new ArrayList<>();
+    private final List<KineticButton> rowExpanders = new ArrayList<>();
+    private KineticButton hudButton;
+    private WalletRows list;
+    private int scrollOffset;
 
     public MainScreen(CompoundTag balances, boolean hudCurrencyVisible) {
         super(KineticI18n.translatable("gui.adventuresystems.curios.wallet.title"));
-        useCanvas(450f, 300f, 6);
+        useCanvas(450, 300, 6);
+        setPausesGame(false);
         this.balances = balances == null ? new CompoundTag() : balances.copy();
         this.hudCurrencyVisible = hudCurrencyVisible;
         rebuildRows();
@@ -57,49 +44,43 @@ public class MainScreen extends KineticScreen {
         this.balances = balances == null ? new CompoundTag() : balances.copy();
         this.hudCurrencyVisible = hudCurrencyVisible;
         if (hudButton != null) hudButton.setText(hudText());
-        rebuildRows();
-        if (rowButtons.size() != rows.size()) rebuildUi();
+        refreshList();
     }
 
     @Override
-    protected void buildUi() {
-        left = (canvasWidth() - PANEL_WIDTH) / 2;
-        top = (canvasHeight() - PANEL_HEIGHT) / 2;
-
-        addButton(
-                left + 12,
-                top + 22,
-                60,
-                KineticI18n.translatable("gui.adventuresystems.curios.wallet.deposit_short"),
-                null,
-                Network::sendDepositAll
-        );
-        addButton(
-                left + 78,
-                top + 22,
-                60,
-                KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop"),
-                null,
-                Network::sendOpenShop
-        );
-        hudButton = addButton(
-                left + PANEL_WIDTH - 138,
-                top + 22,
-                60,
-                hudText(),
-                KineticI18n.translatable("gui.adventuresystems.curios.wallet.hud_button_tip"),
-                Network::sendToggleHudCurrency
-        );
-        addButton(
-                left + PANEL_WIDTH - 72,
-                top + 22,
-                60,
-                KineticI18n.translatable("gui.adventuresystems.curios.wallet.close"),
-                null,
-                this::onClose
-        );
-
-        rebuildRowButtons();
+    protected void build(KineticUi ui) {
+        if (list != null) scrollOffset = list.scrollOffset();
+        ui.button(22, 37, 60).text(KineticI18n.translatable("gui.adventuresystems.curios.wallet.deposit_short"))
+                .onClick(Network::sendDepositAll).build();
+        ui.button(88, 37, 60).text(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop"))
+                .onClick(Network::sendOpenShop).build();
+        hudButton = ui.button(302, 37, 60).text(hudText())
+                .tooltip(KineticI18n.translatable("gui.adventuresystems.curios.wallet.hud_button_tip"))
+                .onClick(Network::sendToggleHudCurrency).build();
+        ui.button(368, 37, 60).text(KineticI18n.translatable("gui.adventuresystems.curios.wallet.close"))
+                .onClick(this::close).build();
+        list = ui.add(new WalletRows(22, 68, 406, 206));
+        list.setItems(rows);
+        list.setScrollOffset(scrollOffset);
+        rowActions.clear();
+        rowExpanders.clear();
+        for (int index = 0; index < rows.size(); index++) {
+            Row row = rows.get(index);
+            int rowIndex = index;
+            if (row.action() == Action.WITHDRAW) {
+                rowExpanders.add(ui.button(0, 0, WalletRows.EXPAND_WIDTH).compact()
+                        .text(expandLabel(row))
+                        .onClick(() -> selectRow(rowIndex))
+                        .visible(false).build());
+            } else {
+                rowExpanders.add(null);
+            }
+            rowActions.add(ui.button(0, 0, WalletRows.ACTION_WIDTH).compact()
+                    .text(actionLabel(row))
+                    .tooltip(actionTooltip(row))
+                    .onClick(() -> runRowAction(rowIndex))
+                    .visible(false).build());
+        }
     }
 
     private Component hudText() {
@@ -108,417 +89,84 @@ public class MainScreen extends KineticScreen {
                 : "gui.adventuresystems.curios.wallet.hud_hidden");
     }
 
-    private void rebuildRowButtons() {
-        rowButtons.clear();
-        for (Row row : rows) {
-            if (row.exchange()) {
-                StateButton once = addCompactHighZButton(
-                        0,
-                        0,
-                        38,
-                        KineticI18n.translatable("gui.adventuresystems.curios.wallet.exchange_one"),
-                        KineticI18n.translatable("gui.adventuresystems.curios.wallet.tooltip_convert_one"),
-                        200,
-                        () -> Network.sendConvertOne(row.from, row.to)
-                );
-                StateButton all = addCompactHighZButton(
-                        0,
-                        0,
-                        38,
-                        KineticI18n.translatable("gui.adventuresystems.curios.wallet.exchange_all"),
-                        KineticI18n.translatable("gui.adventuresystems.curios.wallet.tooltip_convert_all"),
-                        200,
-                        () -> Network.sendConvertAll(row.from, row.to)
-                );
-                setControlVisible(once, false);
-                setControlEnabled(once, false);
-                setControlVisible(all, false);
-                setControlEnabled(all, false);
-                rowButtons.add(new RowButtons(once, all));
-            } else {
-                StateButton withdraw = addCompactHighZButton(
-                        0,
-                        0,
-                        62,
-                        KineticI18n.translatable("gui.adventuresystems.curios.wallet.withdraw_64"),
-                        KineticI18n.translatable("gui.adventuresystems.curios.wallet.tooltip_withdraw"),
-                        200,
-                        () -> Network.sendWithdraw(row.from)
-                );
-                setControlVisible(withdraw, false);
-                setControlEnabled(withdraw, false);
-                rowButtons.add(new RowButtons(withdraw, null));
-            }
-        }
-        updateActionButtonPositions();
-    }
-
-    private void updateActionButtonPositions() {
-        int listTop = listTop();
-        int listBottom = listBottom();
-        int baseX = listLeft();
-        int baseWidth = listWidth();
-        int y = listTop - (int) Math.round(listScroll.smoothOffset());
-        for (int i = 0; i < rows.size() && i < rowButtons.size(); i++) {
-            Row row = rows.get(i);
-            RowButtons buttons = rowButtons.get(i);
-            if (row.exchange()) {
-                int childX = baseX + 18;
-                int childWidth = baseWidth - 18;
-                positionButton(buttons.primary(), oneButtonX(childX, childWidth), y + 5, listTop, listBottom);
-                positionButton(buttons.secondary(), allButtonX(childX, childWidth), y + 5, listTop, listBottom);
-            } else {
-                positionButton(buttons.primary(), baseX + baseWidth - 74, y + 9, listTop, listBottom);
-            }
-            y += row.height();
-        }
-    }
-
-    private void positionButton(StateButton button, int x, int y, int listTop, int listBottom) {
-        if (button == null) return;
-        button.setX(x);
-        button.setY(y);
-        boolean visible = y >= listTop && y + button.getHeight() <= listBottom;
-        setControlVisible(button, visible);
-        setControlEnabled(button, visible);
-    }
-
-    @Override
-    protected void renderCanvasBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        GuiTheme.panel(graphics, left, top, PANEL_WIDTH, PANEL_HEIGHT);
-        graphics.drawCenteredString(font, title, left + PANEL_WIDTH / 2, top + 8, GuiTheme.current().text());
-        updateActionButtonPositions();
-    }
-
-    @Override
-    protected void renderCanvasForeground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        renderRows(graphics, mouseX, mouseY);
-        renderScrollbar(graphics, mouseX, mouseY);
-    }
-
-    @Override
-    protected void renderTooltips(GuiGraphics graphics, int scaledMouseX, int scaledMouseY, int rawMouseX, int rawMouseY) {
-        renderHover(scaledMouseX, scaledMouseY, rawMouseX, rawMouseY);
-    }
-
-    private int listLeft() { return left + 12; }
-    private int listTop() { return top + 52; }
-    private int listRight() { return left + PANEL_WIDTH - 12; }
-    private int listBottom() { return top + PANEL_HEIGHT - 12; }
-    private int listWidth() { return listRight() - listLeft(); }
-
-    private void renderRows(GuiGraphics graphics, int mouseX, int mouseY) {
-        enableCanvasScissor(graphics, listLeft(), listTop(), listRight(), listBottom());
-        try {
-            int y = listTop() - (int) Math.round(listScroll.smoothOffset());
-            for (Row row : rows) {
-                if (y + row.height() >= listTop() && y <= listBottom()) {
-                    renderRow(graphics, row, listLeft(), y, listWidth(), mouseX, mouseY);
-                }
-                y += row.height();
-            }
-        } finally {
-            disableCanvasScissor(graphics);
-        }
-    }
-
-    private void renderRow(GuiGraphics graphics, Row row, int x, int y, int width, int mouseX, int mouseY) {
-        if (row.exchange()) {
-            renderExchangeRow(graphics, row, x + 18, y, width - 18, mouseX, mouseY);
-        } else {
-            renderCurrencyRow(graphics, row, x, y, width, mouseX, mouseY);
-        }
-    }
-
-    private void renderCurrencyRow(GuiGraphics graphics, Row row, int x, int y, int width, int mouseX, int mouseY) {
-        CurrencyType currency = currency(row.from);
-        if (currency == null) return;
-        boolean hover = GuiTheme.hovering(mouseX, mouseY, x, y, width, CURRENCY_ROW_HEIGHT - 3);
-        GuiTheme.stateSurface(
-                graphics,
-                x,
-                y,
-                width,
-                CURRENCY_ROW_HEIGHT - 3,
-                GuiTheme.Surface.PANEL_ALT,
-                expandedCurrencies.contains(row.from),
-                hover,
-                false
-        );
-
-        ItemStack stack = stack(row.from);
-        GuiTheme.itemSlot(graphics, x + 6, y + 10, 18, 4, hover);
-        graphics.renderItem(stack, x + 7, y + 11);
-
-        graphics.drawString(
-                font,
-                KineticI18n.translatable(expandedCurrencies.contains(row.from)
-                        ? "gui.adventuresystems.curios.wallet.expand_arrow_open"
-                        : "gui.adventuresystems.curios.wallet.expand_arrow_closed"),
-                x + 29,
-                y + 9,
-                GuiTheme.current().text(),
-                true
-        );
-        graphics.drawString(font, stack.getHoverName(), x + 44, y + 7, GuiTheme.current().text(), true);
-        graphics.drawString(
-                font,
-                KineticI18n.translatable("gui.adventuresystems.curios.wallet.amount_value", formatCompact(amount(row.from))),
-                x + 44,
-                y + 22,
-                GuiTheme.current().text(),
-                true
-        );
-        graphics.drawString(
-                font,
-                KineticI18n.translatable(expandedCurrencies.contains(row.from)
-                        ? "gui.adventuresystems.curios.wallet.click_collapse_short"
-                        : "gui.adventuresystems.curios.wallet.click_expand_short"),
-                x + width - 135,
-                y + 6,
-                GuiTheme.current().mutedText(),
-                true
-        );
-    }
-
-    private void renderExchangeRow(GuiGraphics graphics, Row row, int x, int y, int width, int mouseX, int mouseY) {
-        boolean hover = GuiTheme.hovering(mouseX, mouseY, x, y, width, EXCHANGE_ROW_HEIGHT - 3);
-        GuiTheme.stateSurface(
-                graphics,
-                x,
-                y,
-                width,
-                EXCHANGE_ROW_HEIGHT - 3,
-                GuiTheme.Surface.PANEL_ALT,
-                false,
-                hover,
-                false
-        );
-
-        ItemStack fromStack = stack(row.from);
-        ItemStack toStack = stack(row.to);
-        renderExchangeItem(graphics, fromStack, x + 7, y + 7);
-        graphics.drawString(font, KineticI18n.translatable("gui.adventuresystems.curios.wallet.exchange_arrow"), x + 25, y + 10, GuiTheme.current().text(), true);
-        renderExchangeItem(graphics, toStack, x + 39, y + 7);
-        graphics.drawString(
-                font,
-                KineticI18n.translatable("gui.adventuresystems.curios.wallet.exchange_to", toStack.getHoverName()),
-                x + 61,
-                y + 4,
-                GuiTheme.current().text(),
-                true
-        );
-        graphics.drawString(font, exchangeRatio(row.from, row.to), x + 61, y + 17, GuiTheme.current().text(), true);
-    }
-
-    private void renderExchangeItem(GuiGraphics graphics, ItemStack stack, int x, int y) {
-        graphics.pose().pushPose();
-        graphics.pose().translate(x, y, 0);
-        graphics.pose().scale(0.82f, 0.82f, 1.0f);
-        graphics.renderItem(stack, 0, 0);
-        graphics.pose().popPose();
-    }
-
-    private void renderScrollbar(GuiGraphics graphics, int mouseX, int mouseY) {
-        updateScrollRange();
-        if (!listScroll.canScroll()) return;
-        listScroll.render(
-                graphics,
-                mouseX,
-                mouseY,
-                left + PANEL_WIDTH - 8,
-                top + 52,
-                SCROLLBAR_WIDTH,
-                visibleHeight(),
-                SCROLLBAR_MIN_THUMB
-        );
-    }
-
-    private void renderHover(int mouseX, int mouseY, int rawMouseX, int rawMouseY) {
-        Row row = rowAt(mouseX, mouseY);
-        if (row == null) return;
-        List<Component> tooltip = new ArrayList<>();
-        if (!row.exchange()) {
-            ItemStack stack = stack(row.from);
-            CurrencyType currency = currency(row.from);
-            tooltip.add(KineticI18n.translatable("gui.adventuresystems.curios.wallet.tooltip_name", stack.getHoverName()));
-            tooltip.add(KineticI18n.translatable("gui.adventuresystems.curios.wallet.tooltip_exact", ShopGuiSupport.formatExact(amount(row.from))));
-            if (currency != null) {
-                tooltip.add(KineticI18n.translatable("gui.adventuresystems.curios.wallet.tooltip_value", ShopGuiSupport.formatExact(currency.value())));
-            }
-            tooltip.add(KineticI18n.translatable("gui.adventuresystems.curios.wallet.tooltip_expand_click"));
-            tooltip.add(KineticI18n.translatable("gui.adventuresystems.curios.wallet.tooltip_withdraw"));
-        } else {
-            ItemStack fromStack = stack(row.from);
-            ItemStack toStack = stack(row.to);
-            tooltip.add(KineticI18n.translatable("gui.adventuresystems.curios.wallet.tooltip_convert", fromStack.getHoverName(), toStack.getHoverName()));
-            tooltip.add(exchangeRatio(row.from, row.to));
-            tooltip.add(KineticI18n.translatable("gui.adventuresystems.curios.wallet.tooltip_convert_one"));
-            tooltip.add(KineticI18n.translatable("gui.adventuresystems.curios.wallet.tooltip_convert_all"));
-        }
-        KineticOverlays.requestTooltip(tooltip, rawMouseX, rawMouseY);
-    }
-
-    @Override
-    protected boolean canvasMouseClicked(double mouseX, double mouseY, int button) {
-        if (super.canvasMouseClicked(mouseX, mouseY, button)) return true;
-        if (!KineticMouseButtons.isPrimary(button)) return false;
-
-        updateScrollRange();
-        if (listScroll.beginDrag(
-                mouseX,
-                mouseY,
-                left + PANEL_WIDTH - 8,
-                top + 52,
-                SCROLLBAR_WIDTH,
-                visibleHeight(),
-                SCROLLBAR_MIN_THUMB,
-                3
-        )) {
-            return true;
-        }
-
-        Row row = rowAt((int) mouseX, (int) mouseY);
-        if (row == null || row.exchange()) return false;
-        if (expandedCurrencies.contains(row.from)) {
-            expandedCurrencies.remove(row.from);
-        } else {
-            expandedCurrencies.add(row.from);
-        }
-        rebuildRows();
-        rebuildUi();
-        return true;
-    }
-
-    @Override
-    protected boolean canvasMouseReleased(double mouseX, double mouseY, int button) {
-        if (listScroll.release(button)) return true;
-        return super.canvasMouseReleased(mouseX, mouseY, button);
-    }
-
-    @Override
-    protected boolean canvasMouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
-        if (listScroll.drag(mouseY, top + 52, visibleHeight(), SCROLLBAR_MIN_THUMB)) {
-            updateActionButtonPositions();
-            return true;
-        }
-        return super.canvasMouseDragged(mouseX, mouseY, button, dragX, dragY);
-    }
-
-    @Override
-    protected boolean canvasMouseScrolled(double mouseX, double mouseY, double delta) {
-        updateScrollRange();
-        if (listScroll.scroll(delta, SCROLLBAR_MIN_THUMB)) {
-            updateActionButtonPositions();
-            return true;
-        }
-        return super.canvasMouseScrolled(mouseX, mouseY, delta);
-    }
-
-    @Override
-    public boolean isPauseScreen() {
-        return false;
-    }
-
-    private Row rowAt(int mouseX, int mouseY) {
-        if (!GuiTheme.hovering(mouseX, mouseY, listLeft(), listTop(), listWidth(), visibleHeight())) return null;
-        int y = listTop() - (int) Math.round(listScroll.smoothOffset());
-        for (Row row : rows) {
-            int rowLeft = row.exchange() ? listLeft() + 18 : listLeft();
-            if (mouseY >= y && mouseY <= y + row.height() - 3 && mouseX >= rowLeft) return row;
-            y += row.height();
-        }
-        return null;
-    }
-
     private void rebuildRows() {
         rows.clear();
-        Map<String, CurrencyType> currencies = Data.currencyMap();
-        for (CurrencyType currency : currencies.values()) {
-            rows.add(new Row(currency.itemId(), null, CURRENCY_ROW_HEIGHT));
+        for (CurrencyType currency : Data.currencyMap().values()) {
+            rows.add(new Row(currency.itemId(), null, Action.WITHDRAW));
             if (expandedCurrencies.contains(currency.itemId())) {
                 for (String[] rule : Data.exchangeRules()) {
-                    if (rule[0].equals(currency.itemId())) {
-                        rows.add(new Row(rule[0], rule[1], EXCHANGE_ROW_HEIGHT));
-                    }
+                    if (!rule[0].equals(currency.itemId())) continue;
+                    rows.add(new Row(rule[0], rule[1], Action.CONVERT_ONE));
+                    rows.add(new Row(rule[0], rule[1], Action.CONVERT_ALL));
                 }
             }
         }
-        updateScrollRange();
     }
 
-    private CurrencyType currency(String id) {
-        return Data.currencyMap().get(id);
+    private void selectRow(int index) {
+        if (index < 0 || index >= rows.size()) return;
+        Row row = rows.get(index);
+        if (row.action() != Action.WITHDRAW) return;
+        if (!expandedCurrencies.add(row.from())) expandedCurrencies.remove(row.from());
+        rebuildRows();
+        rebuild();
     }
 
-    private long amount(String id) {
-        return Data.readAmount(balances, id);
+    private void runRowAction(int index) {
+        if (index < 0 || index >= rows.size()) return;
+        Row row = rows.get(index);
+        switch (row.action()) {
+            case WITHDRAW -> Network.sendWithdraw(row.from());
+            case CONVERT_ONE -> Network.sendConvertOne(row.from(), row.to());
+            case CONVERT_ALL -> Network.sendConvertAll(row.from(), row.to());
+        }
     }
 
-    private ItemStack stack(String id) {
-        Item item = KineticRegistries.items().get(KineticResourceIds.parse(id));
-        if (item == null) item = net.minecraft.world.item.Items.BARRIER;
-        return new ItemStack(item);
+    private void refreshList() {
+        rebuildRows();
+        if (list != null) list.setItems(rows);
     }
 
-    private int visibleHeight() {
-        return PANEL_HEIGHT - 64;
+    private Component expandLabel(Row row) {
+        return KineticI18n.translatable(expandedCurrencies.contains(row.from())
+                ? "gui.adventuresystems.curios.wallet.collapse" : "gui.adventuresystems.curios.wallet.expand");
     }
 
-    private int contentHeight() {
-        int height = 0;
-        for (Row row : rows) height += row.height();
-        return height;
+    private Component actionLabel(Row row) {
+        return KineticI18n.translatable(switch (row.action()) {
+            case WITHDRAW -> "gui.adventuresystems.curios.wallet.withdraw_64";
+            case CONVERT_ONE -> "gui.adventuresystems.curios.wallet.exchange_one";
+            case CONVERT_ALL -> "gui.adventuresystems.curios.wallet.exchange_all";
+        });
     }
 
-    private void updateScrollRange() {
-        listScroll.update(contentHeight(), visibleHeight());
+    private Component actionTooltip(Row row) {
+        return KineticI18n.translatable(switch (row.action()) {
+            case WITHDRAW -> "gui.adventuresystems.curios.wallet.tooltip_withdraw";
+            case CONVERT_ONE -> "gui.adventuresystems.curios.wallet.tooltip_convert_one";
+            case CONVERT_ALL -> "gui.adventuresystems.curios.wallet.tooltip_convert_all";
+        });
     }
 
-    private int oneButtonX(int x, int width) {
-        return x + width - 88;
-    }
-
-    private int allButtonX(int x, int width) {
-        return x + width - 44;
-    }
-
-    private MutableComponent exchangeRatio(String from, String to) {
-        CurrencyType source = currency(from);
-        CurrencyType target = currency(to);
+    private Component exchangeRatio(String from, String to) {
+        CurrencyType source = Data.currencyMap().get(from);
+        CurrencyType target = Data.currencyMap().get(to);
         if (source == null || target == null) return Component.empty();
-
         long sourceValue = source.value();
         long targetValue = target.value();
-        ItemStack fromStack = stack(from);
-        ItemStack toStack = stack(to);
-
+        Component fromName = ShopGuiSupport.stackNameComponent(from);
+        Component toName = ShopGuiSupport.stackNameComponent(to);
         if (sourceValue == targetValue) {
-            return KineticI18n.translatable(
-                    "gui.adventuresystems.curios.wallet.exchange_ratio",
-                    "1",
-                    fromStack.getHoverName(),
-                    "1",
-                    toStack.getHoverName()
-            );
+            return KineticI18n.translatable("gui.adventuresystems.curios.wallet.exchange_ratio",
+                    "1", fromName, "1", toName);
         }
-        if (targetValue > sourceValue && targetValue % sourceValue == 0) {
-            return KineticI18n.translatable(
-                    "gui.adventuresystems.curios.wallet.exchange_ratio",
-                    Long.toString(targetValue / sourceValue),
-                    fromStack.getHoverName(),
-                    "1",
-                    toStack.getHoverName()
-            );
+        if (targetValue > sourceValue && sourceValue > 0 && targetValue % sourceValue == 0) {
+            return KineticI18n.translatable("gui.adventuresystems.curios.wallet.exchange_ratio",
+                    Long.toString(targetValue / sourceValue), fromName, "1", toName);
         }
-        if (sourceValue > targetValue && sourceValue % targetValue == 0) {
-            return KineticI18n.translatable(
-                    "gui.adventuresystems.curios.wallet.exchange_ratio",
-                    "1",
-                    fromStack.getHoverName(),
-                    Long.toString(sourceValue / targetValue),
-                    toStack.getHoverName()
-            );
+        if (sourceValue > targetValue && targetValue > 0 && sourceValue % targetValue == 0) {
+            return KineticI18n.translatable("gui.adventuresystems.curios.wallet.exchange_ratio",
+                    "1", fromName, Long.toString(sourceValue / targetValue), toName);
         }
         return KineticI18n.translatable("gui.adventuresystems.curios.wallet.exchange_ratio_invalid");
     }
@@ -534,28 +182,95 @@ public class MainScreen extends KineticScreen {
         return ShopGuiSupport.formatExact(safeValue);
     }
 
-    private record Row(String from, String to, int height) {
-        boolean exchange() {
-            return to != null;
+    private final class WalletRows extends KineticRowList<Row> {
+        private static final int ROW_HEIGHT = 28;
+        private static final int ACTION_WIDTH = 68;
+        private static final int EXPAND_WIDTH = 62;
+        private static final int BUTTON_GAP = 4;
+
+        private WalletRows(int x, int y, int width, int height) {
+            super(x, y, width, height, ROW_HEIGHT);
+        }
+
+        @Override
+        protected void renderRowBackground(KineticGraphics graphics, int index, int x, int y, int width,
+                                           int height, boolean hovered, boolean selected) {
+            KineticTheme.panelAlt(graphics, x, y + 1, width, height - 2);
+        }
+
+        @Override
+        protected void renderRow(KineticGraphics graphics, Row row, int index, int x, int y, int width,
+                                 int height, boolean hovered, boolean selected) {
+            int actionX = x + width - ACTION_WIDTH - BUTTON_GAP;
+            int expandX = actionX - EXPAND_WIDTH - BUTTON_GAP;
+            int slotX = x + 4;
+            int slotY = y + 5;
+            KineticTheme.itemSlot(graphics, slotX, slotY, 18, hovered && mouseX() < slotX + 18);
+            graphics.item(ShopGuiSupport.stack(row.action() == Action.WITHDRAW ? row.from() : row.to()), slotX + 1, slotY + 1);
+
+            boolean currency = row.action() == Action.WITHDRAW;
+            int textRight = currency ? expandX : actionX;
+            Component name = currency ? ShopGuiSupport.stackNameComponent(row.from())
+                    : KineticI18n.translatable("gui.adventuresystems.curios.wallet.exchange_to",
+                            ShopGuiSupport.stackNameComponent(row.to()));
+            graphics.scrollingText(name, x + 28, y + 3, textRight - x - 34,
+                    KineticTheme.current().text(), false);
+            Component detail = currency
+                    ? KineticI18n.translatable("gui.adventuresystems.curios.wallet.amount_value",
+                            formatCompact(Data.readAmount(balances, row.from())))
+                    : exchangeRatio(row.from(), row.to());
+            graphics.scrollingText(detail, x + 28, y + 15, textRight - x - 34,
+                    KineticTheme.current().mutedText(), false);
+            boolean fullyVisible = y >= controlY() && y + height <= controlY() + controlHeight();
+            KineticButton action = rowActions.get(index);
+            action.moveTo(actionX, y + 6);
+            action.setControlVisible(fullyVisible);
+            KineticButton expander = rowExpanders.get(index);
+            if (expander != null) {
+                expander.moveTo(expandX, y + 6);
+                expander.setControlVisible(fullyVisible);
+            }
+        }
+
+        @Override
+        protected boolean onRowClick(Row row, int index, MouseInput input) {
+            if (!input.isLeft()) return false;
+            int actionX = controlX() + rowsWidth() - ACTION_WIDTH - BUTTON_GAP;
+            int expandX = actionX - EXPAND_WIDTH - BUTTON_GAP;
+            if (input.x() >= (row.action() == Action.WITHDRAW ? expandX : actionX)) return false;
+            if (row.action() == Action.WITHDRAW) {
+                selectRow(index);
+                return true;
+            }
+            return false;
+        }
+
+        @Override
+        protected Component rowTooltip(Row row, int index) {
+            int actionX = controlX() + rowsWidth() - ACTION_WIDTH - BUTTON_GAP;
+            int buttonX = row.action() == Action.WITHDRAW ? actionX - EXPAND_WIDTH - BUTTON_GAP : actionX;
+            if (mouseX() >= buttonX) return null;
+            if (row.action() == Action.WITHDRAW) {
+                return KineticI18n.translatable("gui.adventuresystems.curios.wallet.tooltip_exact",
+                        ShopGuiSupport.formatExact(Data.readAmount(balances, row.from())));
+            }
+            return KineticI18n.translatable(row.action() == Action.CONVERT_ONE
+                    ? "gui.adventuresystems.curios.wallet.tooltip_convert_one"
+                    : "gui.adventuresystems.curios.wallet.tooltip_convert_all");
         }
     }
 
-    private record RowButtons(StateButton primary, StateButton secondary) {
-    }
-    private static boolean isControlVisible(KineticControl control) {
-        return control != null && control.isVisible();
-    }
-
-    private static boolean isControlEnabled(KineticControl control) {
-        return control != null && control.isEnabled();
-    }
-
-    private static void setControlVisible(KineticControl control, boolean visible) {
-        if (control != null) control.setVisible(visible);
+    @Override
+    protected void renderBackground(KineticGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        for (KineticButton button : rowActions) button.setControlVisible(false);
+        for (KineticButton button : rowExpanders) if (button != null) button.setControlVisible(false);
+        KineticTheme.shadow(graphics, width(), height());
+        KineticTheme.panel(graphics, 10, 15, 430, 270);
+        graphics.centeredText(title(), 225, 23, KineticTheme.current().text(), false);
     }
 
-    private static void setControlEnabled(KineticControl control, boolean enabled) {
-        if (control != null) control.setEnabled(enabled);
-    }
+    private enum Action { WITHDRAW, CONVERT_ONE, CONVERT_ALL }
 
+    private record Row(String from, String to, Action action) {
+    }
 }

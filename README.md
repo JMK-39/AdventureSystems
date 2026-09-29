@@ -14,7 +14,7 @@ Adventure Systems connects equipment progression, a configurable currency econom
 | --- | --- |
 | Minecraft | 1.20.1 |
 | Forge | 47.4.2+ for Minecraft 1.20.1 |
-| KineticCore | 26.9.24+ |
+26.9.28+ |
 | Curios API | 5.10.0+ |
 | FTB Library, FTB Quests, FTB Teams | Required by this branch's mod metadata |
 | Refined Storage, Sophisticated Backpacks, JEI | Optional integrations |
@@ -122,7 +122,7 @@ Adventure Systems 将装备成长、货币经济、FTB 任务快捷交互和情�
 | --- | --- |
 | Minecraft | 1.20.1 |
 | Forge | 对应 1.20.1 分支的 47.4.2+ |
-| KineticCore | 26.9.24+ |
+26.9.28+ |
 | Curios API | 5.10.0+ |
 | FTB Library、FTB Quests、FTB Teams | 当前分支元数据声明为必需 |
 | Refined Storage、Sophisticated Backpacks、JEI | 可选联动 |

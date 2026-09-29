@@ -3,57 +3,49 @@ package dev.xyat.adventuresystems.ftb.client.gui;
 import dev.xyat.adventuresystems.ftb.client.hud.FTBToastUtil;
 import dev.xyat.adventuresystems.ftb.data.BindingStoreFTB;
 import dev.xyat.adventuresystems.ftb.data.BlacklistStoreFTB;
-import dev.xyat.kineticcore.api.client.input.KineticMouseButtons;
-import dev.xyat.kineticcore.api.client.overlay.KineticOverlays;
-import dev.xyat.kineticcore.api.client.screen.KineticScreen;
-import dev.xyat.kineticcore.api.client.selector.KineticSelectors;
-import dev.xyat.kineticcore.api.client.theme.GuiTheme;
-import dev.xyat.kineticcore.api.client.widget.selection.KineticTabs.ItemGridDensity;
-import dev.xyat.kineticcore.api.client.widget.selection.KineticTabs.ItemGridItem;
-import dev.xyat.kineticcore.api.client.widget.selection.KineticTabs.ItemGridOutline;
-import dev.xyat.kineticcore.api.client.widget.selection.KineticTabs.ScrollableItemGrid;
+import dev.xyat.kineticcore.api.client.gui.input.MouseInput;
+import dev.xyat.kineticcore.api.client.gui.page.KineticPage;
+import dev.xyat.kineticcore.api.client.gui.render.KineticGraphics;
+import dev.xyat.kineticcore.api.client.gui.selector.KineticSelectors;
+import dev.xyat.kineticcore.api.client.gui.theme.KineticTheme;
+import dev.xyat.kineticcore.api.client.gui.ui.KineticUi;
+import dev.xyat.kineticcore.api.client.gui.widget.list.ItemGridDensity;
+import dev.xyat.kineticcore.api.client.gui.widget.list.ItemGridItem;
+import dev.xyat.kineticcore.api.client.gui.widget.list.ItemGridOutline;
+import dev.xyat.kineticcore.api.client.gui.widget.list.KineticItemGrid;
 import dev.xyat.kineticcore.api.registry.KineticRegistries;
 import dev.xyat.kineticcore.api.text.KineticI18n;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class FTBBlacklistScreen extends KineticScreen {
-    private final Screen parent;
+public class FTBBlacklistScreen extends KineticPage {
     private final List<String> allEntries = new ArrayList<>();
-    private ScrollableItemGrid itemGrid;
+    private KineticItemGrid itemGrid;
+    private int gridScroll;
 
-    public FTBBlacklistScreen(Screen parent) {
+    public FTBBlacklistScreen() {
         super(KineticI18n.translatable("screen.adventuresystems.ftb.blacklist"));
-        this.parent = parent;
-        setParentScreen(parent);
-        useCanvas(500f, 320f, 6);
+        useCanvas(500, 320, 6);
         configureStandaloneDraft(BlacklistStoreFTB::getAll, BlacklistStoreFTB::replaceAll);
     }
 
     @Override
-    protected void buildUi() {
+    protected void build(KineticUi ui) {
+        if (itemGrid != null) gridScroll = itemGrid.scrollOffset();
+        itemGrid = null;
         reloadEntries();
-        addButton(14, 10, 100, KineticI18n.translatable("button.adventuresystems.ftb.blacklist.add"), null, this::openSelector);
-        addButton(canvasWidth() - 74, 10, 60, KineticI18n.translatable("button.adventuresystems.ftb.save"), null, this::save);
-        itemGrid = addScrollableItemGrid(
-                14,
-                36,
-                canvasWidth() - 28,
-                canvasHeight() - 50,
-                ItemGridDensity.STANDARD,
-                gridItems(),
-                0,
-                ignored -> { }
-        );
+        ui.button(14, 10, 100).text(KineticI18n.translatable("button.adventuresystems.ftb.blacklist.add"))
+                .onClick(this::openSelector).build();
+        ui.button(width() - 74, 10, 60).text(KineticI18n.translatable("button.adventuresystems.ftb.save"))
+                .onClick(this::save).build();
+        itemGrid = ui.itemGrid(14, 36, width() - 28, height() - 50, ItemGridDensity.STANDARD, gridItems())
+                .scrollOffset(gridScroll).onClick(ignored -> { }).build();
     }
 
     private void reloadEntries() {
@@ -67,7 +59,7 @@ public class FTBBlacklistScreen extends KineticScreen {
         for (String entry : allEntries) {
             items.add(new ItemGridItem(
                     getIconForRule(entry),
-                    Component.literal(entry),
+                    null,
                     true,
                     false,
                     false,
@@ -78,7 +70,7 @@ public class FTBBlacklistScreen extends KineticScreen {
     }
 
     private void openSelector() {
-        KineticSelectors.openItemSelector(this, selection -> {
+        KineticSelectors.openItemSelector(selection -> {
             String target = "";
             if (selection.isMod()) target = "@" + selection.value();
             else if (selection.isTag()) target = "#" + selection.value();
@@ -98,26 +90,25 @@ public class FTBBlacklistScreen extends KineticScreen {
     }
 
     @Override
-    protected void renderCanvasBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        GuiTheme.shadow(graphics, canvasWidth(), canvasHeight());
-        GuiTheme.canvasBackground(graphics, canvasWidth(), canvasHeight());
-        graphics.drawString(
-                font,
+    protected void renderBackground(KineticGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        KineticTheme.shadow(graphics, width(), height());
+        KineticTheme.canvasBackground(graphics, width(), height());
+        graphics.text(
                 KineticI18n.translatable(
                         "label.adventuresystems.ftb.blacklist.count",
                         Component.literal(String.valueOf(allEntries.size()))
                 ),
                 122,
                 16,
-                GuiTheme.current().text(),
+                KineticTheme.current().text(),
                 false
         );
     }
 
     @Override
-    protected void renderTooltips(GuiGraphics graphics, int screenMouseX, int screenMouseY, int mouseX, int mouseY) {
+    protected void renderTooltips(int mouseX, int mouseY) {
         if (itemGrid == null) return;
-        int index = itemGrid.itemAt(screenMouseX, screenMouseY);
+        int index = itemGrid.itemAt(mouseX, mouseY);
         if (index < 0 || index >= allEntries.size()) return;
         String entry = allEntries.get(index);
         ItemStack icon = getIconForRule(entry);
@@ -127,13 +118,13 @@ public class FTBBlacklistScreen extends KineticScreen {
         else tips.add(icon.getHoverName());
         tips.add(KineticI18n.translatable("tip.adventuresystems.ftb.blacklist.rule_value", entry));
         tips.add(KineticI18n.translatable("tip.adventuresystems.ftb.blacklist.remove"));
-        KineticOverlays.requestTooltip(tips, mouseX, mouseY);
+        showTooltip(tips);
     }
 
     @Override
-    protected boolean canvasMouseClicked(double mouseX, double mouseY, int button) {
-        if (KineticMouseButtons.isSecondary(button) && itemGrid != null) {
-            int index = itemGrid.itemAt(mouseX, mouseY);
+    protected boolean onMouseClick(MouseInput input) {
+        if (input.isRight() && itemGrid != null) {
+            int index = itemGrid.itemAt(input.x(), input.y());
             if (index >= 0 && index < allEntries.size()) {
                 BlacklistStoreFTB.remove(allEntries.get(index));
                 reloadEntries();
@@ -141,7 +132,7 @@ public class FTBBlacklistScreen extends KineticScreen {
                 return true;
             }
         }
-        return super.canvasMouseClicked(mouseX, mouseY, button);
+        return false;
     }
 
     private ItemStack getIconForRule(String rule) {
@@ -163,12 +154,8 @@ public class FTBBlacklistScreen extends KineticScreen {
     }
 
     @Override
-    protected boolean handleCloseRequest() {
+    protected boolean onCloseRequested() {
         navigateBack();
         return true;
-    }
-
-    public Screen getParent() {
-        return parent;
     }
 }

@@ -4,29 +4,29 @@ import dev.ftb.mods.ftbquests.quest.task.ItemTask;
 import dev.xyat.adventuresystems.ftb.api.FTBTaskSubmitHelper;
 import dev.xyat.adventuresystems.ftb.client.FTBVirtualItemClientState;
 import dev.xyat.adventuresystems.ftb.network.FTBSubmitLimitNetwork;
-import dev.xyat.kineticcore.api.client.input.KineticKeyBindings;
-import dev.xyat.kineticcore.api.client.screen.KineticScreen;
-import dev.xyat.kineticcore.api.client.theme.GuiTheme;
-import dev.xyat.kineticcore.api.client.widget.input.KineticNumericFields.NumericEditBox;
+import dev.xyat.kineticcore.api.client.gui.input.KeyInput;
+import dev.xyat.kineticcore.api.client.gui.page.KineticPage;
+import dev.xyat.kineticcore.api.client.gui.render.KineticGraphics;
+import dev.xyat.kineticcore.api.client.gui.theme.KineticTheme;
+import dev.xyat.kineticcore.api.client.gui.ui.KineticUi;
+import dev.xyat.kineticcore.api.client.gui.ui.NumberType;
+import dev.xyat.kineticcore.api.client.gui.widget.KineticNumberField;
 import dev.xyat.kineticcore.api.runtime.KineticClientRuntime;
 import dev.xyat.kineticcore.api.text.KineticI18n;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
-import org.jetbrains.annotations.NotNull;
 
-public class FTBSubmitCountScreen extends KineticScreen {
+public class FTBSubmitCountScreen extends KineticPage {
     private static final int PANEL_W = 420;
     private static final int PANEL_H = 230;
     private static final int MARGIN_X = 24;
     private static final int BUTTON_W = 150;
     private static final long STATS_REFRESH_MS = 250L;
 
-    private final Screen parent;
     private final ItemTask task;
-    private NumericEditBox countBox;
+    private KineticNumberField countBox;
+    private String countValue = "1";
     private int left;
     private int top;
     private String lastCountValue = "";
@@ -40,34 +40,33 @@ public class FTBSubmitCountScreen extends KineticScreen {
     private int cachedInventoryEstimatedTimes;
     private int cachedTotalEstimatedTimes;
 
-    public FTBSubmitCountScreen(Screen parent, ItemTask task) {
+    public FTBSubmitCountScreen(ItemTask task) {
         super(KineticI18n.translatable("screen.adventuresystems.ftb.submit"));
-        this.parent = parent;
-        setParentScreen(parent);
         this.task = task;
-        useCanvas(460f, 270f, 6);
+        useCanvas(460, 270, 6);
+        setPausesGame(false);
     }
 
     @Override
-    protected void buildUi() {
-        left = (canvasWidth() - PANEL_W) / 2;
-        top = (canvasHeight() - PANEL_H) / 2;
-        countBox = addIntegerField(
-                left + MARGIN_X,
-                top + 52,
-                PANEL_W - MARGIN_X * 2,
-                KineticI18n.translatable("placeholder.adventuresystems.ftb.submit.count"),
-                false,
-                1,
-                1_000_000,
-                null
-        );
-        countBox.setValue("1");
+    protected void build(KineticUi ui) {
+        left = (width() - PANEL_W) / 2;
+        top = (height() - PANEL_H) / 2;
+        countBox = ui.numberField(left + MARGIN_X, top + 52, PANEL_W - MARGIN_X * 2, NumberType.INT)
+                .label(KineticI18n.translatable("placeholder.adventuresystems.ftb.submit.count"))
+                .allowNegative(false)
+                .range(1, 1_000_000)
+                .onChange(value -> countValue = value)
+                .firstShownTextAsDefault().build();
+        countBox.setTextValue(countValue);
         int buttonY = top + PANEL_H - 38;
-        addButton(left + MARGIN_X, buttonY, BUTTON_W, KineticI18n.translatable("button.adventuresystems.ftb.submit.confirm"), null, this::submit);
-        addButton(left + PANEL_W - MARGIN_X - BUTTON_W, buttonY, BUTTON_W, KineticI18n.translatable("gui.cancel"), null, this::onClose);
+        ui.button(left + MARGIN_X, buttonY, BUTTON_W)
+                .text(KineticI18n.translatable("button.adventuresystems.ftb.submit.confirm"))
+                .onClick(this::submit).build();
+        ui.button(left + PANEL_W - MARGIN_X - BUTTON_W, buttonY, BUTTON_W)
+                .text(KineticI18n.translatable("gui.cancel"))
+                .onClick(this::close).build();
         refreshStats(true);
-        focusControl(countBox);
+        focus(countBox);
     }
 
     private void submit() {
@@ -90,7 +89,7 @@ public class FTBSubmitCountScreen extends KineticScreen {
     }
 
     private void refreshStats(boolean force) {
-        String value = countBox == null ? "" : countBox.getValue().trim();
+        String value = countBox == null ? "" : countBox.textValue().trim();
         long now = System.currentTimeMillis();
         if (!force && value.equals(lastCountValue) && now - lastStatsRefreshMs < STATS_REFRESH_MS) return;
         lastCountValue = value;
@@ -145,17 +144,17 @@ public class FTBSubmitCountScreen extends KineticScreen {
     }
 
     @Override
-    protected void renderCanvasBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+    protected void renderBackground(KineticGraphics graphics, int mouseX, int mouseY, float partialTick) {
         refreshStats(false);
-        GuiTheme.shadow(graphics, canvasWidth(), canvasHeight());
-        GuiTheme.canvasBackground(graphics, canvasWidth(), canvasHeight());
-        GuiTheme.panel(graphics, left, top, PANEL_W, PANEL_H);
-        graphics.drawCenteredString(font, title, left + PANEL_W / 2, top + 14, GuiTheme.current().text());
-        graphics.drawString(font, KineticI18n.translatable("label.adventuresystems.ftb.submit.desc"), left + MARGIN_X, top + 34, GuiTheme.current().mutedText(), false);
+        KineticTheme.shadow(graphics, width(), height());
+        KineticTheme.canvasBackground(graphics, width(), height());
+        KineticTheme.panel(graphics, left, top, PANEL_W, PANEL_H);
+        graphics.centeredText(title(), left + PANEL_W / 2, top + 14, KineticTheme.current().text(), true);
+        graphics.text(KineticI18n.translatable("label.adventuresystems.ftb.submit.desc"), left + MARGIN_X, top + 34, KineticTheme.current().mutedText(), false);
     }
 
     @Override
-    protected void renderCanvasForeground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+    protected void renderForeground(KineticGraphics graphics, int mouseX, int mouseY, float partialTick) {
         int lineX = left + MARGIN_X;
         int y = top + 86;
         int gap = 18;
@@ -178,14 +177,13 @@ public class FTBSubmitCountScreen extends KineticScreen {
         return Component.literal(String.valueOf(value));
     }
 
-    private void drawLine(GuiGraphics graphics, Component component, int x, int y) {
-        graphics.drawString(font, component, x, y, GuiTheme.current().text(), false);
+    private void drawLine(KineticGraphics graphics, Component component, int x, int y) {
+        graphics.text(component, x, y, KineticTheme.current().text(), false);
     }
 
     @Override
-    protected boolean canvasKeyPressed(int keyCode, int scanCode, int modifiers) {
-        if (KineticKeyBindings.matchesKeyCode(KineticKeyBindings.Key.ENTER, keyCode)
-                || KineticKeyBindings.matchesKeyCode(KineticKeyBindings.Key.KP_ENTER, keyCode)) {
+    protected boolean onKeyPress(KeyInput input) {
+        if (input.isEnter()) {
             submit();
             return true;
         }
@@ -193,13 +191,8 @@ public class FTBSubmitCountScreen extends KineticScreen {
     }
 
     @Override
-    protected boolean handleCloseRequest() {
+    protected boolean onCloseRequested() {
         navigateBack();
         return true;
-    }
-
-    @Override
-    public boolean isPauseScreen() {
-        return false;
     }
 }

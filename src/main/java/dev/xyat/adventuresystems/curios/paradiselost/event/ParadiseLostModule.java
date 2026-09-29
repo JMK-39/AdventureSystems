@@ -5,7 +5,7 @@ import dev.xyat.adventuresystems.curios.config.CuriosConfig;
 import dev.xyat.adventuresystems.curios.init.Items;
 import dev.xyat.adventuresystems.curios.paradiselost.data.ParadiseLostSavedData;
 import dev.xyat.adventuresystems.curios.paradiselost.data.ParadiseLostCurve;
-import dev.xyat.kineticcore.api.client.overlay.KineticOverlays;
+import dev.xyat.kineticcore.api.client.gui.overlay.KineticOverlays;
 import dev.xyat.kineticcore.api.entity.event.KineticLivingEvents;
 import dev.xyat.kineticcore.api.event.KineticEventPriority;
 import dev.xyat.kineticcore.api.player.KineticPlayerMessages;

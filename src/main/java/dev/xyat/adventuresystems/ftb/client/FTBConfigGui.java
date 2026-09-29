@@ -4,8 +4,6 @@ import dev.xyat.kineticcore.api.config.client.KTConfigApi;
 import dev.xyat.kineticcore.api.config.client.KTConfigPage;
 import dev.xyat.kineticcore.api.config.client.KTConfigScope;
 import dev.xyat.adventuresystems.ftb.client.gui.FTBItemBindingEditorScreen;
-import net.minecraft.client.gui.screens.Screen;
-import dev.xyat.kineticcore.api.runtime.KineticClientRuntime;
 import dev.xyat.kineticcore.api.text.KineticI18n;
 
 /** FTB Quests contributes this page only while that optional mod is installed. */
@@ -33,18 +31,14 @@ public final class FTBConfigGui {
                 .action(
                         "open_binding_editor",
                         KineticI18n.translatable("cfg.adventuresystems.ftb.open_editor"),
-                        FTBConfigGui::openEditor,
+                        KTConfigApi.pageAction(FTBItemBindingEditorScreen::new),
                         KineticI18n.translatable("cfg.adventuresystems.ftb.open_editor.tooltip")
                 )
                 .onSave(FTBClientConfig::save)
                 .build());
     }
 
-    public static Screen create(Screen parent) {
-        return KTConfigApi.createScreen(parent, PAGE_ID);
-    }
-
-    private static void openEditor() {
-        KineticClientRuntime.openScreen(new FTBItemBindingEditorScreen(KineticClientRuntime.currentScreen()));
+    public static void open() {
+        KTConfigApi.openPage(PAGE_ID);
     }
 }

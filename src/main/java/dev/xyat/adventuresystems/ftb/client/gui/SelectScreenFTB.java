@@ -3,75 +3,67 @@ package dev.xyat.adventuresystems.ftb.client.gui;
 import dev.xyat.adventuresystems.ftb.data.FavoritesStoreFTB;
 import dev.xyat.adventuresystems.ftb.data.RefFTB;
 import dev.xyat.adventuresystems.ftb.util.BridgeFTB;
-import dev.xyat.kineticcore.api.client.screen.KineticScreen;
+import dev.xyat.kineticcore.api.client.gui.page.KineticPage;
+import dev.xyat.kineticcore.api.client.gui.render.KineticGraphics;
+import dev.xyat.kineticcore.api.client.gui.theme.KineticTheme;
+import dev.xyat.kineticcore.api.client.gui.ui.KineticUi;
+import dev.xyat.kineticcore.api.client.gui.widget.KineticTextField;
+import dev.xyat.kineticcore.api.client.gui.widget.list.ActionItem;
+import dev.xyat.kineticcore.api.client.gui.widget.list.KineticActionList;
 import dev.xyat.kineticcore.api.client.search.KineticSearch;
-import dev.xyat.kineticcore.api.client.theme.GuiTheme;
-import dev.xyat.kineticcore.api.client.widget.input.KineticTextFields.KineticEditBox;
-import dev.xyat.kineticcore.api.client.widget.selection.KineticTabs.ActionItem;
-import dev.xyat.kineticcore.api.client.widget.selection.KineticTabs.ScrollableActionList;
 import dev.xyat.kineticcore.api.text.KineticI18n;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class SelectScreenFTB extends KineticScreen {
+public class SelectScreenFTB extends KineticPage {
     private static final int LIST_X = 24;
-    private static final int LIST_Y = 88;
-    private static final int LIST_W = 792;
-    private static final int LIST_H = 330;
+    private static final int LIST_Y = 82;
+    private static final int LIST_W = 592;
+    private static final int LIST_H = 238;
 
-    private final Screen parent;
     private final ItemStack stack;
     private final List<RefFTB> allRefs;
     private final List<RefFTB> filtered = new ArrayList<>();
-    private KineticEditBox searchBox;
-    private ScrollableActionList listWidget;
+    private KineticTextField searchBox;
+    private KineticActionList listWidget;
+    private String searchText = "";
+    private int listScroll;
 
-    public SelectScreenFTB(Screen parent, ItemStack stack, List<RefFTB> refs) {
+    public SelectScreenFTB(ItemStack stack, List<RefFTB> refs) {
         super(KineticI18n.translatable("screen.adventuresystems.ftb.select"));
-        this.parent = parent;
-        setParentScreen(parent);
         this.stack = stack;
         this.allRefs = new ArrayList<>(refs);
         this.filtered.addAll(refs);
-        useCanvas(840f, 470f, 6);
+        useCanvas(640, 360, 6);
     }
 
     @Override
-    protected void buildUi() {
-        searchBox = addTextField(
-                LIST_X,
-                54,
-                520,
-                KineticI18n.translatable("gui.adventuresystems.ftb.search"),
-                KineticI18n.translatable("placeholder.adventuresystems.ftb.select.search"),
-                null,
-                KineticI18n.translatable("tip.adventuresystems.ftb.search.desc")
-        );
-        searchBox.setResponder(value -> applySearch());
-        addButton(728, 432, 88, KineticI18n.translatable("gui.done"), null, this::onClose);
-        listWidget = addScrollableActionList(
-                LIST_X,
-                LIST_Y,
-                LIST_W,
-                LIST_H,
-                listItems(),
-                -1,
-                0,
-                116,
-                this::openQuest,
-                this::setFavorite
-        );
+    protected void build(KineticUi ui) {
+        if (listWidget != null) listScroll = listWidget.scrollOffset();
+        listWidget = null;
+        applySearch();
+        searchBox = ui.textField(LIST_X, 48, 360)
+                .label(KineticI18n.translatable("gui.adventuresystems.ftb.search"))
+                .placeholder(KineticI18n.translatable("placeholder.adventuresystems.ftb.select.search"))
+                .tooltip(KineticI18n.translatable("tip.adventuresystems.ftb.search.desc"))
+                .value(searchText)
+                .onChange(value -> {
+                    searchText = value;
+                    applySearch();
+                }).firstShownTextAsDefault().build();
+        ui.button(528, 329, 88).text(KineticI18n.translatable("gui.done"))
+                .onClick(this::close).build();
+        listWidget = ui.actionList(LIST_X, LIST_Y, LIST_W, LIST_H, listItems())
+                .selected(-1).scrollOffset(listScroll).actionWidth(116)
+                .onSelect(this::openQuest).onAction(this::setFavorite).build();
     }
 
     private void applySearch() {
         filtered.clear();
-        String query = searchBox == null ? "" : searchBox.getValue().trim().toLowerCase();
+        String query = searchText.trim().toLowerCase();
         for (RefFTB ref : allRefs) {
             if (KineticSearch.match(ref.searchText(), query)) filtered.add(ref);
         }
@@ -95,7 +87,6 @@ public class SelectScreenFTB extends KineticScreen {
                     secondary,
                     KineticI18n.translatable("tip.adventuresystems.ftb.list.open"),
                     true,
-                    ref.id() == favoriteId,
                     false,
                     KineticI18n.translatable("tip.adventuresystems.ftb.favorite.title"),
                     KineticI18n.translatable("tip.adventuresystems.ftb.favorite.desc"),
@@ -126,30 +117,25 @@ public class SelectScreenFTB extends KineticScreen {
     }
 
     @Override
-    protected void renderCanvasBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        GuiTheme.shadow(graphics, canvasWidth(), canvasHeight());
-        GuiTheme.panel(graphics, 10, 10, 820, 450);
-        graphics.drawString(font, KineticI18n.translatable("screen.adventuresystems.ftb.select"), 24, 24, GuiTheme.current().text(), false);
-        graphics.drawString(font, KineticI18n.translatable("label.adventuresystems.ftb.select.subtitle"), 170, 25, GuiTheme.current().mutedText(), false);
-        GuiTheme.itemSlot(graphics, 565, 53);
-        GuiTheme.item(graphics, font, stack, 565, 53, 18, 1.0F, false);
-        graphics.drawString(
-                font,
+    protected void renderBackground(KineticGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        KineticTheme.shadow(graphics, width(), height());
+        KineticTheme.panel(graphics, 10, 10, 620, 340);
+        graphics.text(KineticI18n.translatable("screen.adventuresystems.ftb.select"), 24, 24, KineticTheme.current().text(), false);
+        graphics.text(KineticI18n.translatable("label.adventuresystems.ftb.select.subtitle"), 170, 25, KineticTheme.current().mutedText(), false);
+        KineticTheme.itemSlot(graphics, 410, 48);
+        KineticTheme.item(graphics, stack, 410, 48, 18, 1.0F, false);
+        graphics.text(
                 KineticI18n.translatable("label.adventuresystems.ftb.item.name", stack.getHoverName().copy()),
-                588,
-                59,
-                GuiTheme.current().text(),
+                435,
+                54,
+                KineticTheme.current().text(),
                 false
         );
     }
 
     @Override
-    protected boolean handleCloseRequest() {
+    protected boolean onCloseRequested() {
         navigateBack();
         return true;
-    }
-
-    public Screen getParent() {
-        return parent;
     }
 }

@@ -192,6 +192,8 @@
   "gui.adventuresystems.curios.wallet.back": "Back",
   "gui.adventuresystems.curios.wallet.shop": "Shop",
   "gui.adventuresystems.curios.wallet.withdraw_64": "§eTake 64",
+  "gui.adventuresystems.curios.wallet.expand": "Exchange ▾",
+  "gui.adventuresystems.curios.wallet.collapse": "Collapse ▴",
   "gui.adventuresystems.curios.wallet.exchange_one": "§aOnce",
   "gui.adventuresystems.curios.wallet.exchange_all": "§eAll",
   "gui.adventuresystems.curios.wallet.hud_amount": "§a§a§l%s§r§a",

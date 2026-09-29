@@ -4,15 +4,15 @@ import dev.xyat.adventuresystems.tips.TipsNetwork;
 import dev.xyat.adventuresystems.tips.TipsUtils;
 import dev.xyat.adventuresystems.tips.client.TipCache;
 import dev.xyat.kineticcore.api.client.advancement.KineticClientAdvancements;
-import dev.xyat.kineticcore.api.client.screen.KineticNativeScreen;
-import dev.xyat.kineticcore.api.client.theme.GuiTheme;
-import dev.xyat.kineticcore.api.client.widget.input.KineticTextFields.KineticEditBox;
-import dev.xyat.kineticcore.api.client.widget.selection.KineticTabs.SelectionItem;
-import dev.xyat.kineticcore.api.client.widget.selection.KineticTabs.ScrollableSelectionList;
+import dev.xyat.kineticcore.api.client.gui.page.KineticPage;
+import dev.xyat.kineticcore.api.client.gui.page.PageLayout;
+import dev.xyat.kineticcore.api.client.gui.render.KineticGraphics;
+import dev.xyat.kineticcore.api.client.gui.theme.KineticTheme;
+import dev.xyat.kineticcore.api.client.gui.ui.KineticUi;
+import dev.xyat.kineticcore.api.client.gui.widget.list.KineticSelectionList;
+import dev.xyat.kineticcore.api.client.gui.widget.list.SelectionItem;
 import dev.xyat.kineticcore.api.runtime.KineticClientRuntime;
 import dev.xyat.kineticcore.api.text.KineticI18n;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -28,70 +28,59 @@ import java.util.function.Consumer;
  */
 public class TipSelectors {
 
-    public static class RegistrySelectorScreen extends KineticNativeScreen {
+    public static class RegistrySelectorScreen extends KineticPage {
         private final String type;
         private final Consumer<String> onSelect;
         private final List<RegistryEntry> allEntries = new ArrayList<>();
-        private KineticEditBox searchBox;
-        private ScrollableSelectionList listWidget;
+        private KineticSelectionList listWidget;
+        private String searchText = "";
+        private int listScroll;
         private List<RegistryEntry> displayEntries = List.of();
         private int lastListSize;
 
-        public RegistrySelectorScreen(Screen parent, String type, Consumer<String> onSelect) {
-            super(KineticI18n.translatable("gui.adventuresystems.tips.tips.setstitle", type));
-            setParentScreen(parent);
+        public RegistrySelectorScreen(String type, Consumer<String> onSelect) {
+            super(KineticI18n.translatable("gui.adventuresystems.tips.tips.setstitle", type), PageLayout.NATIVE);
             this.type = type;
             this.onSelect = onSelect;
         }
 
         @Override
-        protected void buildUi() {
+        protected void build(KineticUi ui) {
+            if (listWidget != null) listScroll = listWidget.scrollOffset();
+            listWidget = null;
             if ("structures".equals(type)) {
                 TipsNetwork.sendToServer(new TipsNetwork.RequestStructure(true));
             }
             loadData();
-            this.searchBox = addTextField(
-                    20,
-                    10,
-                    this.width - 100,
-                    Component.empty(),
-                    KineticI18n.translatable("gui.adventuresystems.tips.tips.search"),
-                    null,
-                    null
-            );
-            this.searchBox.setResponder(this::updateSearch);
+            updateSearch(searchText);
+            ui.textField(20, 10, width() - 100)
+                    .label(Component.empty())
+                    .placeholder(KineticI18n.translatable("gui.adventuresystems.tips.tips.search"))
+                    .value(searchText)
+                    .onChange(value -> {
+                        searchText = value;
+                        updateSearch(value);
+                    }).firstShownTextAsDefault().build();
 
-            addButton(
-                    this.width - 70,
-                    10,
-                    60,
-                    KineticI18n.translatable("gui.adventuresystems.tips.tips.cancel"),
-                    null,
-                    this::closeToParent
-            );
+            ui.button(width() - 70, 10, 60)
+                    .text(KineticI18n.translatable("gui.adventuresystems.tips.tips.cancel"))
+                    .onClick(this::closeToParent).build();
 
-            this.listWidget = addScrollableSelectionList(
-                    20,
-                    40,
-                    this.width - 40,
-                    this.height - 50,
-                    List.of(),
-                    -1,
-                    0,
-                    index -> {
+            this.listWidget = ui.selectionList(20, 40, width() - 40, height() - 50,
+                    selectionItems())
+                    .selected(-1).scrollOffset(listScroll)
+                    .onSelect(index -> {
                         if (index < 0 || index >= displayEntries.size()) return;
                         onSelect.accept(displayEntries.get(index).id);
                         navigateBack();
-                    }
-            );
-            updateSearch("");
+                    }).build();
         }
 
         @Override
-        protected void nativeTick() {
+        protected void onTick() {
             if ("structures".equals(type) && TipCache.ALL_STRUCTURES.size() > lastListSize) {
                 loadData();
-                updateSearch(searchBox == null ? "" : searchBox.getValue());
+                updateSearch(searchText);
             }
         }
 
@@ -154,28 +143,28 @@ public class TipSelectors {
                             || entry.source.toLowerCase(Locale.ROOT).contains(query))
                     .toList();
             if (listWidget != null) {
-                listWidget.setItems(displayEntries.stream()
-                        .map(entry -> new SelectionItem(
-                                KineticI18n.translatable("gui.adventuresystems.tips.tips.selector.name", entry.name),
-                                KineticI18n.translatable("gui.adventuresystems.tips.tips.selector.meta", entry.source, entry.id),
-                                null,
-                                true,
-                                false,
-                                false
-                        ))
-                        .toList());
+                listWidget.setItems(selectionItems());
                 listWidget.setSelectedIndex(-1);
                 listWidget.setScrollOffset(0);
             }
         }
 
-        @Override
-        protected void renderNativeBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-            graphics.drawCenteredString(this.font, this.title, this.width / 2, 15, GuiTheme.current().text());
+        private List<SelectionItem> selectionItems() {
+            return displayEntries.stream()
+                    .map(entry -> new SelectionItem(
+                            KineticI18n.translatable("gui.adventuresystems.tips.tips.selector.name", entry.name),
+                            KineticI18n.translatable("gui.adventuresystems.tips.tips.selector.meta", entry.source, entry.id),
+                            null, true, false))
+                    .toList();
         }
 
         @Override
-        protected boolean handleCloseRequest() {
+        protected void renderBackground(KineticGraphics graphics, int mouseX, int mouseY, float partialTick) {
+            graphics.centeredText(title(), width() / 2, 15, KineticTheme.current().text(), true);
+        }
+
+        @Override
+        protected boolean onCloseRequested() {
             closeToParent();
             return true;
         }

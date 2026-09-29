@@ -5,7 +5,6 @@ import dev.xyat.kineticcore.api.config.client.KTConfigApi;
 import dev.xyat.kineticcore.api.config.client.KTConfigPage;
 import dev.xyat.kineticcore.api.config.client.KTConfigScope;
 import dev.xyat.kineticcore.api.text.KineticI18n;
-import net.minecraft.client.gui.screens.Screen;
 
 public final class TipsConfigGui {
     public static final String PAGE_ID = "adventuresystems:tips";
@@ -50,7 +49,7 @@ public final class TipsConfigGui {
                 .build());
     }
 
-    public static Screen create(Screen parent) {
-        return KTConfigApi.createScreenForOwner(parent, "adventuresystems");
+    public static void open() {
+        KTConfigApi.openOwner("adventuresystems");
     }
 }

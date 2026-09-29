@@ -2,24 +2,24 @@ package dev.xyat.adventuresystems.curios.wallet.client.gui;
 
 import dev.xyat.adventuresystems.curios.wallet.network.Network;
 import dev.xyat.adventuresystems.curios.wallet.shop.Shop;
-import dev.xyat.kineticcore.api.client.theme.GuiTheme;
-import dev.xyat.kineticcore.api.client.overlay.KineticOverlays;
-import dev.xyat.kineticcore.api.client.selector.KineticSelectors;
-import dev.xyat.kineticcore.api.client.screen.KineticScreen;
-import dev.xyat.kineticcore.api.client.widget.button.KineticButtons.StateButton;
-import dev.xyat.kineticcore.api.client.widget.input.KineticNumericFields.NumericEditBox;
-import dev.xyat.kineticcore.api.client.widget.input.KineticTextFields.KineticEditBox;
-import dev.xyat.kineticcore.api.runtime.KineticClientRuntime;
+import dev.xyat.kineticcore.api.client.gui.theme.KineticTheme;
+import dev.xyat.kineticcore.api.client.gui.page.KineticPage;
+import dev.xyat.kineticcore.api.client.gui.render.KineticGraphics;
+import dev.xyat.kineticcore.api.client.gui.ui.KineticUi;
+import dev.xyat.kineticcore.api.client.gui.ui.NumberType;
+import dev.xyat.kineticcore.api.client.gui.widget.KineticButton;
+import dev.xyat.kineticcore.api.client.gui.widget.KineticNumberField;
+import dev.xyat.kineticcore.api.client.gui.widget.KineticTextField;
+import dev.xyat.kineticcore.api.client.gui.overlay.KineticOverlays;
+import dev.xyat.kineticcore.api.client.gui.selector.KineticSelectors;
 import dev.xyat.kineticcore.api.text.KineticI18n;
 import java.util.ArrayList;
 import java.util.List;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
-import org.jetbrains.annotations.NotNull;
-import dev.xyat.kineticcore.api.client.widget.KineticControl;
+import dev.xyat.kineticcore.api.client.gui.widget.KineticControl;
 
-final class ShopEntryEditorScreen extends KineticScreen {
+final class ShopEntryEditorScreen extends KineticPage {
     private static final int MIN_PANEL_WIDTH = 632;
     private static final int MIN_PANEL_HEIGHT = 348;
     private final ShopScreen parent;
@@ -28,28 +28,24 @@ final class ShopEntryEditorScreen extends KineticScreen {
     private int top;
     private int panelWidth;
     private int panelHeight;
-    private NumericEditBox priceBox;
-    private NumericEditBox countBox;
-    private NumericEditBox dailyLimitBox;
-    private NumericEditBox totalLimitBox;
-    private KineticEditBox pageBox;
-    private NumericEditBox questNeedBox;
-    private KineticEditBox displayNameBox;
-    private KineticEditBox descriptionBox;
-    private StateButton commandManageButton;
-    private StateButton rewardModeButton;
-    private StateButton rewardManageButton;
+    private KineticNumberField priceBox;
+    private KineticNumberField countBox;
+    private KineticNumberField dailyLimitBox;
+    private KineticNumberField totalLimitBox;
+    private KineticTextField pageBox;
+    private KineticNumberField questNeedBox;
+    private KineticTextField displayNameBox;
+    private KineticTextField descriptionBox;
+    private KineticButton commandManageButton;
+    private KineticButton rewardModeButton;
+    private KineticButton rewardManageButton;
+    private KineticUi buildingUi;
 
     ShopEntryEditorScreen(ShopScreen parent, ShopGuiSupport.EditorDraft draft) {
         super(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_editor_title"));
         this.parent = parent;
-        setParentScreen(parent);
         this.draft = draft;
-        useCanvas(
-                640f,
-                360f,
-                6
-        );
+        useCanvas(640, 360, 6);
         configureStandaloneDraft(this::captureDraftSnapshot, this::restoreDraftSnapshot);
     }
 
@@ -124,11 +120,13 @@ final class ShopEntryEditorScreen extends KineticScreen {
     }
 
     @Override
-    protected void buildUi() {
-        panelWidth = Math.max(320, Math.min(MIN_PANEL_WIDTH, canvasWidth() - 8));
-        panelHeight = Math.max(300, Math.min(MIN_PANEL_HEIGHT, canvasHeight() - 12));
-        left = Math.max(4, (canvasWidth() - panelWidth) / 2);
-        top = Math.max(4, (canvasHeight() - panelHeight) / 2);
+    protected void build(KineticUi ui) {
+        syncBasicInputsQuietly();
+        buildingUi = ui;
+        panelWidth = Math.max(320, Math.min(MIN_PANEL_WIDTH, width() - 8));
+        panelHeight = Math.max(300, Math.min(MIN_PANEL_HEIGHT, height() - 12));
+        left = Math.max(4, (width() - panelWidth) / 2);
+        top = Math.max(4, (height() - panelHeight) / 2);
 
         addButton(typeButtonX(), typeButtonY(), buttonColumnWidth(), typeButtonText(), null, () -> {
             syncBasicInputsQuietly();
@@ -138,7 +136,7 @@ final class ShopEntryEditorScreen extends KineticScreen {
             rebuildEditorWidgets();
         });
         addButton(selectItemButtonX(), selectItemButtonY(), buttonColumnWidth(), itemButtonText(), null, this::openMainItemSelector);
-        addButton(selectCurrencyButtonX(), selectCurrencyButtonY(), buttonColumnWidth(), currencyButtonText(), null, () -> KineticClientRuntime.openScreen(new CurrencyPickerScreen(this, draft)));
+        addButton(selectCurrencyButtonX(), selectCurrencyButtonY(), buttonColumnWidth(), currencyButtonText(), null, () -> openChild(new CurrencyPickerScreen(draft)));
         addButton(selectPaymentButtonX(), selectPaymentButtonY(), buttonColumnWidth(), paymentButtonText(), null, this::openPaymentItemSelector);
 
         priceBox = addLongField(
@@ -151,7 +149,7 @@ final class ShopEntryEditorScreen extends KineticScreen {
                 null,
                 null
         );
-        priceBox.setMaxLength(18);
+        priceBox.limitTextLength(18);
         priceBox.setLongValue(draft.price);
 
         countBox = addIntegerField(
@@ -164,7 +162,7 @@ final class ShopEntryEditorScreen extends KineticScreen {
                 64,
                 null
         );
-        countBox.setMaxLength(2);
+        countBox.limitTextLength(2);
         countBox.setIntValue(draft.count);
 
         dailyLimitBox = addIntegerField(
@@ -177,7 +175,7 @@ final class ShopEntryEditorScreen extends KineticScreen {
                 Integer.MAX_VALUE,
                 null
         );
-        dailyLimitBox.setMaxLength(10);
+        dailyLimitBox.limitTextLength(10);
         dailyLimitBox.setIntValue(draft.dailyLimit);
 
         totalLimitBox = addIntegerField(
@@ -190,7 +188,7 @@ final class ShopEntryEditorScreen extends KineticScreen {
                 999999999,
                 null
         );
-        totalLimitBox.setMaxLength(9);
+        totalLimitBox.limitTextLength(9);
         totalLimitBox.setIntValue(draft.totalLimit);
 
         pageBox = addTextField(
@@ -202,8 +200,8 @@ final class ShopEntryEditorScreen extends KineticScreen {
                 null,
                 null
         );
-        pageBox.setMaxLength(32);
-        pageBox.setValue(draft.pageName == null ? "" : draft.pageName);
+        pageBox.limitTextLength(32);
+        pageBox.setTextValue(draft.pageName == null ? "" : draft.pageName);
 
         questNeedBox = addIntegerField(
                 rightInputX(),
@@ -215,7 +213,7 @@ final class ShopEntryEditorScreen extends KineticScreen {
                 999,
                 null
         );
-        questNeedBox.setMaxLength(3);
+        questNeedBox.limitTextLength(3);
         questNeedBox.setIntValue(draft.requiredQuestCount);
 
         displayNameBox = addTextField(
@@ -227,8 +225,8 @@ final class ShopEntryEditorScreen extends KineticScreen {
                 null,
                 null
         );
-        displayNameBox.setMaxLength(64);
-        displayNameBox.setValue(draft.displayName == null ? "" : draft.displayName);
+        displayNameBox.limitTextLength(64);
+        displayNameBox.setTextValue(draft.displayName == null ? "" : draft.displayName);
 
         descriptionBox = addTextField(
                 commandAreaX(),
@@ -239,8 +237,8 @@ final class ShopEntryEditorScreen extends KineticScreen {
                 null,
                 null
         );
-        descriptionBox.setMaxLength(256);
-        descriptionBox.setValue(draft.description == null ? "" : draft.description);
+        descriptionBox.limitTextLength(256);
+        descriptionBox.setTextValue(draft.description == null ? "" : draft.description);
 
         commandManageButton = addButton(
                 commandManageButtonX(),
@@ -250,7 +248,7 @@ final class ShopEntryEditorScreen extends KineticScreen {
                 null,
                 () -> {
                     syncBasicInputsQuietly();
-                    KineticClientRuntime.openScreen(new CommandManageScreen(this, draft));
+                    openChild(new CommandManageScreen(draft));
                 }
         );
 
@@ -262,7 +260,7 @@ final class ShopEntryEditorScreen extends KineticScreen {
                 null,
                 () -> {
                     syncBasicInputsQuietly();
-                    KineticClientRuntime.openScreen(new QuestManageScreen(this, draft));
+                    openChild(new QuestManageScreen(draft));
                 }
         );
 
@@ -275,7 +273,29 @@ final class ShopEntryEditorScreen extends KineticScreen {
     }
 
     private void rebuildEditorWidgets() {
-        rebuildUi();
+        rebuild();
+    }
+
+    private KineticButton addButton(int x, int y, int width, Component label, Component tooltip, Runnable action) {
+        return buildingUi.button(x, y, width).text(label).tooltip(tooltip).onClick(action).build();
+    }
+
+    private KineticNumberField addLongField(int x, int y, int width, Component label,
+                                            boolean allowNegative, long minimum, Object maximum, Component tooltip) {
+        return buildingUi.numberField(x, y, width, NumberType.LONG)
+                .label(label).allowNegative(allowNegative).range(minimum, maximum instanceof Number n ? n : null)
+                .tooltip(tooltip).firstShownTextAsDefault().build();
+    }
+
+    private KineticNumberField addIntegerField(int x, int y, int width, Component label,
+                                               boolean allowNegative, int minimum, int maximum, Component tooltip) {
+        return buildingUi.numberField(x, y, width, NumberType.INT)
+                .label(label).allowNegative(allowNegative).range(minimum, maximum).tooltip(tooltip).firstShownTextAsDefault().build();
+    }
+
+    private KineticTextField addTextField(int x, int y, int width, Component label,
+                                         Component placeholder, Object validator, Component tooltip) {
+        return buildingUi.textField(x, y, width).label(label).placeholder(placeholder).tooltip(tooltip).firstShownTextAsDefault().build();
     }
 
     private int basicSectionY() { return top + 28; }
@@ -334,7 +354,7 @@ final class ShopEntryEditorScreen extends KineticScreen {
     private int cancelButtonX() { return left + panelWidth - 88; }
 
     private void openMainItemSelector() {
-        KineticSelectors.openItemSelector(this, selection -> {
+        KineticSelectors.openItemSelector(selection -> {
             if (!selection.isItem()) return;
             ItemStack stack = selection.stack();
             String spec = ShopGuiSupport.selectedStackSpec(stack);
@@ -347,7 +367,7 @@ final class ShopEntryEditorScreen extends KineticScreen {
     }
 
     private void openPaymentItemSelector() {
-        KineticSelectors.openItemSelector(this, selection -> {
+        KineticSelectors.openItemSelector(selection -> {
             if (!selection.isItem()) return;
             ItemStack stack = selection.stack();
             String spec = ShopGuiSupport.selectedStackSpec(stack);
@@ -356,9 +376,9 @@ final class ShopEntryEditorScreen extends KineticScreen {
     }
 
     private void syncBasicInputsQuietly() {
-        if (pageBox != null) draft.pageName = pageBox.getValue().trim();
-        if (displayNameBox != null) draft.displayName = displayNameBox.getValue().trim();
-        if (descriptionBox != null) draft.description = descriptionBox.getValue().trim();
+        if (pageBox != null) draft.pageName = pageBox.textValue().trim();
+        if (displayNameBox != null) draft.displayName = displayNameBox.textValue().trim();
+        if (descriptionBox != null) draft.description = descriptionBox.textValue().trim();
 
         if (priceBox != null) {
             Long value = priceBox.getLongValue();
@@ -481,15 +501,15 @@ final class ShopEntryEditorScreen extends KineticScreen {
         if (draft.mode == Shop.Mode.SELL) {
             if (!draft.selectable) return;
             normalizeChoiceRewards();
-            KineticClientRuntime.openScreen(new RewardPoolScreen(this, draft));
+            openChild(new RewardPoolScreen(draft));
             return;
         }
         if (draft.selectable) {
             normalizeChoiceRewards();
-            KineticClientRuntime.openScreen(new RewardPoolScreen(this, draft));
+            openChild(new RewardPoolScreen(draft));
             return;
         }
-        if (draft.gacha) KineticClientRuntime.openScreen(new RewardPoolScreen(this, draft));
+        if (draft.gacha) openChild(new RewardPoolScreen(draft));
     }
 
     private void normalizeChoiceRewards() {
@@ -540,9 +560,9 @@ final class ShopEntryEditorScreen extends KineticScreen {
         draft.count = count;
         draft.dailyLimit = dailyLimit;
         draft.totalLimit = totalLimit;
-        draft.pageName = pageBox.getValue().trim();
-        draft.displayName = displayNameBox.getValue().trim();
-        draft.description = descriptionBox.getValue().trim();
+        draft.pageName = pageBox.textValue().trim();
+        draft.displayName = displayNameBox.textValue().trim();
+        draft.description = descriptionBox.textValue().trim();
         draft.syncDirectCommandFromList();
         draft.requiredQuestCount = requiredQuestCount;
 
@@ -586,15 +606,15 @@ final class ShopEntryEditorScreen extends KineticScreen {
     }
 
     @Override
-    protected boolean handleCloseRequest() {
+    protected boolean onCloseRequested() {
         cancelAndReturn();
         return true;
     }
 
     @Override
-    protected void renderCanvasBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        GuiTheme.panel(graphics, left, top, panelWidth, panelHeight);
-        graphics.drawCenteredString(font, title, left + panelWidth / 2, top + 12, GuiTheme.current().text());
+    protected void renderBackground(KineticGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        KineticTheme.panel(graphics, left, top, panelWidth, panelHeight);
+        graphics.centeredText(title(), left + panelWidth / 2, top + 12, KineticTheme.current().text(), false);
 
         renderSection(graphics, left + 12, basicSectionY(), basicSectionHeight(), KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_editor_basic_info"));
         renderButtonItemIcon(graphics, draft.itemId, selectItemButtonX(), selectItemButtonY());
@@ -602,24 +622,24 @@ final class ShopEntryEditorScreen extends KineticScreen {
         renderButtonItemIcon(graphics, currentBarterItemId(), selectPaymentButtonX(), selectPaymentButtonY());
 
         renderSection(graphics, left + 12, priceSectionY(), priceSectionHeight(), KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_editor_price_limit"));
-        graphics.drawString(font, KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_editor_price_label"), labelLeftX(), priceInputY() + 5, GuiTheme.current().mutedText(), true);
-        graphics.drawString(font, KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_editor_count_label"), rightLabelX(), priceInputY() + 5, GuiTheme.current().mutedText(), true);
-        graphics.drawString(font, KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_editor_timed_label"), labelLeftX(), dailyInputY() + 5, GuiTheme.current().mutedText(), true);
-        graphics.drawString(font, KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_editor_total_label"), rightLabelX(), dailyInputY() + 5, GuiTheme.current().mutedText(), true);
-        graphics.drawString(font, KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_editor_page_label"), labelLeftX(), pageInputY() + 5, GuiTheme.current().mutedText(), true);
-        graphics.drawString(font, KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_editor_quest_need_label"), rightLabelX(), pageInputY() + 5, GuiTheme.current().mutedText(), true);
-        graphics.drawString(font, KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_editor_display_name_label"), labelLeftX(), displayNameInputY() + 5, GuiTheme.current().mutedText(), true);
-        graphics.drawString(font, KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_command_manage_label"), commandManageButtonX(), commandManageButtonY() - 14, GuiTheme.current().mutedText(), true);
-        graphics.drawString(font, KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_command_count", draft.commands.size()), commandManageButtonX(), commandManageButtonY() + 26, GuiTheme.current().text(), true);
-        graphics.drawString(font, KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_editor_description_label"), commandAreaX(), descriptionInputY() - 12, GuiTheme.current().mutedText(), true);
+        graphics.text(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_editor_price_label"), labelLeftX(), priceInputY() + 5, KineticTheme.current().mutedText(), true);
+        graphics.text(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_editor_count_label"), rightLabelX(), priceInputY() + 5, KineticTheme.current().mutedText(), true);
+        graphics.text(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_editor_timed_label"), labelLeftX(), dailyInputY() + 5, KineticTheme.current().mutedText(), true);
+        graphics.text(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_editor_total_label"), rightLabelX(), dailyInputY() + 5, KineticTheme.current().mutedText(), true);
+        graphics.text(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_editor_page_label"), labelLeftX(), pageInputY() + 5, KineticTheme.current().mutedText(), true);
+        graphics.text(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_editor_quest_need_label"), rightLabelX(), pageInputY() + 5, KineticTheme.current().mutedText(), true);
+        graphics.text(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_editor_display_name_label"), labelLeftX(), displayNameInputY() + 5, KineticTheme.current().mutedText(), true);
+        graphics.text(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_command_manage_label"), commandManageButtonX(), commandManageButtonY() - 14, KineticTheme.current().mutedText(), true);
+        graphics.text(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_command_count", draft.commands.size()), commandManageButtonX(), commandManageButtonY() + 26, KineticTheme.current().text(), true);
+        graphics.text(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_editor_description_label"), commandAreaX(), descriptionInputY() - 12, KineticTheme.current().mutedText(), true);
 
         renderSection(graphics, left + 12, questSectionY(), questSectionHeight(), KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_editor_requirements"));
-        graphics.drawString(font, KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_editor_quest_count", draft.questIds.size()), innerLeft(), questSectionY() + 28, GuiTheme.current().text(), true);
-        graphics.drawString(font, KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_editor_quest_rule", draft.requiredQuestCount <= 0 ? draft.questIds.size() : Math.min(draft.requiredQuestCount, draft.questIds.size())), rightLabelX(), questSectionY() + 28, GuiTheme.current().mutedText(), true);
+        graphics.text(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_editor_quest_count", draft.questIds.size()), innerLeft(), questSectionY() + 28, KineticTheme.current().text(), true);
+        graphics.text(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_editor_quest_rule", draft.requiredQuestCount <= 0 ? draft.questIds.size() : Math.min(draft.requiredQuestCount, draft.questIds.size())), rightLabelX(), questSectionY() + 28, KineticTheme.current().mutedText(), true);
 
         renderSection(graphics, left + 12, contentSectionY(), contentSectionHeight(), contentSectionTitle());
-        graphics.drawString(font, KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_editor_content_mode_label"), labelLeftX(), contentModeButtonY() + 5, GuiTheme.current().mutedText(), true);
-        graphics.drawString(font, contentCountText(), contentPreviewX(), contentPreviewY() + 5, GuiTheme.current().text(), true);
+        graphics.text(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_editor_content_mode_label"), labelLeftX(), contentModeButtonY() + 5, KineticTheme.current().mutedText(), true);
+        graphics.text(contentCountText(), contentPreviewX(), contentPreviewY() + 5, KineticTheme.current().text(), true);
     }
 
     private Component contentCountText() {
@@ -633,59 +653,59 @@ final class ShopEntryEditorScreen extends KineticScreen {
     }
 
 
-    private void renderButtonItemIcon(GuiGraphics graphics, String id, int buttonX, int buttonY) {
+    private void renderButtonItemIcon(KineticGraphics graphics, String id, int buttonX, int buttonY) {
         if (id == null || id.isBlank()) return;
-        graphics.renderItem(ShopGuiSupport.stack(id), buttonX + buttonColumnWidth() - 20, buttonY + 2);
+        graphics.item(ShopGuiSupport.stack(id), buttonX + buttonColumnWidth() - 20, buttonY + 2);
     }
 
 
-    private void renderSection(GuiGraphics graphics, int x, int y, int height, Component title) {
-        GuiTheme.panelAlt(graphics, x, y, panelWidth - 24, height);
-        graphics.drawString(font, title, x + 10, y + 5, GuiTheme.current().text(), true);
+    private void renderSection(KineticGraphics graphics, int x, int y, int height, Component title) {
+        KineticTheme.panelAlt(graphics, x, y, panelWidth - 24, height);
+        graphics.text(title, x + 10, y + 5, KineticTheme.current().text(), true);
     }
 
     @Override
-    protected void renderTooltips(GuiGraphics graphics, int scaledMouseX, int scaledMouseY, int rawMouseX, int rawMouseY) {
-        ItemStack stack = hoveredEditorItem(scaledMouseX, scaledMouseY);
+    protected void renderTooltips(int mouseX, int mouseY) {
+        ItemStack stack = hoveredEditorItem(mouseX, mouseY);
         if (!stack.isEmpty()) {
-            KineticOverlays.requestItemTooltip(stack, rawMouseX, rawMouseY);
+            showItemTooltip(stack);
             return;
         }
-        List<Component> tooltip = editorTooltipAt(scaledMouseX, scaledMouseY);
-        if (!tooltip.isEmpty()) KineticOverlays.requestTooltip(tooltip, rawMouseX, rawMouseY);
+        List<Component> tooltip = editorTooltipAt(mouseX, mouseY);
+        if (!tooltip.isEmpty()) showTooltip(tooltip);
     }
 
     private ItemStack hoveredEditorItem(int mouseX, int mouseY) {
-        if (draft.itemId != null && !draft.itemId.isBlank() && GuiTheme.hovering(mouseX, mouseY, selectItemButtonX() + buttonColumnWidth() - 20, selectItemButtonY() + 2, 16, 16)) return ShopGuiSupport.stack(draft.itemId);
-        if (!currentCurrencyId().isBlank() && GuiTheme.hovering(mouseX, mouseY, selectCurrencyButtonX() + buttonColumnWidth() - 20, selectCurrencyButtonY() + 2, 16, 16)) return ShopGuiSupport.stack(currentCurrencyId());
-        if (!currentBarterItemId().isBlank() && GuiTheme.hovering(mouseX, mouseY, selectPaymentButtonX() + buttonColumnWidth() - 20, selectPaymentButtonY() + 2, 16, 16)) return ShopGuiSupport.stack(currentBarterItemId());
+        if (draft.itemId != null && !draft.itemId.isBlank() && KineticTheme.hovering(mouseX, mouseY, selectItemButtonX() + buttonColumnWidth() - 20, selectItemButtonY() + 2, 16, 16)) return ShopGuiSupport.stack(draft.itemId);
+        if (!currentCurrencyId().isBlank() && KineticTheme.hovering(mouseX, mouseY, selectCurrencyButtonX() + buttonColumnWidth() - 20, selectCurrencyButtonY() + 2, 16, 16)) return ShopGuiSupport.stack(currentCurrencyId());
+        if (!currentBarterItemId().isBlank() && KineticTheme.hovering(mouseX, mouseY, selectPaymentButtonX() + buttonColumnWidth() - 20, selectPaymentButtonY() + 2, 16, 16)) return ShopGuiSupport.stack(currentBarterItemId());
         return ItemStack.EMPTY;
     }
 
     private List<Component> editorTooltipAt(int mouseX, int mouseY) {
         List<Component> tooltip = new ArrayList<>();
-        if (GuiTheme.hovering(mouseX, mouseY, typeButtonX(), typeButtonY(), buttonColumnWidth(), 20)) addTooltip(tooltip, "gui.adventuresystems.curios.wallet.shop_editor_type_label", "gui.adventuresystems.curios.wallet.shop_editor_tooltip_type");
-        else if (GuiTheme.hovering(mouseX, mouseY, selectItemButtonX(), selectItemButtonY(), buttonColumnWidth(), 20)) addTooltip(tooltip, "gui.adventuresystems.curios.wallet.shop_editor_item_label", "gui.adventuresystems.curios.wallet.shop_editor_tooltip_item");
-        else if (GuiTheme.hovering(mouseX, mouseY, selectCurrencyButtonX(), selectCurrencyButtonY(), buttonColumnWidth(), 20)) addTooltip(tooltip, "gui.adventuresystems.curios.wallet.shop_editor_currency_label", "gui.adventuresystems.curios.wallet.shop_editor_tooltip_currency");
-        else if (GuiTheme.hovering(mouseX, mouseY, selectPaymentButtonX(), selectPaymentButtonY(), buttonColumnWidth(), 20)) addTooltip(tooltip, "gui.adventuresystems.curios.wallet.shop_editor_payment_item", "gui.adventuresystems.curios.wallet.shop_editor_tooltip_payment_item");
-        else if (GuiTheme.hovering(mouseX, mouseY, priceBox.getX(), priceBox.getY(), priceBox.getWidth(), 18)) addTooltip(tooltip, "gui.adventuresystems.curios.wallet.shop_editor_price_label", "gui.adventuresystems.curios.wallet.shop_editor_tooltip_price");
-        else if (GuiTheme.hovering(mouseX, mouseY, countBox.getX(), countBox.getY(), countBox.getWidth(), 18)) addTooltip(tooltip, "gui.adventuresystems.curios.wallet.shop_editor_count_label", "gui.adventuresystems.curios.wallet.shop_editor_tooltip_count");
-        else if (GuiTheme.hovering(mouseX, mouseY, dailyLimitBox.getX(), dailyLimitBox.getY(), dailyLimitBox.getWidth(), 18)) addTooltip(tooltip, "gui.adventuresystems.curios.wallet.shop_editor_timed_label", "gui.adventuresystems.curios.wallet.shop_editor_tooltip_timed");
-        else if (GuiTheme.hovering(mouseX, mouseY, totalLimitBox.getX(), totalLimitBox.getY(), totalLimitBox.getWidth(), 18)) addTooltip(tooltip, "gui.adventuresystems.curios.wallet.shop_editor_total_label", "gui.adventuresystems.curios.wallet.shop_editor_tooltip_total");
-        else if (GuiTheme.hovering(mouseX, mouseY, pageBox.getX(), pageBox.getY(), pageBox.getWidth(), 18)) addTooltip(tooltip, "gui.adventuresystems.curios.wallet.shop_editor_page_label", "gui.adventuresystems.curios.wallet.shop_editor_tooltip_page");
-        else if (GuiTheme.hovering(mouseX, mouseY, questNeedBox.getX(), questNeedBox.getY(), questNeedBox.getWidth(), 18)) addTooltip(tooltip, "gui.adventuresystems.curios.wallet.shop_editor_quest_need_label", "gui.adventuresystems.curios.wallet.shop_editor_tooltip_quest_need");
-        else if (GuiTheme.hovering(mouseX, mouseY, displayNameBox.getX(), displayNameBox.getY(), displayNameBox.getWidth(), 18)) addTooltip(tooltip, "gui.adventuresystems.curios.wallet.shop_editor_display_name_label", "gui.adventuresystems.curios.wallet.shop_editor_tooltip_display_name");
-        else if (GuiTheme.hovering(mouseX, mouseY, descriptionBox.getX(), descriptionBox.getY(), descriptionBox.getWidth(), 18)) addTooltip(tooltip, "gui.adventuresystems.curios.wallet.shop_editor_description_label", "gui.adventuresystems.curios.wallet.shop_editor_tooltip_description");
-        else if (commandManageButton != null && GuiTheme.hovering(mouseX, mouseY, commandManageButton.getX(), commandManageButton.getY(), commandManageButton.getWidth(), 20)) addTooltip(tooltip, "gui.adventuresystems.curios.wallet.shop_command_manage_button", "gui.adventuresystems.curios.wallet.shop_command_manage_tooltip");
-        else if (GuiTheme.hovering(mouseX, mouseY, questManageButtonX(), questManageButtonY(), 220, 20)) addTooltip(tooltip, "gui.adventuresystems.curios.wallet.shop_editor_quest_manage", "gui.adventuresystems.curios.wallet.shop_editor_tooltip_quest");
-        else if (GuiTheme.hovering(mouseX, mouseY, contentModeButtonX(), contentModeButtonY(), 180, 20)) {
+        if (KineticTheme.hovering(mouseX, mouseY, typeButtonX(), typeButtonY(), buttonColumnWidth(), 20)) addTooltip(tooltip, "gui.adventuresystems.curios.wallet.shop_editor_type_label", "gui.adventuresystems.curios.wallet.shop_editor_tooltip_type");
+        else if (KineticTheme.hovering(mouseX, mouseY, selectItemButtonX(), selectItemButtonY(), buttonColumnWidth(), 20)) addTooltip(tooltip, "gui.adventuresystems.curios.wallet.shop_editor_item_label", "gui.adventuresystems.curios.wallet.shop_editor_tooltip_item");
+        else if (KineticTheme.hovering(mouseX, mouseY, selectCurrencyButtonX(), selectCurrencyButtonY(), buttonColumnWidth(), 20)) addTooltip(tooltip, "gui.adventuresystems.curios.wallet.shop_editor_currency_label", "gui.adventuresystems.curios.wallet.shop_editor_tooltip_currency");
+        else if (KineticTheme.hovering(mouseX, mouseY, selectPaymentButtonX(), selectPaymentButtonY(), buttonColumnWidth(), 20)) addTooltip(tooltip, "gui.adventuresystems.curios.wallet.shop_editor_payment_item", "gui.adventuresystems.curios.wallet.shop_editor_tooltip_payment_item");
+        else if (KineticTheme.hovering(mouseX, mouseY, priceBox.controlX(), priceBox.controlY(), priceBox.controlWidth(), 18)) addTooltip(tooltip, "gui.adventuresystems.curios.wallet.shop_editor_price_label", "gui.adventuresystems.curios.wallet.shop_editor_tooltip_price");
+        else if (KineticTheme.hovering(mouseX, mouseY, countBox.controlX(), countBox.controlY(), countBox.controlWidth(), 18)) addTooltip(tooltip, "gui.adventuresystems.curios.wallet.shop_editor_count_label", "gui.adventuresystems.curios.wallet.shop_editor_tooltip_count");
+        else if (KineticTheme.hovering(mouseX, mouseY, dailyLimitBox.controlX(), dailyLimitBox.controlY(), dailyLimitBox.controlWidth(), 18)) addTooltip(tooltip, "gui.adventuresystems.curios.wallet.shop_editor_timed_label", "gui.adventuresystems.curios.wallet.shop_editor_tooltip_timed");
+        else if (KineticTheme.hovering(mouseX, mouseY, totalLimitBox.controlX(), totalLimitBox.controlY(), totalLimitBox.controlWidth(), 18)) addTooltip(tooltip, "gui.adventuresystems.curios.wallet.shop_editor_total_label", "gui.adventuresystems.curios.wallet.shop_editor_tooltip_total");
+        else if (KineticTheme.hovering(mouseX, mouseY, pageBox.controlX(), pageBox.controlY(), pageBox.controlWidth(), 18)) addTooltip(tooltip, "gui.adventuresystems.curios.wallet.shop_editor_page_label", "gui.adventuresystems.curios.wallet.shop_editor_tooltip_page");
+        else if (KineticTheme.hovering(mouseX, mouseY, questNeedBox.controlX(), questNeedBox.controlY(), questNeedBox.controlWidth(), 18)) addTooltip(tooltip, "gui.adventuresystems.curios.wallet.shop_editor_quest_need_label", "gui.adventuresystems.curios.wallet.shop_editor_tooltip_quest_need");
+        else if (KineticTheme.hovering(mouseX, mouseY, displayNameBox.controlX(), displayNameBox.controlY(), displayNameBox.controlWidth(), 18)) addTooltip(tooltip, "gui.adventuresystems.curios.wallet.shop_editor_display_name_label", "gui.adventuresystems.curios.wallet.shop_editor_tooltip_display_name");
+        else if (KineticTheme.hovering(mouseX, mouseY, descriptionBox.controlX(), descriptionBox.controlY(), descriptionBox.controlWidth(), 18)) addTooltip(tooltip, "gui.adventuresystems.curios.wallet.shop_editor_description_label", "gui.adventuresystems.curios.wallet.shop_editor_tooltip_description");
+        else if (commandManageButton != null && KineticTheme.hovering(mouseX, mouseY, commandManageButton.controlX(), commandManageButton.controlY(), commandManageButton.controlWidth(), 20)) addTooltip(tooltip, "gui.adventuresystems.curios.wallet.shop_command_manage_button", "gui.adventuresystems.curios.wallet.shop_command_manage_tooltip");
+        else if (KineticTheme.hovering(mouseX, mouseY, questManageButtonX(), questManageButtonY(), 220, 20)) addTooltip(tooltip, "gui.adventuresystems.curios.wallet.shop_editor_quest_manage", "gui.adventuresystems.curios.wallet.shop_editor_tooltip_quest");
+        else if (KineticTheme.hovering(mouseX, mouseY, contentModeButtonX(), contentModeButtonY(), 180, 20)) {
             String body = draft.mode == Shop.Mode.SELL ? "gui.adventuresystems.curios.wallet.shop_editor_tooltip_sell_multi_switch" : (!draft.selectable && !draft.gacha ? "gui.adventuresystems.curios.wallet.shop_editor_tooltip_single_reward_mode" : (draft.selectable ? "gui.adventuresystems.curios.wallet.shop_editor_tooltip_choice_table" : "gui.adventuresystems.curios.wallet.shop_editor_tooltip_gacha_pool"));
             addTooltip(tooltip, "gui.adventuresystems.curios.wallet.shop_editor_content_mode_label", body);
-        } else if (shouldShowContentManageButton() && GuiTheme.hovering(mouseX, mouseY, contentManageButtonX(), contentModeButtonY(), contentManageButtonWidth(), 20)) {
+        } else if (shouldShowContentManageButton() && KineticTheme.hovering(mouseX, mouseY, contentManageButtonX(), contentModeButtonY(), contentManageButtonWidth(), 20)) {
             if (draft.mode == Shop.Mode.SELL) addTooltip(tooltip, "gui.adventuresystems.curios.wallet.shop_editor_sell_choice_manage", "gui.adventuresystems.curios.wallet.shop_editor_tooltip_sell_choices");
             else if (draft.selectable) addTooltip(tooltip, "gui.adventuresystems.curios.wallet.shop_editor_choice_table_manage", "gui.adventuresystems.curios.wallet.shop_editor_tooltip_choice_table");
             else addTooltip(tooltip, "gui.adventuresystems.curios.wallet.shop_editor_gacha_pool_manage", "gui.adventuresystems.curios.wallet.shop_editor_tooltip_gacha_pool");
-        } else if (GuiTheme.hovering(mouseX, mouseY, saveButtonX(), actionButtonY(), 92, 20)) addTooltip(tooltip, "gui.adventuresystems.curios.wallet.shop_editor_save", "gui.adventuresystems.curios.wallet.shop_editor_tooltip_save");
+        } else if (KineticTheme.hovering(mouseX, mouseY, saveButtonX(), actionButtonY(), 92, 20)) addTooltip(tooltip, "gui.adventuresystems.curios.wallet.shop_editor_save", "gui.adventuresystems.curios.wallet.shop_editor_tooltip_save");
         return tooltip;
     }
 
@@ -694,7 +714,7 @@ final class ShopEntryEditorScreen extends KineticScreen {
         tooltip.add(KineticI18n.translatable(bodyKey));
     }
     private static boolean isControlVisible(KineticControl control) {
-        return control != null && control.isVisible();
+        return control != null && control.controlVisible();
     }
 
     private static boolean isControlEnabled(KineticControl control) {
@@ -702,7 +722,7 @@ final class ShopEntryEditorScreen extends KineticScreen {
     }
 
     private static void setControlVisible(KineticControl control, boolean visible) {
-        if (control != null) control.setVisible(visible);
+        if (control != null) control.setControlVisible(visible);
     }
 
     private static void setControlEnabled(KineticControl control, boolean enabled) {

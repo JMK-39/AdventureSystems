@@ -28,7 +28,7 @@ side="BOTH"
 [[dependencies.adventuresystems]]
 modId="kineticcore"
 mandatory=true
-versionRange="[26.9.24,)"
+versionRange="[26.9.28,)"
 ordering="AFTER"
 side="BOTH"
 

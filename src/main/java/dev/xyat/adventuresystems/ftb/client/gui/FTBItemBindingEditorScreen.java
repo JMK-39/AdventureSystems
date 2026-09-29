@@ -1,16 +1,18 @@
 package dev.xyat.adventuresystems.ftb.client.gui;
 
-import dev.xyat.kineticcore.api.client.input.KineticMouseButtons;
-import dev.xyat.kineticcore.api.client.overlay.KineticOverlays;
+import dev.xyat.kineticcore.api.client.gui.input.MouseDragInput;
+import dev.xyat.kineticcore.api.client.gui.input.MouseInput;
+import dev.xyat.kineticcore.api.client.gui.input.ScrollInput;
+import dev.xyat.kineticcore.api.client.gui.page.KineticPage;
+import dev.xyat.kineticcore.api.client.gui.render.KineticGraphics;
+import dev.xyat.kineticcore.api.client.gui.scroll.KineticScrollController;
+import dev.xyat.kineticcore.api.client.gui.selector.KineticSelectors;
+import dev.xyat.kineticcore.api.client.gui.text.KineticText;
+import dev.xyat.kineticcore.api.client.gui.theme.KineticTheme;
+import dev.xyat.kineticcore.api.client.gui.ui.KineticUi;
+import dev.xyat.kineticcore.api.client.gui.widget.KineticButton;
 import dev.xyat.kineticcore.api.client.search.KineticSearch;
-import dev.xyat.kineticcore.api.client.theme.GuiTheme;
-import dev.xyat.kineticcore.api.client.selector.KineticSelectors;
-import dev.xyat.kineticcore.api.client.screen.KineticScreen;
-import dev.xyat.kineticcore.api.client.widget.scroll.KineticScroll;
-import dev.xyat.kineticcore.api.client.widget.button.KineticButtons.StateButton;
-import dev.xyat.kineticcore.api.client.widget.input.KineticTextFields.KineticEditBox;
 import dev.xyat.kineticcore.api.config.client.KTConfigApi;
-import dev.xyat.kineticcore.api.runtime.KineticClientRuntime;
 import dev.xyat.kineticcore.api.text.KineticI18n;
 import dev.xyat.adventuresystems.ftb.client.hud.FTBToastUtil;
 import dev.xyat.adventuresystems.ftb.client.FTBConfigGui;
@@ -19,11 +21,8 @@ import dev.xyat.adventuresystems.ftb.data.FavoritesStoreFTB;
 import dev.xyat.adventuresystems.ftb.data.ItemBindingEntryFTB;
 import dev.xyat.adventuresystems.ftb.data.RefFTB;
 import dev.xyat.adventuresystems.ftb.util.BridgeFTB;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -32,7 +31,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-public class FTBItemBindingEditorScreen extends KineticScreen {
+public class FTBItemBindingEditorScreen extends KineticPage {
     private static final int PANEL_TOP = 36;
     private static final int PANEL_BOTTOM_PAD = 12;
     private static final int GAP = 10;
@@ -40,7 +39,6 @@ public class FTBItemBindingEditorScreen extends KineticScreen {
     private static final int ITEM_SLOT = 22;
     private static final int SCROLL_W = 4;
     
-    private final Screen parent;
     private final List<RefFTB> allTasks = new ArrayList<>();
     private final List<RefFTB> visibleTasks = new ArrayList<>();
     private final List<RefFTB> boundTasks = new ArrayList<>();
@@ -48,7 +46,7 @@ public class FTBItemBindingEditorScreen extends KineticScreen {
     private final LinkedHashSet<Long> selectedQuestIds = new LinkedHashSet<>();
     private final Map<Long, RefFTB> taskById = new LinkedHashMap<>();
 
-    private KineticEditBox searchBox;
+    private String searchText = "";
     private ItemStack selectedStack = ItemStack.EMPTY;
 
     private int leftX;
@@ -64,31 +62,16 @@ public class FTBItemBindingEditorScreen extends KineticScreen {
     private int itemGridH;
     private int boundY;
     private int boundH;
-    private double taskScroll;
-    private double boundScroll;
-    private double itemScroll;
-    private int taskMaxScroll;
-    private int boundMaxScroll;
-    private int itemMaxScroll;
-    private boolean taskScrolling;
-    private boolean boundScrolling;
-    private boolean itemScrolling;
-    private final KineticScroll.State taskScrollState = new KineticScroll.State();
-    private final KineticScroll.State boundScrollState = new KineticScroll.State();
-    private final KineticScroll.State itemScrollState = new KineticScroll.State();
+    private final KineticScrollController taskScroll = new KineticScrollController();
+    private final KineticScrollController boundScroll = new KineticScrollController();
+    private final KineticScrollController itemScroll = new KineticScrollController();
     private boolean dirty;
     private long favoriteQuestId;
-    private StateButton saveButton;
+    private KineticButton saveButton;
 
-    public FTBItemBindingEditorScreen(Screen parent) {
+    public FTBItemBindingEditorScreen() {
         super(KineticI18n.translatable("screen.adventuresystems.ftb.editor"));
-        this.parent = parent;
-        setParentScreen(parent);
-        useCanvas(
-                760f,
-                430f,
-                6
-        );
+        useCanvas(640, 360, 6);
         configureStandaloneDraft(this::captureBindingSnapshot, this::restoreBindingSnapshot);
     }
 
@@ -122,7 +105,7 @@ public class FTBItemBindingEditorScreen extends KineticScreen {
     }
 
     @Override
-    protected void buildUi() {
+    protected void build(KineticUi ui) {
         this.allTasks.clear();
         this.taskById.clear();
         for (RefFTB ref : BridgeFTB.getAllQuestRefs()) {
@@ -133,47 +116,42 @@ public class FTBItemBindingEditorScreen extends KineticScreen {
 
         int topY = 10;
         this.leftX = 14;
-        int panelTotalW = canvasWidth() - this.leftX * 2 - GAP;
+        int panelTotalW = width() - this.leftX * 2 - GAP;
         this.leftW = Math.max(220, panelTotalW / 2);
         this.rightW = this.leftW;
         this.rightX = this.leftX + this.leftW + GAP;
         this.panelY = PANEL_TOP;
-        this.panelH = canvasHeight() - this.panelY - PANEL_BOTTOM_PAD;
+        this.panelH = height() - this.panelY - PANEL_BOTTOM_PAD;
 
         int buttonW = 70;
-        int closeX = canvasWidth() - 14 - buttonW;
+        int closeX = width() - 14 - buttonW;
         int clearX = closeX - GAP - 80;
         int blacklistX = clearX - GAP - 70;
 
-        this.searchBox = addTextField(
-                this.leftX,
-                topY,
-                220,
-                KineticI18n.translatable("placeholder.adventuresystems.ftb.task.search"),
-                KineticI18n.translatable("placeholder.adventuresystems.ftb.task.search"),
-                null,
-                null
-        );
-        this.searchBox.setMaxLength(128);
-        this.searchBox.setResponder(this::refreshTaskFilter);
-        addButton(blacklistX, topY, 70, KineticI18n.translatable("button.adventuresystems.ftb.blacklist"), null,
-                () -> KineticClientRuntime.openScreen(new FTBBlacklistScreen(this)));
-        addButton(clearX, topY, 80, KineticI18n.translatable("button.adventuresystems.ftb.clear"), null, this::clearSelectedBinding);
-        addButton(closeX, topY, buttonW, KineticI18n.translatable("gui.done"), null, this::onClose);
+        ui.textField(this.leftX, topY, 220)
+                .label(KineticI18n.translatable("placeholder.adventuresystems.ftb.task.search"))
+                .placeholder(KineticI18n.translatable("placeholder.adventuresystems.ftb.task.search"))
+                .value(searchText).maxLength(128)
+                .onChange(value -> {
+                    searchText = value;
+                    taskScroll.reset();
+                    refreshTaskFilter(value);
+                }).firstShownTextAsDefault().build();
+        ui.button(blacklistX, topY, 70).text(KineticI18n.translatable("button.adventuresystems.ftb.blacklist"))
+                .onClick(() -> openChild(new FTBBlacklistScreen())).build();
+        ui.button(clearX, topY, 80).text(KineticI18n.translatable("button.adventuresystems.ftb.clear"))
+                .onClick(this::clearSelectedBinding).build();
+        ui.button(closeX, topY, buttonW).text(KineticI18n.translatable("gui.done"))
+                .onClick(this::close).build();
 
         refreshLayoutValues();
 
-        this.saveButton = addButton(
-                selectedItemIconX() + ITEM_SLOT + 8,
-                selectedItemIconY() + 1,
-                52,
-                KineticI18n.translatable("button.adventuresystems.ftb.save"),
-                null,
-                this::saveCurrentBinding
-        );
+        this.saveButton = ui.button(selectedItemIconX() + ITEM_SLOT + 8, selectedItemIconY() + 1, 52)
+                .text(KineticI18n.translatable("button.adventuresystems.ftb.save"))
+                .onClick(this::saveCurrentBinding).build();
 
         updateItemScroll();
-        refreshTaskFilter(this.searchBox.getValue());
+        refreshTaskFilter(searchText);
         refreshBoundRefs();
         updateSaveButton();
     }
@@ -202,8 +180,7 @@ public class FTBItemBindingEditorScreen extends KineticScreen {
 
     private void updateItemScroll() {
         int rows = explicitEntries.isEmpty() ? 0 : (int) Math.ceil((double) explicitEntries.size() / Math.max(1, itemGridCols));
-        itemMaxScroll = Math.max(0, rows - itemGridRows);
-        itemScroll = Math.max(0, Math.min(itemScroll, itemMaxScroll));
+        itemScroll.update(rows, itemGridRows);
     }
 
     private void refreshTaskFilter(String raw) {
@@ -218,8 +195,7 @@ public class FTBItemBindingEditorScreen extends KineticScreen {
                 }
             }
         }
-        taskScroll = 0;
-        taskMaxScroll = Math.max(0, visibleTasks.size() - visibleTaskRows());
+        taskScroll.update(visibleTasks.size(), visibleTaskRows());
     }
 
     private void refreshBoundRefs() {
@@ -233,8 +209,7 @@ public class FTBItemBindingEditorScreen extends KineticScreen {
                 boundTasks.add(ref);
             }
         }
-        boundScroll = 0;
-        boundMaxScroll = Math.max(0, boundTasks.size() - visibleBoundRows());
+        boundScroll.update(boundTasks.size(), visibleBoundRows());
     }
 
     private int visibleTaskRows() {
@@ -246,7 +221,7 @@ public class FTBItemBindingEditorScreen extends KineticScreen {
     }
 
     private void openItemSelector() {
-        KineticSelectors.openItemSelector(this, selection -> {
+        KineticSelectors.openItemSelector(selection -> {
             if (selection != null && selection.isItem()) {
                 selectStack(selection.stack());
             } else {
@@ -389,94 +364,93 @@ public class FTBItemBindingEditorScreen extends KineticScreen {
 
     private void updateSaveButton() {
         if (saveButton == null) return;
-        saveButton.setVisible(!selectedStack.isEmpty());
+        saveButton.setControlVisible(!selectedStack.isEmpty());
         saveButton.setEnabled(!selectedStack.isEmpty() && dirty);
     }
 
     @Override
-    protected void renderCanvasBackground(@NotNull GuiGraphics g, int mx, int my, float pt) {
-        GuiTheme.shadow(g, canvasWidth(), canvasHeight());
-        GuiTheme.canvasBackground(g, canvasWidth(), canvasHeight());
-        g.drawCenteredString(font, title, canvasWidth() / 2, 15, GuiTheme.current().text());
-        GuiTheme.panel(g, leftX, panelY, leftW, panelH);
-        GuiTheme.panel(g, rightX, panelY, rightW, panelH);
+    protected void renderBackground(KineticGraphics g, int mx, int my, float pt) {
+        KineticTheme.shadow(g, width(), height());
+        KineticTheme.canvasBackground(g, width(), height());
+        g.centeredText(title(), width() / 2, 15, KineticTheme.current().text(), true);
+        KineticTheme.panel(g, leftX, panelY, leftW, panelH);
+        KineticTheme.panel(g, rightX, panelY, rightW, panelH);
     }
 
     @Override
-    protected void renderCanvasForeground(@NotNull GuiGraphics g, int mx, int my, float pt) {
+    protected void renderForeground(KineticGraphics g, int mx, int my, float pt) {
         renderLeftTasks(g, mx, my);
         renderRightPanel(g, mx, my);
     }
 
-    private void renderLeftTasks(GuiGraphics g, int mx, int my) {
+    private void renderLeftTasks(KineticGraphics g, int mx, int my) {
         int titleX = leftX + 8;
         int titleY = panelY + 8;
-        g.drawString(font, KineticI18n.translatable("label.adventuresystems.ftb.tasks", number(visibleTasks.size()), number(allTasks.size())), titleX, titleY, GuiTheme.current().text(), false);
+        g.text(KineticI18n.translatable("label.adventuresystems.ftb.tasks", number(visibleTasks.size()), number(allTasks.size())), titleX, titleY, KineticTheme.current().text(), false);
 
         int listX = leftX + 6;
         int listY = panelY + 26;
         int listW = leftW - 20;
         int rows = visibleTaskRows();
-        double smoothTaskScroll = taskScrollState.follow(taskScroll, taskMaxScroll, taskScrolling);
+        double smoothTaskScroll = taskScroll.smoothOffset();
         int start = (int) Math.floor(smoothTaskScroll + 1.0E-6D);
         int taskShift = (int) Math.round((smoothTaskScroll - start) * ROW_H);
         int end = Math.min(visibleTasks.size(), start + rows + 1);
 
-        enableCanvasScissor(g, listX, listY, listX + listW, listY + rows * ROW_H);
+        g.scissor(listX, listY, listX + listW, listY + rows * ROW_H);
         for (int i = start; i < end; i++) {
             RefFTB ref = visibleTasks.get(i);
             int row = i - start;
             int y = listY + row * ROW_H - taskShift;
             boolean selected = selectedQuestIds.contains(ref.id());
             boolean hover = mx >= listX && mx < listX + listW && my >= y && my < y + ROW_H;
-            GuiTheme.stateSurface(g, listX, y, listW, ROW_H - 1, GuiTheme.Surface.PANEL_ALT, selected, hover, false);
-            String titleText = GuiTheme.trim(font, cleanTaskTitle(ref), listW - 8);
+            KineticTheme.stateSurface(g, listX, y, listW, ROW_H - 1, KineticTheme.Surface.PANEL_ALT, selected, hover, false);
+            String titleText = KineticText.trim(cleanTaskTitle(ref), listW - 8);
             Component subText = buildTaskChapterLine(ref);
-            g.drawString(font, titleText, listX + 4, y + 3, GuiTheme.current().text(), false);
-            g.drawString(font, subText, listX + 4, y + 13, GuiTheme.current().text(), false);
+            g.text(titleText, listX + 4, y + 3, KineticTheme.current().text(), false);
+            g.text(subText, listX + 4, y + 13, KineticTheme.current().text(), false);
         }
 
-        disableCanvasScissor(g);
-        if (taskMaxScroll > 0) {
+        g.endScissor();
+        if (taskScroll.canScroll()) {
             int trackH = rows * ROW_H;
-            int thumbH = KineticScroll.stateThumbHeight(trackH, rows, visibleTasks.size(), 20);
-            KineticScroll.renderScrollbarState(g, mx, my, leftX + leftW - 12, listY, SCROLL_W, trackH, thumbH, taskMaxScroll, smoothTaskScroll, taskScrolling);
+            taskScroll.render(g, mx, my, leftX + leftW - 12, listY, SCROLL_W, trackH, 20);
         }
     }
 
-    private void renderRightPanel(GuiGraphics g, int mx, int my) {
+    private void renderRightPanel(KineticGraphics g, int mx, int my) {
         int headerX = rightX + 8;
         int headerY = panelY + 8;
         Component selectedLabel = KineticI18n.translatable("label.adventuresystems.ftb.item");
-        g.drawString(font, selectedLabel, headerX, headerY, GuiTheme.current().text(), false);
+        g.text(selectedLabel, headerX, headerY, KineticTheme.current().text(), false);
 
         drawItemSlot(g, selectedItemIconX(), selectedItemIconY(), selectedStack, mx, my, false);
         if (selectedStack.isEmpty()) {
-            g.drawString(font, KineticI18n.translatable("tip.adventuresystems.ftb.item.choose"), selectedItemIconX() + ITEM_SLOT + 8, selectedItemIconY() + 7, GuiTheme.current().text(), false);
+            g.text(KineticI18n.translatable("tip.adventuresystems.ftb.item.choose"), selectedItemIconX() + ITEM_SLOT + 8, selectedItemIconY() + 7, KineticTheme.current().text(), false);
         }
 
-        g.drawString(font, KineticI18n.translatable("label.adventuresystems.ftb.custom.items", number(explicitEntries.size())), headerX, panelY + 30, GuiTheme.current().text(), false);
+        g.text(KineticI18n.translatable("label.adventuresystems.ftb.custom.items", number(explicitEntries.size())), headerX, panelY + 30, KineticTheme.current().text(), false);
         renderExplicitItemGrid(g, mx, my);
 
-        g.drawString(font, KineticI18n.translatable("label.adventuresystems.ftb.bound.tasks", number(boundTasks.size())), headerX, boundY - 18, GuiTheme.current().text(), false);
+        g.text(KineticI18n.translatable("label.adventuresystems.ftb.bound.tasks", number(boundTasks.size())), headerX, boundY - 18, KineticTheme.current().text(), false);
         renderBoundTasks(g, mx, my);
 
         if (!selectedStack.isEmpty() && boundTasks.isEmpty() && !dirty) {
-            g.drawString(font, KineticI18n.translatable("tip.adventuresystems.ftb.default"), rightX + 8, boundY + boundH + 1, GuiTheme.current().text(), false);
+            g.text(KineticI18n.translatable("tip.adventuresystems.ftb.default"), rightX + 8, boundY + boundH + 1, KineticTheme.current().text(), false);
         }
     }
 
-    private void renderExplicitItemGrid(GuiGraphics g, int mx, int my) {
-        double smoothItemScroll = itemScrollState.follow(itemScroll, itemMaxScroll, itemScrolling);
+    private void renderExplicitItemGrid(KineticGraphics g, int mx, int my) {
+        double smoothItemScroll = itemScroll.smoothOffset();
         int smoothItemRow = (int) Math.floor(smoothItemScroll + 1.0E-6D);
         int itemShift = (int) Math.round((smoothItemScroll - smoothItemRow) * ITEM_SLOT);
         int start = smoothItemRow * itemGridCols;
         int visible = (itemGridRows + 1) * itemGridCols;
         int end = Math.min(explicitEntries.size(), start + visible);
         int gridW = itemGridCols * ITEM_SLOT;
-        GuiTheme.panelAlt(g, itemGridX - 2, itemGridY - 2, gridW + SCROLL_W + 7, itemGridH + 4);
+        KineticTheme.panelAlt(g, itemGridX - 2, itemGridY - 2, gridW + SCROLL_W + 7, itemGridH + 4);
 
-        enableCanvasScissor(g, itemGridX, itemGridY, itemGridX + gridW, itemGridY + itemGridH);
+        g.scissor(itemGridX, itemGridY, itemGridX + gridW, itemGridY + itemGridH);
         for (int i = start; i < end; i++) {
             ItemBindingEntryFTB entry = explicitEntries.get(i);
             int col = (i - start) % itemGridCols;
@@ -488,46 +462,44 @@ public class FTBItemBindingEditorScreen extends KineticScreen {
             drawItemSlot(g, x, y, stack, mx, my, selected);
         }
 
-        disableCanvasScissor(g);
-        if (itemMaxScroll > 0) {
-            int thumbH = KineticScroll.stateThumbHeight(itemGridH, itemGridRows, Math.max(itemGridRows, (int) Math.ceil((double) explicitEntries.size() / itemGridCols)), 18);
-            KineticScroll.renderScrollbarState(g, mx, my, itemGridX + gridW + 3, itemGridY, SCROLL_W, itemGridH, thumbH, itemMaxScroll, smoothItemScroll, itemScrolling);
+        g.endScissor();
+        if (itemScroll.canScroll()) {
+            itemScroll.render(g, mx, my, itemGridX + gridW + 3, itemGridY, SCROLL_W, itemGridH, 18);
         }
     }
 
-    private void renderBoundTasks(GuiGraphics g, int mx, int my) {
+    private void renderBoundTasks(KineticGraphics g, int mx, int my) {
         int listX = rightX + 10;
         int listW = rightW - 34 - SCROLL_W;
         int rows = visibleBoundRows();
-        double smoothBoundScroll = boundScrollState.follow(boundScroll, boundMaxScroll, boundScrolling);
+        double smoothBoundScroll = boundScroll.smoothOffset();
         int start = (int) Math.floor(smoothBoundScroll + 1.0E-6D);
         int boundShift = (int) Math.round((smoothBoundScroll - start) * ROW_H);
         int end = Math.min(boundTasks.size(), start + rows + 1);
-        GuiTheme.panelAlt(g, listX - 2, boundY - 2, listW + SCROLL_W + 8, rows * ROW_H + 4);
+        KineticTheme.panelAlt(g, listX - 2, boundY - 2, listW + SCROLL_W + 8, rows * ROW_H + 4);
 
-        enableCanvasScissor(g, listX, boundY, listX + listW, boundY + rows * ROW_H);
+        g.scissor(listX, boundY, listX + listW, boundY + rows * ROW_H);
         for (int i = start; i < end; i++) {
             RefFTB ref = boundTasks.get(i);
             int y = boundY + (i - start) * ROW_H - boundShift;
             boolean hover = mx >= listX && mx < listX + listW && my >= y && my < y + ROW_H;
-            GuiTheme.stateSurface(g, listX, y, listW, ROW_H - 1, GuiTheme.Surface.PANEL_ALT, false, hover, false);
+            KineticTheme.stateSurface(g, listX, y, listW, ROW_H - 1, KineticTheme.Surface.PANEL_ALT, false, hover, false);
             boolean favorite = ref.id() == favoriteQuestId;
             Component star = KineticI18n.translatable(favorite
                     ? "label.adventuresystems.ftb.favorite.marker_on"
                     : "label.adventuresystems.ftb.favorite.marker_off");
-            int starW = font.width(star) + 8;
-            String titleText = GuiTheme.trim(font, cleanTaskTitle(ref), listW - 8 - starW);
+            int starW = KineticText.width(star) + 8;
+            String titleText = KineticText.trim(cleanTaskTitle(ref), listW - 8 - starW);
             Component subText = buildTaskChapterLine(ref);
-            g.drawString(font, titleText, listX + 4, y + 3, GuiTheme.current().text(), false);
-            g.drawString(font, subText, listX + 4, y + 13, GuiTheme.current().text(), false);
-            g.drawString(font, star, listX + listW - starW + 2, y + 3, GuiTheme.current().text(), false);
+            g.text(titleText, listX + 4, y + 3, KineticTheme.current().text(), false);
+            g.text(subText, listX + 4, y + 13, KineticTheme.current().text(), false);
+            g.text(star, listX + listW - starW + 2, y + 3, KineticTheme.current().text(), false);
         }
 
-        disableCanvasScissor(g);
-        if (boundMaxScroll > 0) {
+        g.endScissor();
+        if (boundScroll.canScroll()) {
             int trackH = rows * ROW_H;
-            int thumbH = KineticScroll.stateThumbHeight(trackH, rows, boundTasks.size(), 20);
-            KineticScroll.renderScrollbarState(g, mx, my, listX + listW + 4, boundY, SCROLL_W, trackH, thumbH, boundMaxScroll, smoothBoundScroll, boundScrolling);
+            boundScroll.render(g, mx, my, listX + listW + 4, boundY, SCROLL_W, trackH, 20);
         }
     }
 
@@ -559,46 +531,48 @@ public class FTBItemBindingEditorScreen extends KineticScreen {
     }
 
     private int selectedItemIconX() {
-        return rightX + 8 + font.width(KineticI18n.translatable("label.adventuresystems.ftb.item")) + 8;
+        return rightX + 8 + KineticText.width(KineticI18n.translatable("label.adventuresystems.ftb.item")) + 8;
     }
 
     private int selectedItemIconY() {
         return panelY + 4;
     }
 
-    private void drawItemSlot(GuiGraphics g, int x, int y, ItemStack stack, int mx, int my, boolean selected) {
+    private void drawItemSlot(KineticGraphics g, int x, int y, ItemStack stack, int mx, int my, boolean selected) {
         boolean hovered = mx >= x && mx < x + ITEM_SLOT && my >= y && my < y + ITEM_SLOT;
-        GuiTheme.itemSlot(g, x, y, ITEM_SLOT, ITEM_SLOT, 4, selected, hovered, false);
-        GuiTheme.item(g, this.font, stack, x, y, ITEM_SLOT, 1.0F, false);
+        KineticTheme.itemSlot(g, x, y, ITEM_SLOT, ITEM_SLOT, 4, selected, hovered, false);
+        KineticTheme.item(g, stack, x, y, ITEM_SLOT, 1.0F, false);
     }
 
     @Override
-    protected void renderTooltips(GuiGraphics g, int smx, int smy, int mx, int my) {
-        RefFTB taskRef = taskAt(smx, smy);
+    protected void renderTooltips(int mx, int my) {
+        RefFTB taskRef = taskAt(mx, my);
         if (taskRef != null) {
             Component tip = selectedQuestIds.contains(taskRef.id())
                     ? KineticI18n.translatable("tip.adventuresystems.ftb.task.remove")
                     : KineticI18n.translatable("tip.adventuresystems.ftb.task.add");
-            KineticOverlays.requestTooltip(List.of(tip), mx, my);
+            showTooltip(List.of(tip));
             return;
         }
-        RefFTB boundRef = boundAt(smx, smy);
+        RefFTB boundRef = boundAt(mx, my);
         if (boundRef != null) {
-            KineticOverlays.requestTooltip(List.of(
+            showTooltip(List.of(
                     KineticI18n.translatable("tip.adventuresystems.ftb.task.remove"),
                     KineticI18n.translatable("tip.adventuresystems.ftb.favorite.desc")
-            ), mx, my);
+            ));
             return;
         }
-        if (isInside(smx, smy, selectedItemIconX(), selectedItemIconY(), ITEM_SLOT, ITEM_SLOT)) {
-            KineticOverlays.requestTooltip(List.of(KineticI18n.translatable("button.adventuresystems.ftb.item.select")), mx, my);
+        if (isInside(mx, my, selectedItemIconX(), selectedItemIconY(), ITEM_SLOT, ITEM_SLOT)) {
+            showTooltip(KineticI18n.translatable("button.adventuresystems.ftb.item.select"));
         }
     }
 
     @Override
-    protected boolean canvasMouseClicked(double mx, double my, int btn) {
-        if (KineticMouseButtons.isPrimary(btn)) {
-            if (clickScrollbars(mx, my)) return true;
+    protected boolean onMouseClick(MouseInput input) {
+        double mx = input.x();
+        double my = input.y();
+        if (input.isLeft()) {
+            if (clickScrollbars(input)) return true;
 
             if (isInside(mx, my, selectedItemIconX(), selectedItemIconY(), ITEM_SLOT, ITEM_SLOT)) {
                 openItemSelector();
@@ -622,113 +596,52 @@ public class FTBItemBindingEditorScreen extends KineticScreen {
                 selectEntry(entry);
                 return true;
             }
-        } else if (KineticMouseButtons.isSecondary(btn)) {
+        } else if (input.isRight()) {
             RefFTB bound = boundAt((int) mx, (int) my);
             if (bound != null) {
                 setFavoriteTask(bound);
                 return true;
             }
         }
-        return super.canvasMouseClicked(mx, my, btn);
+        return false;
     }
 
-    private boolean clickScrollbars(double mx, double my) {
+    private boolean clickScrollbars(MouseInput input) {
         int rows = visibleTaskRows();
         int listY = panelY + 26;
         int taskTrackH = rows * ROW_H;
-        if (taskMaxScroll > 0 && mx >= leftX + leftW - 12 && mx <= leftX + leftW - 12 + SCROLL_W && my >= listY && my < listY + taskTrackH) {
-            taskScrolling = true;
-            updateTaskScroll(my);
-            return true;
-        }
+        if (taskScroll.beginDrag(input.x(), input.y(), input.button(), leftX + leftW - 12, listY, SCROLL_W, taskTrackH, 20)) return true;
 
         int gridW = itemGridCols * ITEM_SLOT;
-        if (itemMaxScroll > 0 && mx >= itemGridX + gridW + 3 && mx <= itemGridX + gridW + 3 + SCROLL_W && my >= itemGridY && my < itemGridY + itemGridH) {
-            itemScrolling = true;
-            updateItemScroll(my);
-            return true;
-        }
+        if (itemScroll.beginDrag(input.x(), input.y(), input.button(), itemGridX + gridW + 3, itemGridY, SCROLL_W, itemGridH, 18)) return true;
 
         int boundRows = visibleBoundRows();
         int boundTrackH = boundRows * ROW_H;
         int boundListX = rightX + 10;
         int boundListW = rightW - 34 - SCROLL_W;
         int boundBarX = boundListX + boundListW + 4;
-        if (boundMaxScroll > 0 && mx >= boundBarX && mx <= boundBarX + SCROLL_W && my >= boundY && my < boundY + boundTrackH) {
-            boundScrolling = true;
-            updateBoundScroll(my);
-            return true;
-        }
+        return boundScroll.beginDrag(input.x(), input.y(), input.button(), boundBarX, boundY, SCROLL_W, boundTrackH, 20);
+    }
+
+    @Override
+    protected boolean onMouseRelease(MouseInput input) {
+        return taskScroll.release(input.button()) | boundScroll.release(input.button()) | itemScroll.release(input.button());
+    }
+
+    @Override
+    protected boolean onMouseDrag(MouseDragInput input) {
+        if (!input.isLeft()) return false;
+        return taskScroll.drag(input.y(), panelY + 26, visibleTaskRows() * ROW_H, 20)
+                | itemScroll.drag(input.y(), itemGridY, itemGridH, 18)
+                | boundScroll.drag(input.y(), boundY, visibleBoundRows() * ROW_H, 20);
+    }
+
+    @Override
+    protected boolean onMouseScroll(ScrollInput input) {
+        if (input.inside(leftX, panelY + 26, leftW, visibleTaskRows() * ROW_H)) return taskScroll.scroll(input.deltaY());
+        if (input.inside(itemGridX, itemGridY, itemGridCols * ITEM_SLOT + SCROLL_W + 4, itemGridH)) return itemScroll.scroll(input.deltaY());
+        if (input.inside(rightX, boundY, rightW, visibleBoundRows() * ROW_H)) return boundScroll.scroll(input.deltaY());
         return false;
-    }
-
-    @Override
-    protected boolean canvasMouseReleased(double mx, double my, int btn) {
-        if (KineticMouseButtons.isPrimary(btn)) {
-            taskScrolling = false;
-            boundScrolling = false;
-            itemScrolling = false;
-        }
-        return super.canvasMouseReleased(mx, my, btn);
-    }
-
-    @Override
-    protected boolean canvasMouseDragged(double mx, double my, int btn, double dx, double dy) {
-        if (KineticMouseButtons.isPrimary(btn)) {
-            if (taskScrolling) {
-                updateTaskScroll(my);
-                return true;
-            }
-            if (boundScrolling) {
-                updateBoundScroll(my);
-                return true;
-            }
-            if (itemScrolling) {
-                updateItemScroll(my);
-                return true;
-            }
-        }
-        return super.canvasMouseDragged(mx, my, btn, dx, dy);
-    }
-
-    @Override
-    protected boolean canvasMouseScrolled(double mx, double my, double delta) {
-        if (isInside(mx, my, leftX, panelY + 26, leftW, visibleTaskRows() * ROW_H) && taskMaxScroll > 0) {
-            taskScroll = taskScrollState.wheel(taskScroll, delta, 1.0D, taskMaxScroll);
-            return true;
-        }
-        if (isInside(mx, my, itemGridX, itemGridY, itemGridCols * ITEM_SLOT + SCROLL_W + 4, itemGridH) && itemMaxScroll > 0) {
-            itemScroll = itemScrollState.wheel(itemScroll, delta, 1.0D, itemMaxScroll);
-            return true;
-        }
-        if (isInside(mx, my, rightX, boundY, rightW, visibleBoundRows() * ROW_H) && boundMaxScroll > 0) {
-            boundScroll = boundScrollState.wheel(boundScroll, delta, 1.0D, boundMaxScroll);
-            return true;
-        }
-        return super.canvasMouseScrolled(mx, my, delta);
-    }
-
-    private void updateTaskScroll(double my) {
-        int rows = visibleTaskRows();
-        int trackH = rows * ROW_H;
-        int thumbH = KineticScroll.stateThumbHeight(trackH, rows, visibleTasks.size(), 20);
-        taskScroll = KineticScroll.stateOffsetFromPointer(my, panelY + 26, trackH, thumbH, taskMaxScroll);
-        taskScrollState.snap(taskScroll, taskMaxScroll);
-    }
-
-    private void updateBoundScroll(double my) {
-        int rows = visibleBoundRows();
-        int trackH = rows * ROW_H;
-        int thumbH = KineticScroll.stateThumbHeight(trackH, rows, boundTasks.size(), 20);
-        boundScroll = KineticScroll.stateOffsetFromPointer(my, boundY, trackH, thumbH, boundMaxScroll);
-        boundScrollState.snap(boundScroll, boundMaxScroll);
-    }
-
-    private void updateItemScroll(double my) {
-        int totalRows = Math.max(itemGridRows, (int) Math.ceil((double) explicitEntries.size() / Math.max(1, itemGridCols)));
-        int thumbH = KineticScroll.stateThumbHeight(itemGridH, itemGridRows, totalRows, 18);
-        itemScroll = KineticScroll.stateOffsetFromPointer(my, itemGridY, itemGridH, thumbH, itemMaxScroll);
-        itemScrollState.snap(itemScroll, itemMaxScroll);
     }
 
     private RefFTB taskAt(int mx, int my) {
@@ -736,7 +649,7 @@ public class FTBItemBindingEditorScreen extends KineticScreen {
         int listY = panelY + 26;
         int listW = leftW - 20;
         if (!isInside(mx, my, listX, listY, listW, visibleTaskRows() * ROW_H)) return null;
-        double smooth = taskScrollState.follow(taskScroll, taskMaxScroll, taskScrolling);
+        double smooth = taskScroll.smoothOffset();
         int start = (int) Math.floor(smooth + 1.0E-6D);
         int shift = (int) Math.round((smooth - start) * ROW_H);
         int idx = start + (my - listY + shift) / ROW_H;
@@ -747,7 +660,7 @@ public class FTBItemBindingEditorScreen extends KineticScreen {
         int listX = rightX + 10;
         int listW = rightW - 34 - SCROLL_W;
         if (!isInside(mx, my, listX, boundY, listW, visibleBoundRows() * ROW_H)) return null;
-        double smooth = boundScrollState.follow(boundScroll, boundMaxScroll, boundScrolling);
+        double smooth = boundScroll.smoothOffset();
         int start = (int) Math.floor(smooth + 1.0E-6D);
         int shift = (int) Math.round((smooth - start) * ROW_H);
         int idx = start + (my - boundY + shift) / ROW_H;
@@ -758,7 +671,7 @@ public class FTBItemBindingEditorScreen extends KineticScreen {
         int gridW = itemGridCols * ITEM_SLOT;
         if (!isInside(mx, my, itemGridX, itemGridY, gridW, itemGridH)) return null;
         int col = (mx - itemGridX) / ITEM_SLOT;
-        double smooth = itemScrollState.follow(itemScroll, itemMaxScroll, itemScrolling);
+        double smooth = itemScroll.smoothOffset();
         int startRow = (int) Math.floor(smooth + 1.0E-6D);
         int shift = (int) Math.round((smooth - startRow) * ITEM_SLOT);
         int row = (my - itemGridY + shift) / ITEM_SLOT;
@@ -770,12 +683,8 @@ public class FTBItemBindingEditorScreen extends KineticScreen {
         return mx >= x && mx < x + w && my >= y && my < y + h;
     }
 
-    private int clampScroll(int value, int max) {
-        return Math.max(0, Math.min(value, max));
-    }
-
     @Override
-    protected boolean handleCloseRequest() {
+    protected boolean onCloseRequested() {
         navigateBack();
         return true;
     }

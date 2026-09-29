@@ -7,7 +7,8 @@ import dev.xyat.adventuresystems.tips.client.gui.editor.TipEditorScreen;
 import dev.xyat.adventuresystems.tips.config.ConfigLoader;
 import dev.xyat.adventuresystems.tips.config.TipsConfigGui;
 import dev.xyat.adventuresystems.tips.util.TipsStructureUtil;
-import dev.xyat.kineticcore.api.client.overlay.KineticOverlays;
+import dev.xyat.kineticcore.api.client.gui.KineticGui;
+import dev.xyat.kineticcore.api.client.gui.overlay.KineticOverlays;
 import dev.xyat.kineticcore.api.config.client.KTConfigApi;
 import dev.xyat.kineticcore.api.network.KineticCompression;
 import dev.xyat.kineticcore.api.network.NetworkBuffer;
@@ -335,11 +336,7 @@ public final class TipsNetwork {
                 KineticOverlays.toast(KineticI18n.translatable("msg.adventuresystems.tips.tips.save_failed"));
                 return;
             }
-            KineticClientRuntime.openScreen(new TipEditorScreen(
-                    KineticClientRuntime.currentScreen(),
-                    languageCode,
-                    entries
-            ));
+            KineticGui.openChild(new TipEditorScreen(languageCode, entries));
         }
 
         public static void handleEditorDenied() {
@@ -347,7 +344,8 @@ public final class TipsNetwork {
         }
 
         public static void handleEditorSaveResult(boolean success) {
-            if (KineticClientRuntime.currentScreen() instanceof TipEditorScreen editor) {
+            TipEditorScreen editor = KineticGui.currentPage(TipEditorScreen.class);
+            if (editor != null) {
                 editor.handleSaveResult(success);
                 return;
             }

@@ -1,59 +1,47 @@
 package dev.xyat.adventuresystems.tips.client.gui.editor;
 
-import dev.xyat.kineticcore.api.client.screen.KineticNativeScreen;
-import dev.xyat.kineticcore.api.client.theme.GuiTheme;
-import dev.xyat.kineticcore.api.client.widget.input.KineticNumericFields.NumericEditBox;
+import dev.xyat.kineticcore.api.client.gui.page.KineticPage;
+import dev.xyat.kineticcore.api.client.gui.page.PageLayout;
+import dev.xyat.kineticcore.api.client.gui.render.KineticGraphics;
+import dev.xyat.kineticcore.api.client.gui.theme.KineticTheme;
+import dev.xyat.kineticcore.api.client.gui.ui.KineticUi;
+import dev.xyat.kineticcore.api.client.gui.ui.NumberType;
+import dev.xyat.kineticcore.api.client.gui.widget.KineticNumberField;
 import dev.xyat.kineticcore.api.text.KineticI18n;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.Screen;
 
 import java.util.function.Consumer;
 
-public class TimeEditScreen extends KineticNativeScreen {
+public class TimeEditScreen extends KineticPage {
     private final int currentTimeMs;
     private final Consumer<Integer> onSave;
-    private NumericEditBox input;
+    private KineticNumberField input;
+    private String inputValue;
 
-    public TimeEditScreen(Screen parent, int currentTimeMs, Consumer<Integer> onSave) {
-        super(KineticI18n.translatable("gui.adventuresystems.tips.tips.time"));
-        setParentScreen(parent);
+    public TimeEditScreen(int currentTimeMs, Consumer<Integer> onSave) {
+        super(KineticI18n.translatable("gui.adventuresystems.tips.tips.time"), PageLayout.NATIVE);
         this.currentTimeMs = currentTimeMs;
         this.onSave = onSave;
+        this.inputValue = NumberType.DECIMAL.format(currentTimeMs / 1000.0D);
     }
 
     @Override
-    protected void buildUi() {
-        int centerX = this.width / 2;
-        int centerY = this.height / 2;
+    protected void build(KineticUi ui) {
+        int centerX = width() / 2;
+        int centerY = height() / 2;
 
-        this.input = addDecimalField(
-                centerX - 100,
-                centerY - 10,
-                200,
-                KineticI18n.translatable("gui.adventuresystems.tips.tips.label"),
-                false,
-                0.25D,
-                3600.0D,
-                value -> true
-        );
-        this.input.setDoubleValue(currentTimeMs / 1000.0D);
+        this.input = ui.numberField(centerX - 100, centerY - 10, 200, NumberType.DECIMAL)
+                .label(KineticI18n.translatable("gui.adventuresystems.tips.tips.label"))
+                .allowNegative(false).range(0.25D, 3600.0D)
+                .validator(value -> true)
+                .onChange(value -> inputValue = value).firstShownTextAsDefault().build();
+        this.input.setTextValue(inputValue);
 
-        addButton(
-                centerX - 105,
-                centerY + 20,
-                100,
-                KineticI18n.translatable("gui.adventuresystems.tips.tips.save"),
-                null,
-                this::save
-        );
-        addButton(
-                centerX + 5,
-                centerY + 20,
-                100,
-                KineticI18n.translatable("gui.adventuresystems.tips.tips.cancel"),
-                null,
-                this::closeToParent
-        );
+        ui.button(centerX - 105, centerY + 20, 100)
+                .text(KineticI18n.translatable("gui.adventuresystems.tips.tips.save"))
+                .onClick(this::save).build();
+        ui.button(centerX + 5, centerY + 20, 100)
+                .text(KineticI18n.translatable("gui.adventuresystems.tips.tips.cancel"))
+                .onClick(this::closeToParent).build();
     }
 
     private void save() {
@@ -67,25 +55,25 @@ public class TimeEditScreen extends KineticNativeScreen {
     }
 
     @Override
-    protected void renderNativeBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+    protected void renderBackground(KineticGraphics graphics, int mouseX, int mouseY, float partialTick) {
         int w = 240;
         int h = 100;
-        int px = (this.width - w) / 2;
-        int py = (this.height - h) / 2;
-        GuiTheme.panel(graphics, px, py, w, h);
+        int px = (width() - w) / 2;
+        int py = (height() - h) / 2;
+        KineticTheme.panel(graphics, px, py, w, h);
 
-        graphics.drawCenteredString(this.font, this.title, this.width / 2, py + 15, GuiTheme.current().text());
-        graphics.drawCenteredString(
-                this.font,
+        graphics.centeredText(title(), width() / 2, py + 15, KineticTheme.current().text(), true);
+        graphics.centeredText(
                 KineticI18n.translatable("gui.adventuresystems.tips.tips.hint"),
-                this.width / 2,
+                width() / 2,
                 py + 30,
-                GuiTheme.current().text()
+                KineticTheme.current().text(),
+                true
         );
     }
 
     @Override
-    protected boolean handleCloseRequest() {
+    protected boolean onCloseRequested() {
         closeToParent();
         return true;
     }

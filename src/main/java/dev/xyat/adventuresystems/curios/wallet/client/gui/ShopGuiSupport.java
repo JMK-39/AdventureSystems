@@ -11,8 +11,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 
@@ -67,12 +65,6 @@ final class ShopGuiSupport {
     static String percent(double value) {
         return String.format(Locale.ROOT, "%.2f%%", Math.max(0.0D, value));
     }
-
-    static void drawScaledString(GuiGraphics graphics, Font font, String text, int x, int y, int color) {
-        if (text == null || text.isBlank()) return;
-        graphics.drawString(font, text, x, y, color, true);
-    }
-
 
     static Map<Long, QuestDisplay> loadQuestDisplays() {
         Map<Long, QuestDisplay> result = new LinkedHashMap<>();

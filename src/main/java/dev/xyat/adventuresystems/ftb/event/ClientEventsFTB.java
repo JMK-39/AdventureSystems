@@ -11,6 +11,7 @@ import dev.xyat.adventuresystems.ftb.data.RefFTB;
 import dev.xyat.adventuresystems.ftb.util.BridgeFTB;
 import dev.xyat.adventuresystems.ftb.util.HoveredItemFTB;
 import dev.xyat.adventuresystems.ftb.util.ResolverFTB;
+import dev.xyat.kineticcore.api.client.gui.KineticGui;
 import dev.xyat.kineticcore.api.client.tooltip.KineticItemTooltips;
 import dev.xyat.kineticcore.api.runtime.KineticClientRuntime;
 import dev.xyat.kineticcore.api.text.KineticI18n;
@@ -80,7 +81,7 @@ public final class ClientEventsFTB {
         }
 
         if (multi && refs.size() > 1) {
-            KineticClientRuntime.openScreen(new SelectScreenFTB(screen, hovered.copy(), refs));
+            KineticGui.openChild(new SelectScreenFTB(hovered.copy(), refs));
         } else {
             long favId = FavoritesStoreFTB.getFavorite(hovered);
             long targetId = refs.get(0).id();

@@ -192,6 +192,8 @@
   "gui.adventuresystems.curios.wallet.back": "返回",
   "gui.adventuresystems.curios.wallet.shop": "商店",
   "gui.adventuresystems.curios.wallet.withdraw_64": "§e取出64",
+  "gui.adventuresystems.curios.wallet.expand": "展开兑换 ▾",
+  "gui.adventuresystems.curios.wallet.collapse": "收起兑换 ▴",
   "gui.adventuresystems.curios.wallet.exchange_one": "§a单次",
   "gui.adventuresystems.curios.wallet.exchange_all": "§e全部",
   "gui.adventuresystems.curios.wallet.hud_amount": "§a§a§l%s§r§a",

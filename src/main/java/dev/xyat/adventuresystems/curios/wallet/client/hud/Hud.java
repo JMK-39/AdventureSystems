@@ -6,12 +6,11 @@ import dev.xyat.adventuresystems.curios.wallet.client.Client;
 import dev.xyat.adventuresystems.curios.wallet.data.CurrencyType;
 import dev.xyat.adventuresystems.curios.wallet.data.Data;
 import dev.xyat.kineticcore.api.client.event.KineticClientEvents;
-import dev.xyat.kineticcore.api.client.theme.GuiTheme;
+import dev.xyat.kineticcore.api.client.gui.render.KineticGraphics;
+import dev.xyat.kineticcore.api.client.gui.theme.KineticTheme;
 import dev.xyat.kineticcore.api.registry.KineticRegistries;
 import dev.xyat.kineticcore.api.resource.KineticResourceIds;
 import dev.xyat.kineticcore.api.runtime.KineticClientRuntime;
-import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Item;
@@ -33,7 +32,7 @@ public final class Hud {
         KineticClientEvents.onHudRender(KineticClientEvents.HudStage.END, Hud::onRenderGui);
     }
 
-    private static void onRenderGui(GuiGraphics graphics, float partialTick) {
+    private static void onRenderGui(KineticGraphics graphics, float partialTick) {
         if (KineticClientRuntime.localPlayer() == null
                 || KineticClientRuntime.currentLevel() == null
                 || !KineticClientRuntime.connected()) {
@@ -45,7 +44,6 @@ public final class Hud {
         if (currencies.isEmpty()) return;
         render(
                 graphics,
-                KineticClientRuntime.font(),
                 KineticClientRuntime.guiScaledWidth(),
                 KineticClientRuntime.guiScaledHeight(),
                 currencies,
@@ -53,7 +51,7 @@ public final class Hud {
         );
     }
 
-    private static void render(GuiGraphics graphics, Font font, int screenWidth, int screenHeight, List<CurrencyType> currencies, CompoundTag balances) {
+    private static void render(KineticGraphics graphics, int screenWidth, int screenHeight, List<CurrencyType> currencies, CompoundTag balances) {
         double scale = Math.max(0.1D, CuriosConfig.walletHudScale);
         int total = currencies.size();
         int contentWidth = contentWidth(total);
@@ -63,12 +61,12 @@ public final class Hud {
         double maxX = screenWidth / scale - contentWidth;
         if (x > maxX) x = Math.max(0, maxX);
         if (y < 0) y = 0;
-        graphics.pose().pushPose();
-        graphics.pose().scale((float) scale, (float) scale, 1.0F);
+        graphics.push();
+        graphics.scale((float) scale, (float) scale);
         try {
-            renderCells(graphics, font, currencies, balances, (int) x, (int) y);
+            renderCells(graphics, currencies, balances, (int) x, (int) y);
         } finally {
-            graphics.pose().popPose();
+            graphics.pop();
         }
     }
 
@@ -82,21 +80,21 @@ public final class Hud {
         return rows * CELL_HEIGHT + Math.max(0, rows - 1) * GAP;
     }
 
-    static void renderCells(GuiGraphics graphics, Font font, List<CurrencyType> currencies, CompoundTag balances, int x, int y) {
+    static void renderCells(KineticGraphics graphics, List<CurrencyType> currencies, CompoundTag balances, int x, int y) {
         for (int i = 0; i < currencies.size(); i++) {
             int row = i / MAX_PER_ROW;
             int col = i % MAX_PER_ROW;
             int cellX = x + col * (CELL_WIDTH + GAP);
             int cellY = y + row * (CELL_HEIGHT + GAP);
             CurrencyType currency = currencies.get(i);
-            renderCell(graphics, font, cellX, cellY, currency, Data.readAmount(balances, currency.itemId()));
+            renderCell(graphics, cellX, cellY, currency, Data.readAmount(balances, currency.itemId()));
         }
     }
 
-    private static void renderCell(GuiGraphics graphics, Font font, int x, int y, CurrencyType currency, long amount) {
-        graphics.renderItem(stack(currency.itemId()), x, y);
+    private static void renderCell(KineticGraphics graphics, int x, int y, CurrencyType currency, long amount) {
+        graphics.item(stack(currency.itemId()), x, y);
         Component text = KineticI18n.translatable("gui.adventuresystems.curios.wallet.hud_amount", compact(amount));
-        graphics.drawString(font, text, x + 18, y + 4, GuiTheme.current().text(), true);
+        graphics.text(text, x + 18, y + 4, KineticTheme.current().text(), true);
     }
 
     private static ItemStack stack(String id) {

@@ -19,8 +19,10 @@ import dev.xyat.adventuresystems.curios.init.Items;
 import dev.xyat.adventuresystems.curios.wallet.network.Network;
 import dev.xyat.kineticcore.api.config.server.KTServerConfigApi;
 import dev.xyat.kineticcore.api.config.server.KTServerConfigSpec;
+import dev.xyat.kineticcore.api.client.gui.selector.KineticSelectors;
 import dev.xyat.kineticcore.api.runtime.KineticPlatform;
 import org.slf4j.Logger;
+import top.theillusivec4.curios.api.CuriosApi;
 
 public final class CuriosModule {
     public static final String MODID = "adventuresystems";
@@ -77,6 +79,14 @@ public final class CuriosModule {
             TooltipEventHandler.install();
             Client.install();
             Hud.install();
+            KineticSelectors.registerInventorySource((player, sink) ->
+                    CuriosApi.getCuriosInventory(player).ifPresent(inventory ->
+                            inventory.getCurios().values().forEach(handler -> {
+                                var stacks = handler.getStacks();
+                                for (int slot = 0; slot < stacks.getSlots(); slot++) {
+                                    sink.accept(stacks.getStackInSlot(slot));
+                                }
+                            })));
         });
     }
 }

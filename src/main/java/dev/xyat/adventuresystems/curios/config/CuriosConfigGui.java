@@ -6,7 +6,6 @@ import dev.xyat.kineticcore.api.config.client.KTConfigScope;
 import dev.xyat.adventuresystems.curios.wallet.client.Client;
 import dev.xyat.adventuresystems.curios.paradiselost.data.ParadiseLostCurve;
 import dev.xyat.adventuresystems.curios.wallet.client.hud.WalletHudEditorScreen;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import dev.xyat.kineticcore.api.text.KineticI18n;
 
@@ -34,7 +33,7 @@ public final class CuriosConfigGui {
                 .applyTiming(KTConfigPage.ApplyTiming.IMMEDIATE)
                 .divider()
                 .action("open_editor", text("hud.open_editor"),
-                        KTConfigApi.screenAction(WalletHudEditorScreen::new),
+                        KTConfigApi.pageAction(WalletHudEditorScreen::new),
                         tooltip("hud.open_editor"))
                 .build());
     }
@@ -158,18 +157,6 @@ public final class CuriosConfigGui {
                 .action("open_shop_editor", text("shop.open"), Client::requestOpenShopEditor,
                         tooltip("shop.open"))
                 .build());
-    }
-
-    public static Screen createHudScreen(Screen parent) {
-        return KTConfigApi.createScreen(parent, HUD_PAGE_ID);
-    }
-
-    public static Screen createMechanicsScreen(Screen parent) {
-        return KTConfigApi.createScreen(parent, MECHANICS_PAGE_ID);
-    }
-
-    public static Screen createShopScreen(Screen parent) {
-        return KTConfigApi.createScreen(parent, SHOP_PAGE_ID);
     }
 
     private static Component text(String path) {

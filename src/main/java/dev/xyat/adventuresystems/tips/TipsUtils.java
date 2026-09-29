@@ -2,10 +2,10 @@ package dev.xyat.adventuresystems.tips;
 
 import dev.xyat.adventuresystems.tips.api.HelpTip;
 import dev.xyat.adventuresystems.tips.client.TipRenderer;
-import dev.xyat.kineticcore.api.client.text.KineticText;
 import dev.xyat.kineticcore.api.registry.KineticRegistries;
 import dev.xyat.kineticcore.api.runtime.KineticClientRuntime;
 import dev.xyat.kineticcore.api.runtime.KineticPlatform;
+import dev.xyat.kineticcore.api.text.KineticI18n;
 import net.minecraft.Util;
 import net.minecraft.core.Registry;
 import net.minecraft.nbt.CompoundTag;
@@ -94,8 +94,8 @@ public class TipsUtils {
         private static String getPrettyName(String type, ResourceLocation key) {
             if (key == null) return "";
             String transKey = Util.makeDescriptionId(type, key);
-            if (KineticText.hasTranslation(transKey)) {
-                return KineticText.get(transKey);
+            if (KineticI18n.hasTranslation(transKey)) {
+                return KineticI18n.string(transKey);
             }
 
             String path = key.getPath().replace('_', ' ');

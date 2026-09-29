@@ -2,11 +2,10 @@ package dev.xyat.adventuresystems.tips.client;
 
 import dev.xyat.adventuresystems.tips.api.HelpTip;
 import dev.xyat.kineticcore.api.client.event.KineticClientEvents;
-import dev.xyat.kineticcore.api.client.theme.GuiTheme;
-import dev.xyat.kineticcore.api.runtime.KineticClientRuntime;
+import dev.xyat.kineticcore.api.client.gui.render.KineticGraphics;
+import dev.xyat.kineticcore.api.client.gui.text.KineticText;
+import dev.xyat.kineticcore.api.client.gui.theme.KineticTheme;
 import dev.xyat.kineticcore.api.text.KineticI18n;
-import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.LevelLoadingScreen;
 import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.client.gui.screens.Screen;
@@ -41,48 +40,45 @@ public final class TipRenderer {
     }
 
     private static void precomputeLayout() {
-        Font font = KineticClientRuntime.font();
         String rawText = currentTip.getText().getString();
         List<String> lines = splitTextKeepFormat(rawText);
 
-        int maxW = font.width(KineticI18n.translatable("gui.adventuresystems.tips.tips.title"));
+        int maxW = KineticText.width(KineticI18n.translatable("gui.adventuresystems.tips.tips.title"));
         for (String line : lines) {
-            maxW = Math.max(maxW, font.width(line));
+            maxW = Math.max(maxW, KineticText.width(line));
         }
 
         int totalBoxH = 10 + 9 + 5 + (lines.size() * 11) + 5;
         currentCache = new TipCache(lines, maxW, totalBoxH);
     }
 
-    private static void onScreenRender(Screen screen, GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+    private static void onScreenRender(Screen screen, KineticGraphics graphics, int mouseX, int mouseY, float partialTick) {
         if (screen instanceof LevelLoadingScreen || screen instanceof PauseScreen) {
             if (currentTip == null || System.currentTimeMillis() - lastSwitchTime > currentTip.cycleTime) refresh(screen);
             if (currentTip != null && currentCache != null) draw(graphics, screen);
         }
     }
 
-    private static void draw(GuiGraphics graphics, Screen screen) {
-        Font font = KineticClientRuntime.font();
+    private static void draw(KineticGraphics graphics, Screen screen) {
         int margin = 5;
         int padding = 8;
         int boxW = currentCache.totalW + padding * 2;
         int boxY = screen.height - currentCache.totalBoxH - margin;
 
-        GuiTheme.panel(graphics, margin, boxY, boxW, currentCache.totalBoxH);
+        KineticTheme.panel(graphics, margin, boxY, boxW, currentCache.totalBoxH);
 
         int curY = boxY + padding;
-        graphics.drawString(
-                font,
+        graphics.text(
                 KineticI18n.translatable("gui.adventuresystems.tips.tips.title"),
                 margin + padding,
                 curY,
-                GuiTheme.current().text(),
+                KineticTheme.current().text(),
                 true
         );
         curY += 13;
 
         for (String line : currentCache.lines) {
-            graphics.drawString(font, line, margin + padding, curY, GuiTheme.current().text(), true);
+            graphics.text(line, margin + padding, curY, KineticTheme.current().text(), true);
             curY += 11;
         }
     }

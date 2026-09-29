@@ -11,8 +11,8 @@ import dev.ftb.mods.ftbquests.client.gui.quests.ValidItemsScreen;
 import dev.ftb.mods.ftbquests.quest.task.ItemTask;
 import dev.xyat.adventuresystems.ftb.api.FTBTaskSubmitHelper;
 import dev.xyat.adventuresystems.ftb.client.gui.FTBSubmitCountScreen;
-import dev.xyat.kineticcore.api.runtime.KineticClientRuntime;
-import net.minecraft.network.chat.Component;
+import dev.xyat.kineticcore.api.client.gui.KineticGui;
+import dev.xyat.kineticcore.api.text.KineticI18n;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -51,7 +51,7 @@ public abstract class ValidItemsScreenSubmitLimitMixin extends BaseScreen {
 
         SimpleTextButton replacementButton = new SimpleTextButton(
                 this,
-                Component.translatable("button.adventuresystems.ftb.submit.confirm"),
+                KineticI18n.translatable("button.adventuresystems.ftb.submit.confirm"),
                 Color4I.empty()
         ) {
             private void adventuresystems_ftb$syncBounds() {
@@ -81,15 +81,12 @@ public abstract class ValidItemsScreenSubmitLimitMixin extends BaseScreen {
                 }
 
                 this.playClickSound();
-                KineticClientRuntime.openScreen(new FTBSubmitCountScreen(
-                        KineticClientRuntime.currentScreen(),
-                        adventuresystems_ftb$submitTask
-                ));
+                KineticGui.openChild(new FTBSubmitCountScreen(adventuresystems_ftb$submitTask));
             }
 
             @Override
             public void addMouseOverText(TooltipList list) {
-                list.add(Component.translatable("tip.adventuresystems.ftb.submit.button"));
+                list.add(KineticI18n.translatable("tip.adventuresystems.ftb.submit.button"));
             }
 
             @Override

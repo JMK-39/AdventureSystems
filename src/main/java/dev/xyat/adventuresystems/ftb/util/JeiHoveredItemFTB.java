@@ -1,6 +1,7 @@
 package dev.xyat.adventuresystems.ftb.util;
 
 import dev.xyat.kineticcore.api.resource.KineticResourceIds;
+import dev.xyat.kineticcore.api.client.item.KineticHoveredItems;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
 import mezz.jei.api.constants.VanillaTypes;
@@ -17,6 +18,7 @@ import java.util.Optional;
 @JeiPlugin
 public class JeiHoveredItemFTB implements IModPlugin {
     private static IJeiRuntime runtime;
+    private static boolean providerRegistered;
 
     @Override
     public @NotNull ResourceLocation getPluginUid() {
@@ -26,6 +28,10 @@ public class JeiHoveredItemFTB implements IModPlugin {
     @Override
     public void onRuntimeAvailable(@NotNull IJeiRuntime jeiRuntime) {
         runtime = jeiRuntime;
+        if (!providerRegistered) {
+            KineticHoveredItems.register(JeiHoveredItemFTB::getHoveredItemStack);
+            providerRegistered = true;
+        }
     }
 
     @Override

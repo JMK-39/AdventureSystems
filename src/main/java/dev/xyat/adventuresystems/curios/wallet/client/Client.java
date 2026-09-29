@@ -7,12 +7,12 @@ import dev.xyat.adventuresystems.curios.wallet.data.CurrencyType;
 import dev.xyat.adventuresystems.curios.wallet.data.Data;
 import dev.xyat.adventuresystems.curios.wallet.network.Network;
 import dev.xyat.kineticcore.api.client.event.KineticClientEvents;
+import dev.xyat.kineticcore.api.client.gui.KineticGui;
 import dev.xyat.kineticcore.api.client.input.KineticKeyBindings;
-import dev.xyat.kineticcore.api.client.overlay.KineticOverlays;
+import dev.xyat.kineticcore.api.client.gui.overlay.KineticOverlays;
 import dev.xyat.kineticcore.api.registry.KineticRegistries;
 import dev.xyat.kineticcore.api.runtime.KineticClientRuntime;
 import dev.xyat.kineticcore.api.runtime.KineticPlatform;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -29,7 +29,7 @@ public final class Client {
     private static KineticKeyBindings.Binding openKey;
     private static CompoundTag hudBalances = new CompoundTag();
     private static boolean hudVisible;
-    private static Screen pendingShopParent;
+    private static KineticGui.NavigationParent pendingShopParent;
     private static long pendingShopParentExpiresAt;
 
     private Client() {
@@ -54,13 +54,11 @@ public final class Client {
     }
 
     public static void handleSync(boolean open, boolean visible, boolean equipped, CompoundTag balances) {
-        Screen current = KineticClientRuntime.currentScreen();
-
         if (!equipped) {
             hudVisible = false;
             hudBalances = new CompoundTag();
-            if (current instanceof MainScreen || current instanceof ShopScreen) {
-                KineticClientRuntime.openScreen(null);
+            if (KineticGui.currentPage(MainScreen.class) != null || KineticGui.currentPage(ShopScreen.class) != null) {
+                KineticGui.closeScreen();
             }
             return;
         }
@@ -69,33 +67,37 @@ public final class Client {
         hudBalances = balances == null ? new CompoundTag() : balances.copy();
 
         if (open) {
-            KineticClientRuntime.openScreen(new MainScreen(hudBalances, hudVisible));
+            KineticGui.open(new MainScreen(hudBalances, hudVisible));
             return;
         }
 
-        if (current instanceof MainScreen screen) {
-            screen.updateBalances(hudBalances, hudVisible);
-        } else if (current instanceof ShopScreen screen) {
-            screen.updateBalances(hudBalances);
+        MainScreen walletPage = KineticGui.currentPage(MainScreen.class);
+        if (walletPage != null) {
+            walletPage.updateBalances(hudBalances, hudVisible);
+        } else {
+            ShopScreen shopPage = KineticGui.currentPage(ShopScreen.class);
+            if (shopPage != null) shopPage.updateBalances(hudBalances);
         }
     }
 
     public static void openShop(CompoundTag balances, CompoundTag shop, boolean editorMode) {
-        Screen current = KineticClientRuntime.currentScreen();
-        Screen parent = takePendingShopParent();
-        if (parent == null && current instanceof MainScreen) parent = current;
+        KineticGui.NavigationParent parent = takePendingShopParent();
+        if (parent == null && KineticGui.currentPage(MainScreen.class) != null) {
+            parent = KineticGui.captureNavigationParent();
+        }
         CompoundTag safeBalances = balances == null ? new CompoundTag() : balances.copy();
         CompoundTag safeShop = shop == null ? new CompoundTag() : shop.copy();
         hudBalances = safeBalances.copy();
-        if (current instanceof ShopScreen screen) {
+        ShopScreen screen = KineticGui.currentPage(ShopScreen.class);
+        if (screen != null) {
             screen.updateShop(safeBalances, safeShop, editorMode);
             return;
         }
-        KineticClientRuntime.openScreen(new ShopScreen(parent, safeBalances, safeShop, editorMode));
+        KineticGui.openChild(new ShopScreen(parent != null, safeBalances, safeShop, editorMode), parent);
     }
 
     public static void requestOpenShopEditor() {
-        pendingShopParent = KineticClientRuntime.currentScreen();
+        pendingShopParent = KineticGui.captureNavigationParent();
         pendingShopParentExpiresAt = System.currentTimeMillis() + SHOP_PARENT_TIMEOUT_MS;
         Network.sendOpenShopEditor();
     }
@@ -104,7 +106,8 @@ public final class Client {
         CompoundTag safeBalances = balances == null ? new CompoundTag() : balances.copy();
         CompoundTag safeShop = shop == null ? new CompoundTag() : shop.copy();
         hudBalances = safeBalances.copy();
-        if (KineticClientRuntime.currentScreen() instanceof ShopScreen screen) {
+        ShopScreen screen = KineticGui.currentPage(ShopScreen.class);
+        if (screen != null) {
             screen.updateShop(safeBalances, safeShop, editorMode);
         }
     }
@@ -159,14 +162,13 @@ public final class Client {
         hudVisible = false;
         hudBalances = new CompoundTag();
         clearPendingShopParent();
-        Screen current = KineticClientRuntime.currentScreen();
-        if (current instanceof MainScreen || current instanceof ShopScreen) {
-            KineticClientRuntime.openScreen(null);
+        if (KineticGui.currentPage(MainScreen.class) != null || KineticGui.currentPage(ShopScreen.class) != null) {
+            KineticGui.closeScreen();
         }
     }
 
-    private static Screen takePendingShopParent() {
-        Screen parent = System.currentTimeMillis() <= pendingShopParentExpiresAt ? pendingShopParent : null;
+    private static KineticGui.NavigationParent takePendingShopParent() {
+        KineticGui.NavigationParent parent = System.currentTimeMillis() <= pendingShopParentExpiresAt ? pendingShopParent : null;
         clearPendingShopParent();
         return parent;
     }

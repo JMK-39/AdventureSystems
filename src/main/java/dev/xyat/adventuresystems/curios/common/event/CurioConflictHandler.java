@@ -1,10 +1,10 @@
 package dev.xyat.adventuresystems.curios.common.event;
 
+import dev.xyat.kineticcore.api.event.KineticExternalEvents;
 import dev.xyat.kineticcore.api.text.KineticI18n;
 import dev.xyat.adventuresystems.curios.config.CuriosConfig;
 import dev.xyat.adventuresystems.curios.init.Items;
-import dev.xyat.kineticcore.api.client.overlay.KineticOverlays;
-import dev.xyat.kineticcore.api.compat.curios.KineticCuriosEvents;
+import dev.xyat.kineticcore.api.client.gui.overlay.KineticOverlays;
 import dev.xyat.kineticcore.api.registry.KineticRegistries;
 import dev.xyat.kineticcore.api.resource.KineticResourceIds;
 import net.minecraft.world.entity.player.Player;
@@ -12,6 +12,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import top.theillusivec4.curios.api.CuriosApi;
 import top.theillusivec4.curios.api.SlotContext;
+import top.theillusivec4.curios.api.event.CurioChangeEvent;
 
 import java.util.List;
 
@@ -20,11 +21,11 @@ public final class CurioConflictHandler {
     }
 
     public static void install() {
-        KineticCuriosEvents.onChange(CurioConflictHandler::onCurioChange);
+        KineticExternalEvents.subscribe(CurioChangeEvent.class, CurioConflictHandler::onCurioChange);
     }
 
-    private static void onCurioChange(KineticCuriosEvents.ChangeContext event) {
-        if (!(event.entity() instanceof Player player)) return;
+    private static void onCurioChange(CurioChangeEvent event) {
+        if (!(event.getEntity() instanceof Player player)) return;
 
         boolean isClient = player.level().isClientSide;
 
