@@ -1,3 +1,5 @@
+import groovy.json.JsonSlurper
+
 import java.text.SimpleDateFormat
 
 buildscript {
@@ -138,6 +140,7 @@ repositories {
 
 
 apply from: 'gradle/kinetic-addon-reobf-verification.gradle'
+apply from: 'gradle/kinetic-addon-architecture.gradle'
 
 dependencies {
     minecraft "net.minecraftforge:forge:${project.findProperty('minecraft_version')?.toString()}-${project.findProperty('forge_version')?.toString()}"
@@ -157,7 +160,7 @@ dependencies {
     def parseKineticCoreVersion = { String value ->
         def parts = value.replaceFirst(/^v/, '').tokenize('.')
         if (parts.size() < 3 || parts.any { part -> !(part ==~ /\d+/) }) {
-            throw new org.gradle.api.GradleException("Invalid KineticCore version '${value}'.")
+            throw new GradleException("Invalid KineticCore version '${value}'.")
         }
         parts.collect { it.toBigInteger() }
     }
@@ -193,7 +196,7 @@ dependencies {
     if (!kineticCoreVersion) {
         String latestOfficialVersion = null
         def latestRelease = null
-        def connection = (java.net.HttpURLConnection) new java.net.URL(
+        def connection = (HttpURLConnection) new URL(
                 'https://api.github.com/repos/JMK-39/KineticCore/releases/latest').openConnection()
         connection.connectTimeout = 10000
         connection.readTimeout = 10000
@@ -201,16 +204,16 @@ dependencies {
         connection.setRequestProperty('User-Agent', 'KineticCore-Gradle-Version-Resolver')
         try {
             if (connection.responseCode != 200) {
-                throw new org.gradle.api.GradleException("GitHub returned HTTP ${connection.responseCode}.")
+                throw new GradleException("GitHub returned HTTP ${connection.responseCode}.")
             }
             latestRelease = connection.inputStream.withCloseable {
-                new groovy.json.JsonSlurper().parse(it)
+                new JsonSlurper().parse(it)
             }
             latestOfficialVersion = latestRelease.tag_name.toString().replaceFirst(/^v/, '')
             parseKineticCoreVersion(latestOfficialVersion)
         } catch (Exception exception) {
             if (!localKineticCoreVersion) {
-                throw new org.gradle.api.GradleException(
+                throw new GradleException(
                         'Could not resolve the latest stable KineticCore release from GitHub and no local KineticCore JAR is available. Set -Pkineticcore_version=<verified-version> or restore network access.',
                         exception)
             }
@@ -224,7 +227,7 @@ dependencies {
                 !(latestRelease?.assets ?: []).any { asset ->
                     asset.name == "kineticcore-${latestOfficialVersion}.jar"
                 }) {
-            throw new org.gradle.api.GradleException(
+            throw new GradleException(
                     "Newer KineticCore release ${latestOfficialVersion} has no matching JAR asset.")
         }
 
@@ -245,7 +248,7 @@ dependencies {
     }
 
     if (compareKineticCoreVersions(kineticCoreVersion, kineticCoreMinimumVersion) < 0) {
-        throw new org.gradle.api.GradleException(
+        throw new GradleException(
                 "KineticCore build dependency ${kineticCoreVersion} must be at least ${kineticCoreMinimumVersion}.")
     }
     def kineticCoreDependency = fg.deobf("dev.xyat.kineticcore:kineticcore:${kineticCoreVersion}") { changing = true }
