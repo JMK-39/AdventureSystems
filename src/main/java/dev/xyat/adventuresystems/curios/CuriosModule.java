@@ -29,6 +29,10 @@ public final class CuriosModule {
     public static final Logger LOGGER = LogUtils.getLogger();
 
     public CuriosModule() {
+        install();
+    }
+
+    public static void install() {
         CuriosConfig.load();
         KTServerConfigApi.register(KTServerConfigSpec.builder("adventuresystems:mechanics")
                 .booleanValue("enable_heart_of_steel", () -> CuriosConfig.enableHeartOfSteel, value -> CuriosConfig.enableHeartOfSteel = value)

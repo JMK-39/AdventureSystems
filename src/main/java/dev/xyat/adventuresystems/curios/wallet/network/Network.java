@@ -323,17 +323,15 @@ public final class Network {
             openShop(player);
             return;
         }
-        if (packet.action() == 1) {
+        if (packet.action() == 1 || packet.action() == 2) {
             int packedAmount = Math.max(1, Math.min(65535, packet.amount()));
-            Shop.BuyResult result = Shop.buyDetailed(player, packet.index(), packedAmount);
-            toast(player, result.messageKey(), result.args());
-            refreshShop(player);
-            return;
-        }
-        if (packet.action() == 2) {
-            int packedAmount = Math.max(1, Math.min(65535, packet.amount()));
-            Shop.SellResult result = Shop.sellDetailed(player, packet.index(), packedAmount);
-            toast(player, result.noticeKey());
+            if (packet.action() == 1) {
+                Shop.BuyResult result = Shop.buyDetailed(player, packet.index(), packedAmount);
+                toast(player, result.messageKey(), result.args());
+            } else {
+                Shop.SellResult result = Shop.sellDetailed(player, packet.index(), packedAmount);
+                toast(player, result.noticeKey());
+            }
             refreshShop(player);
             return;
         }

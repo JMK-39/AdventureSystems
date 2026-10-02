@@ -392,6 +392,7 @@ public final class Shop {
         tag.putBoolean("Unlocked", entry.unlocked());
         tag.putBoolean("Gacha", entry.gacha());
         tag.putBoolean("Selectable", entry.selectable());
+        if (entry.icon() != null && !entry.icon().isEmpty()) tag.put("Icon", entry.icon().save(new CompoundTag()));
         tag.put("Rewards", rewardsTag(entry.rewards()));
         return tag;
     }
@@ -416,6 +417,7 @@ public final class Shop {
         boolean hasBackpack = tag.getBoolean("HasBackpack");
         boolean rsLoaded = tag.getBoolean("RsLoaded");
         String rsState = tag.getString("RsState");
+        ItemStack icon = tag.contains("Icon", Tag.TAG_COMPOUND) ? ItemStack.of(tag.getCompound("Icon")) : ItemStack.EMPTY;
         long sellProgress = tag.getLong("SellProgress");
         String pageName = tag.getString("PageName");
         String displayName = tag.getString("DisplayName");
@@ -434,7 +436,7 @@ public final class Shop {
         boolean gacha = tag.getBoolean("Gacha");
         boolean selectable = tag.getBoolean("Selectable");
         List<Reward> rewards = rewardsFromTag(tag.getList("Rewards", Tag.TAG_COMPOUND));
-        return new Entry(mode, index, key, stack, currency, price, dailyLimit, totalLimit, pageName, displayName, description, command, requiredQuestCount, requiredQuestCompleted, requiredQuestCompletedIds, requiredQuestId, requiredQuestTitle, requiredQuestIds, requiredQuestTitles, unlocked, gacha, selectable, rewards, dailyBought, totalBought, timedRemainingSeconds, inventoryCount, walletCount, backpackCount, rsCount, backpackLoaded, hasBackpack, rsLoaded, rsState, sellProgress);
+        return new Entry(mode, index, key, stack, currency, price, dailyLimit, totalLimit, pageName, displayName, description, command, requiredQuestCount, requiredQuestCompleted, requiredQuestCompletedIds, requiredQuestId, requiredQuestTitle, requiredQuestIds, requiredQuestTitles, unlocked, gacha, selectable, rewards, dailyBought, totalBought, timedRemainingSeconds, inventoryCount, walletCount, backpackCount, rsCount, backpackLoaded, hasBackpack, rsLoaded, rsState, sellProgress, icon);
     }
 
     private static Entry entry(Mode mode, int index, ServerPlayer player) {
@@ -469,6 +471,8 @@ public final class Shop {
         if (!description.isEmpty()) builder.append("|description=").append(description);
         String command = normalizeCommand(questText);
         if (!command.isEmpty()) builder.append("|command=").append(command);
+        String icon = normalizeIcon(questText);
+        if (!icon.isEmpty()) builder.append("|icon=").append(icon);
         if (!normalizedQuests.isEmpty()) builder.append("|quests=").append(normalizedQuests);
         if (requiredQuestCount > 0 && !normalizedQuests.isEmpty()) builder.append("|questNeed=").append(requiredQuestCount);
         String normalizedRewards = normalizeRewardsText(rewardsText);
@@ -513,6 +517,7 @@ public final class Shop {
             String description = "";
             String command = "";
             int requiredQuestCount = 0;
+            ItemStack icon = ItemStack.EMPTY;
             List<Long> questIds = new ArrayList<>();
             boolean gacha = false;
             boolean selectable = false;
@@ -530,6 +535,7 @@ public final class Shop {
                     case "name", "title", "displayname" -> displayName = sanitizeDisplayName(value);
                     case "description", "desc" -> description = sanitizeDescription(value);
                     case "command", "cmd" -> command = sanitizeCommand(value);
+                    case "icon" -> icon = iconStack(value);
                     case "questneed" -> requiredQuestCount = parsePositiveInt(value);
                     case "quests" -> questIds = parseQuestIds(value);
                     case "gacha" -> gacha = Boolean.parseBoolean(value);
@@ -573,7 +579,7 @@ public final class Shop {
             List<String> titles = questTitles(safeContext, questIds);
             long primaryQuestId = primaryQuestId(safeContext, questIds);
             String primaryTitle = primaryQuestTitle(primaryQuestId, questIds, titles);
-            return new Entry(mode, index, limitKey, stack, currency, price, timedLimitSeconds, totalLimit, pageName, displayName, description, command, requiredQuestCount, requiredQuestCompleted, completedQuestIds, primaryQuestId, primaryTitle, questIds, titles, unlocked, gacha, selectable, rewards, dailyBought, totalBought, timedRemainingSeconds, materialSnapshot.inventoryCount(), walletCount, materialSnapshot.backpackCount(), materialSnapshot.rsCount(), materialSnapshot.backpackLoaded(), materialSnapshot.hasBackpack(), materialSnapshot.rsLoaded(), materialSnapshot.rsState().name(), sellProgress);
+            return new Entry(mode, index, limitKey, stack, currency, price, timedLimitSeconds, totalLimit, pageName, displayName, description, command, requiredQuestCount, requiredQuestCompleted, completedQuestIds, primaryQuestId, primaryTitle, questIds, titles, unlocked, gacha, selectable, rewards, dailyBought, totalBought, timedRemainingSeconds, materialSnapshot.inventoryCount(), walletCount, materialSnapshot.backpackCount(), materialSnapshot.rsCount(), materialSnapshot.backpackLoaded(), materialSnapshot.hasBackpack(), materialSnapshot.rsLoaded(), materialSnapshot.rsState().name(), sellProgress, icon);
         } catch (Exception ignored) {
             return null;
         }
@@ -681,6 +687,24 @@ public final class Shop {
         if (text.startsWith("/")) text = text.substring(1);
         if (text.length() > 2048) text = text.substring(0, 2048);
         return text;
+    }
+
+    /** 商品自定义显示图标（icon=物品），统一为数量 1 的物品串；无效物品视为未设置。 */
+    private static String normalizeIcon(String questText) {
+        for (String option : splitOptionTokens(questText)) {
+            int eq = option.indexOf('=');
+            if (eq <= 0) continue;
+            if (!option.substring(0, eq).trim().equalsIgnoreCase("icon")) continue;
+            ItemStack stack = iconStack(option.substring(eq + 1));
+            return stack.isEmpty() ? "" : StackCodec.toConfigString(stack, 1);
+        }
+        return "";
+    }
+
+    private static ItemStack iconStack(String value) {
+        if (value == null || value.isBlank()) return ItemStack.EMPTY;
+        ItemStack stack = StackCodec.fromConfigString(value.trim(), 1);
+        return stack.isEmpty() ? ItemStack.EMPTY : stack;
     }
 
     private static String normalizeDisplayName(String questText) {
@@ -1148,7 +1172,12 @@ public final class Shop {
         SELL
     }
 
-    public record Entry(Mode mode, int index, String key, ItemStack stack, String currencyId, long price, int dailyLimit, int totalLimit, String pageName, String displayName, String description, String command, int requiredQuestCount, int requiredQuestCompleted, List<Long> requiredQuestCompletedIds, long requiredQuestId, String requiredQuestTitle, List<Long> requiredQuestIds, List<String> requiredQuestTitles, boolean unlocked, boolean gacha, boolean selectable, List<Reward> rewards, int dailyBought, int totalBought, long timedRemainingSeconds, long inventoryCount, long walletCount, long backpackCount, long rsCount, boolean backpackLoaded, boolean hasBackpack, boolean rsLoaded, String rsState, long sellProgress) {
+    public record Entry(Mode mode, int index, String key, ItemStack stack, String currencyId, long price, int dailyLimit, int totalLimit, String pageName, String displayName, String description, String command, int requiredQuestCount, int requiredQuestCompleted, List<Long> requiredQuestCompletedIds, long requiredQuestId, String requiredQuestTitle, List<Long> requiredQuestIds, List<String> requiredQuestTitles, boolean unlocked, boolean gacha, boolean selectable, List<Reward> rewards, int dailyBought, int totalBought, long timedRemainingSeconds, long inventoryCount, long walletCount, long backpackCount, long rsCount, boolean backpackLoaded, boolean hasBackpack, boolean rsLoaded, String rsState, long sellProgress, ItemStack icon) {
+        /** 自定义的列表显示图标；为空时使用商品本身 / Custom list icon; empty means the entry item itself. */
+        public boolean hasCustomIcon() {
+            return icon != null && !icon.isEmpty();
+        }
+
         public boolean locked() {
             return requiredQuestIds != null && !requiredQuestIds.isEmpty() && !unlocked;
         }

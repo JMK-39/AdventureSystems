@@ -105,6 +105,20 @@ public final class ParadiseLostCurve {
         if (definitions == null || definitions.size() < 2) {
             throw new IllegalArgumentException("Paradise Lost curve requires at least two points");
         }
+        List<Point> points = parsePoints(definitions);
+        points.sort(Comparator.comparingInt(Point::score));
+        if (points.get(0).score() != 0) {
+            throw new IllegalArgumentException("Paradise Lost curve must start at score 0");
+        }
+        for (int i = 1; i < points.size(); i++) {
+            if (points.get(i - 1).score() == points.get(i).score()) {
+                throw new IllegalArgumentException("Duplicate Paradise Lost score: " + points.get(i).score());
+            }
+        }
+        return List.copyOf(points);
+    }
+
+    private static List<Point> parsePoints(List<String> definitions) {
         List<Point> points = new ArrayList<>(definitions.size());
         for (String definition : definitions) {
             if (definition == null) throw new IllegalArgumentException("Null curve point");
@@ -117,16 +131,7 @@ public final class ParadiseLostCurve {
             }
             points.add(new Point(score, bonus));
         }
-        points.sort(Comparator.comparingInt(Point::score));
-        if (points.get(0).score() != 0) {
-            throw new IllegalArgumentException("Paradise Lost curve must start at score 0");
-        }
-        for (int i = 1; i < points.size(); i++) {
-            if (points.get(i - 1).score() == points.get(i).score()) {
-                throw new IllegalArgumentException("Duplicate Paradise Lost score: " + points.get(i).score());
-            }
-        }
-        return List.copyOf(points);
+        return points;
     }
 
     private record Point(int score, double bonus) {

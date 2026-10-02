@@ -46,14 +46,15 @@ public final class FTBVirtualItemProviders {
         long total = 0L;
         for (FTBVirtualItemProvider provider : PROVIDERS) {
             try {
-                if (!provider.matches(player, filterStack)) continue;
-                supported = true;
-                long add = Math.max(0L, provider.count(player, filterStack));
-                if (add == 0L) continue;
-                if (Long.MAX_VALUE - total < add) {
-                    return new QueryResult(true, Long.MAX_VALUE);
+                if (provider.matches(player, filterStack)) {
+                    supported = true;
+                    long add = Math.max(0L, provider.count(player, filterStack));
+                    if (add == 0L) continue;
+                    if (Long.MAX_VALUE - total < add) {
+                        return new QueryResult(true, Long.MAX_VALUE);
+                    }
+                    total += add;
                 }
-                total += add;
             } catch (Throwable t) {
                 FtbModule.LOGGER.error("[KT-FTB虚拟物品] 统计虚拟物品失败：{}", provider.id(), t);
             }
@@ -72,15 +73,16 @@ public final class FTBVirtualItemProviders {
             if (remaining <= 0L) break;
 
             try {
-                if (!provider.matches(player, filterStack)) continue;
-                long taken = Math.min(remaining, Math.max(0L, provider.extract(player, filterStack, remaining, simulate)));
-                if (taken == 0L) continue;
+                if (provider.matches(player, filterStack)) {
+                    long taken = Math.min(remaining, Math.max(0L, provider.extract(player, filterStack, remaining, simulate)));
+                    if (taken == 0L) continue;
 
-                extracted += taken;
-                remaining -= taken;
+                    extracted += taken;
+                    remaining -= taken;
 
-                if (!simulate) {
-                    provider.sync(player);
+                    if (!simulate) {
+                        provider.sync(player);
+                    }
                 }
             } catch (Throwable t) {
                 FtbModule.LOGGER.error("[KT-FTB虚拟物品] 扣除虚拟物品失败：{}", provider.id(), t);

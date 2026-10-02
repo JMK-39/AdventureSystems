@@ -12,14 +12,12 @@ import dev.xyat.kineticcore.api.text.KineticI18n;
 import java.util.function.Consumer;
 
 public class TimeEditScreen extends KineticPage {
-    private final int currentTimeMs;
     private final Consumer<Integer> onSave;
     private KineticNumberField input;
     private String inputValue;
 
     public TimeEditScreen(int currentTimeMs, Consumer<Integer> onSave) {
         super(KineticI18n.translatable("gui.adventuresystems.tips.tips.time"), PageLayout.NATIVE);
-        this.currentTimeMs = currentTimeMs;
         this.onSave = onSave;
         this.inputValue = NumberType.DECIMAL.format(currentTimeMs / 1000.0D);
     }

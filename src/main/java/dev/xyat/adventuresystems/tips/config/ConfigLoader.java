@@ -27,7 +27,7 @@ public class ConfigLoader {
         try {
             if (!KineticPaths.configFileExists(targetFile)) return new ArrayList<>();
             HelpTip.JsonModel model = GSON.fromJson(KineticPaths.readConfigText(targetFile), HelpTip.JsonModel.class);
-            if (model != null && model.tips != null && areValidEntries(model.tips)) {
+            if (model != null && areValidEntries(model.tips)) {
                 return new ArrayList<>(model.tips);
             }
         } catch (Exception exception) {
@@ -39,7 +39,7 @@ public class ConfigLoader {
     public static List<HelpTip.JsonModel.Entry> fromJson(String json) {
         try {
             HelpTip.JsonModel model = GSON.fromJson(json == null ? "" : json, HelpTip.JsonModel.class);
-            if (model == null || model.tips == null || !areValidEntries(model.tips)) return null;
+            if (model == null || !areValidEntries(model.tips)) return null;
             return new ArrayList<>(model.tips);
         } catch (RuntimeException exception) {
             return null;
@@ -88,32 +88,32 @@ public class ConfigLoader {
                 || isInvalidOptionalResourceLocation(conditions.dimension)) {
             return true;
         }
-        return !isValidItemChecks(conditions.items) || !isValidItemChecks(conditions.curios);
+        return hasInvalidItemChecks(conditions.items) || hasInvalidItemChecks(conditions.curios);
     }
 
     private static boolean isInvalidOptionalResourceLocation(String value) {
         return value != null && !value.isBlank() && KineticResourceIds.tryParse(value.trim()) == null;
     }
 
-    private static boolean isValidItemChecks(List<HelpTip.JsonModel.ItemCheck> checks) {
-        if (checks == null) return true;
-        if (checks.size() > 256) return false;
+    private static boolean hasInvalidItemChecks(List<HelpTip.JsonModel.ItemCheck> checks) {
+        if (checks == null) return false;
+        if (checks.size() > 256) return true;
         for (HelpTip.JsonModel.ItemCheck check : checks) {
-            if (check == null || check.id == null) return false;
+            if (check == null || check.id == null) return true;
             ResourceLocation id = KineticResourceIds.tryParse(check.id.trim());
-            if (id == null) return false;
+            if (id == null) return true;
             String mode = check.nbtMode == null ? "NONE" : check.nbtMode.toUpperCase(Locale.ROOT);
-            if (!("NONE".equals(mode) || "WEAK".equals(mode) || "STRONG".equals(mode))) return false;
-            if (check.nbt != null && check.nbt.length() > 32767) return false;
+            if (!("NONE".equals(mode) || "WEAK".equals(mode) || "STRONG".equals(mode))) return true;
+            if (check.nbt != null && check.nbt.length() > 32767) return true;
             if (check.nbt != null && !check.nbt.isBlank()) {
                 try {
                     TagParser.parseTag(check.nbt);
                 } catch (Exception exception) {
-                    return false;
+                    return true;
                 }
             }
         }
-        return true;
+        return false;
     }
 
     public static List<HelpTip> loadTipsForLanguage(String languageCode) {
@@ -184,18 +184,17 @@ public class ConfigLoader {
             String chinese = CONFIG_DIR + "tips_zh_cn.json";
             String english = CONFIG_DIR + "tips_en_us.json";
             if (!KineticPaths.configFileExists(chinese)) {
-                KineticPaths.writeConfigText(chinese, getDefaultJsonCN());
+                KineticPaths.writeConfigText(chinese, DEFAULT_JSON_CN);
             }
             if (!KineticPaths.configFileExists(english)) {
-                KineticPaths.writeConfigText(english, getDefaultJsonEN());
+                KineticPaths.writeConfigText(english, DEFAULT_JSON_EN);
             }
         } catch (IOException exception) {
             TipsModule.LOGGER.error("TipsConfig: Failed to init default files", exception);
         }
     }
 
-    private static String getDefaultJsonCN() {
-        return """
+    private static final String DEFAULT_JSON_CN = """
         {
           "tips":[
             {
@@ -247,10 +246,8 @@ public class ConfigLoader {
             }
           ]
         }""";
-    }
 
-    private static String getDefaultJsonEN() {
-        return """
+    private static final String DEFAULT_JSON_EN = """
         {
           "tips":[
             {
@@ -274,5 +271,4 @@ public class ConfigLoader {
             }
           ]
         }""";
-    }
 }

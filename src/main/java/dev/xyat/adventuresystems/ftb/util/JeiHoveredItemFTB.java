@@ -73,22 +73,22 @@ public class JeiHoveredItemFTB implements IModPlugin {
             double mouseX = mouse.x();
             double mouseY = mouse.y();
 
-            ItemStack stack = invokeItemMethod(recipesGui, "getIngredientUnderMouse", VanillaTypes.ITEM_STACK);
+            ItemStack stack = invokeIngredientUnderMouse(recipesGui, VanillaTypes.ITEM_STACK);
             if (!stack.isEmpty()) {
                 return stack;
             }
 
-            stack = invokeItemMethod(recipesGui, "getIngredientUnderMouse", mouseX, mouseY);
+            stack = invokeIngredientUnderMouse(recipesGui, mouseX, mouseY);
             if (!stack.isEmpty()) {
                 return stack;
             }
 
-            stack = invokeItemMethod(recipesGui, "getIngredientUnderMouse", VanillaTypes.ITEM_STACK, mouseX, mouseY);
+            stack = invokeIngredientUnderMouse(recipesGui, VanillaTypes.ITEM_STACK, mouseX, mouseY);
             if (!stack.isEmpty()) {
                 return stack;
             }
 
-            stack = invokeItemMethod(recipesGui, "getIngredientUnderMouse");
+            stack = invokeIngredientUnderMouse(recipesGui);
             if (!stack.isEmpty()) {
                 return stack;
             }
@@ -98,13 +98,13 @@ public class JeiHoveredItemFTB implements IModPlugin {
         return ItemStack.EMPTY;
     }
 
-    private static ItemStack invokeItemMethod(Object target, String methodName, Object... args) {
+    private static ItemStack invokeIngredientUnderMouse(Object target, Object... args) {
         if (target == null) {
             return ItemStack.EMPTY;
         }
 
         for (Method method : target.getClass().getMethods()) {
-            if (!method.getName().equals(methodName) || method.getParameterCount() != args.length) {
+            if (!method.getName().equals("getIngredientUnderMouse") || method.getParameterCount() != args.length) {
                 continue;
             }
 

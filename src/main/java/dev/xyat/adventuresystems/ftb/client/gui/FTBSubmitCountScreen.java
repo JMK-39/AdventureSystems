@@ -32,7 +32,6 @@ public class FTBSubmitCountScreen extends KineticPage {
     private String lastCountValue = "";
     private long lastStatsRefreshMs;
     private int cachedCount = 1;
-    private long cachedPerExchange = 1L;
     private long cachedRequiredItems = 1L;
     private long cachedInventoryItems;
     private long cachedVirtualItems;
@@ -70,13 +69,12 @@ public class FTBSubmitCountScreen extends KineticPage {
     }
 
     private void submit() {
-        if (!FTBTaskSubmitHelper.isCustomSubmitAllowed(task)) {
+        if (FTBTaskSubmitHelper.isCustomSubmitAllowed(task)) {
+            refreshStats(true);
+            FTBSubmitLimitNetwork.sendSubmit(task.id, cachedCount);
+        } else {
             FTBSubmitLimitNetwork.sendSubmit(task.id, 1);
-            navigateBack();
-            return;
         }
-        refreshStats(true);
-        FTBSubmitLimitNetwork.sendSubmit(task.id, cachedCount);
         navigateBack();
     }
 
@@ -95,14 +93,14 @@ public class FTBSubmitCountScreen extends KineticPage {
         lastCountValue = value;
         lastStatsRefreshMs = now;
         cachedCount = parseCountValue(value);
-        cachedPerExchange = Math.max(1L, task.getMaxProgress());
-        cachedRequiredItems = safeMultiply(cachedPerExchange, cachedCount);
+        long perExchange = Math.max(1L, task.getMaxProgress());
+        cachedRequiredItems = safeMultiply(perExchange, cachedCount);
         cachedInventoryItems = calculateInventoryItems(cachedRequiredItems);
         FTBVirtualItemClientState.Snapshot virtualItems = FTBVirtualItemClientState.request(task.id);
         cachedVirtualSupported = virtualItems.supported();
         cachedVirtualItems = virtualItems.count();
-        cachedInventoryEstimatedTimes = estimateTimes(cachedInventoryItems, cachedPerExchange, cachedCount);
-        cachedTotalEstimatedTimes = estimateTimes(safeAdd(cachedInventoryItems, cachedVirtualItems), cachedPerExchange, cachedCount);
+        cachedInventoryEstimatedTimes = estimateTimes(cachedInventoryItems, perExchange, cachedCount);
+        cachedTotalEstimatedTimes = estimateTimes(safeAdd(cachedInventoryItems, cachedVirtualItems), perExchange, cachedCount);
     }
 
     private long calculateInventoryItems(long stopAt) {

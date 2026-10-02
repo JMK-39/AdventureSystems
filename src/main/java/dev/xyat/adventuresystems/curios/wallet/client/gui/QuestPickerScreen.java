@@ -105,7 +105,7 @@ final class QuestPickerScreen extends KineticPage {
         graphics.centeredText(title(), 290, 20, KineticTheme.current().text(), false);
         if (all.isEmpty()) {
             graphics.centeredText(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_task_empty"),
-                    290, 166, KineticTheme.current().mutedText(), false);
+                    290, 166, KineticTheme.current().text(), false);
         }
     }
 

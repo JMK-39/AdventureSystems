@@ -58,20 +58,17 @@ public final class BridgeFTB {
     }
 
     public static RefFTB getQuestRef(long id, String source) {
-        if (id == 0L || !exists()) {
-            return null;
-        }
-
-        try {
-            ClientQuestFile file = ClientQuestFile.INSTANCE;
-            if (file == null) {
-                return null;
+        if (id == 0L) return null;
+        if (exists()) {
+            try {
+                ClientQuestFile file = ClientQuestFile.INSTANCE;
+                if (file != null) {
+                    return toQuestRef(file.getQuest(id), source);
+                }
+            } catch (Throwable ignored) {
             }
-
-            return toQuestRef(file.getQuest(id), source);
-        } catch (Throwable ignored) {
-            return null;
         }
+        return null;
     }
 
     public static String toCodeString(long id) {

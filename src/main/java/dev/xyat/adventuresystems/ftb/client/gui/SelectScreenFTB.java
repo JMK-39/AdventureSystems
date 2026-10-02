@@ -7,7 +7,6 @@ import dev.xyat.kineticcore.api.client.gui.page.KineticPage;
 import dev.xyat.kineticcore.api.client.gui.render.KineticGraphics;
 import dev.xyat.kineticcore.api.client.gui.theme.KineticTheme;
 import dev.xyat.kineticcore.api.client.gui.ui.KineticUi;
-import dev.xyat.kineticcore.api.client.gui.widget.KineticTextField;
 import dev.xyat.kineticcore.api.client.gui.widget.list.ActionItem;
 import dev.xyat.kineticcore.api.client.gui.widget.list.KineticActionList;
 import dev.xyat.kineticcore.api.client.search.KineticSearch;
@@ -27,7 +26,6 @@ public class SelectScreenFTB extends KineticPage {
     private final ItemStack stack;
     private final List<RefFTB> allRefs;
     private final List<RefFTB> filtered = new ArrayList<>();
-    private KineticTextField searchBox;
     private KineticActionList listWidget;
     private String searchText = "";
     private int listScroll;
@@ -45,7 +43,7 @@ public class SelectScreenFTB extends KineticPage {
         if (listWidget != null) listScroll = listWidget.scrollOffset();
         listWidget = null;
         applySearch();
-        searchBox = ui.textField(LIST_X, 48, 360)
+        ui.textField(LIST_X, 48, 360)
                 .label(KineticI18n.translatable("gui.adventuresystems.ftb.search"))
                 .placeholder(KineticI18n.translatable("placeholder.adventuresystems.ftb.select.search"))
                 .tooltip(KineticI18n.translatable("tip.adventuresystems.ftb.search.desc"))
@@ -71,7 +69,6 @@ public class SelectScreenFTB extends KineticPage {
     }
 
     private List<ActionItem> listItems() {
-        long favoriteId = resolvedFavoriteId();
         List<ActionItem> items = new ArrayList<>(filtered.size());
         for (RefFTB ref : filtered) {
             Component title = KineticI18n.translatable(

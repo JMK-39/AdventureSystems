@@ -12,6 +12,10 @@ public final class FtbModule {
     public static final Logger LOGGER = LogUtils.getLogger();
 
     public FtbModule() {
+        install();
+    }
+
+    public static void install() {
         FTBSubmitLimitNetwork.register();
         KineticPlatform.runOnClient(() -> () -> {
             ItemClientModuleFTB.register();

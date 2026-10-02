@@ -18,13 +18,20 @@ import dev.xyat.kineticcore.api.client.gui.widget.list.KineticItemGrid;
 import dev.xyat.kineticcore.api.client.gui.overlay.KineticOverlays;
 import dev.xyat.kineticcore.api.text.KineticI18n;
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.item.ItemStack;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
 final class CommandManageScreen extends KineticPage {
+    // 图标格：只显示物品格，点击格子打开物品选择器更换图标。
+    private static final int ICON_X = 76;
+    private static final int ICON_Y = 40;
+    private static final int ICON_SIZE = 20;
+    // “添加/更新”“新建”和右上角“完成”三个按钮同宽，右缘对齐。
+    private static final int ACTION_W = 56;
+    private static final int NEW_X = 622 - ACTION_W;
+    private static final int SAVE_X = NEW_X - 4 - ACTION_W;
     private final ShopGuiSupport.EditorDraft draft;
     private int selectedIndex = -1;
     private String iconId = "";
@@ -49,19 +56,16 @@ final class CommandManageScreen extends KineticPage {
         if (commandBox != null) commandText = commandBox.textValue();
         if (grid != null) gridScroll = grid.scrollOffset();
         if (iconId.isBlank()) iconId = fallbackIconId();
-        ui.button(76, 40, 20).text(Component.empty())
-                .tooltip(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_command_icon_tooltip"))
-                .onClick(this::openIconSelector).build();
         nameBox = ui.textField(188, 41, 306)
                 .label(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_command_name"))
                 .placeholder(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_command_name"))
                 .tooltip(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_command_name_tooltip"))
                 .maxLength(64).value(nameText).onChange(value -> nameText = value).firstShownTextAsDefault().build();
-        saveButton = ui.button(506, 40, 58).text(saveButtonText()).onClick(this::saveCommand).build();
-        ui.button(568, 40, 54).text(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_command_new"))
+        saveButton = ui.button(SAVE_X, 40, ACTION_W).text(saveButtonText()).onClick(this::saveCommand).build();
+        ui.button(NEW_X, 40, ACTION_W).text(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_command_new"))
                 .tooltip(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_command_clear_tooltip"))
                 .onClick(this::clearEditor).build();
-        ui.button(550, 8, 76).text(KineticI18n.translatable("gui.done"))
+        ui.button(NEW_X, 8, ACTION_W).text(KineticI18n.translatable("gui.done"))
                 .tooltip(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_command_done_tooltip"))
                 .onClick(this::navigateBack).build();
         commandBox = ui.textField(84, 332, 536)
@@ -190,19 +194,20 @@ final class CommandManageScreen extends KineticPage {
         KineticTheme.panel(graphics, 0, 0, 640, 360);
         graphics.centeredText(title(), 320, 10, KineticTheme.current().text(), false);
         graphics.text(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_command_icon_preview"),
-                18, 46, KineticTheme.current().mutedText(), true);
-        KineticTheme.itemSlot(graphics, 76, 40, 20, 4, false);
-        graphics.item(ShopGuiSupport.stack(iconId), 78, 42);
+                18, 46, KineticTheme.current().text(), true);
+        boolean iconHovered = KineticTheme.hovering(mouseX, mouseY, ICON_X, ICON_Y, ICON_SIZE, ICON_SIZE);
+        KineticTheme.itemSlot(graphics, ICON_X, ICON_Y, ICON_SIZE, ICON_SIZE, 4, false, iconHovered, false);
+        graphics.item(ShopGuiSupport.stack(iconId), ICON_X + 2, ICON_Y + 2);
         graphics.text(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_command_name"),
-                120, 46, KineticTheme.current().mutedText(), true);
+                120, 46, KineticTheme.current().text(), true);
         graphics.text(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_command_list"),
                 16, 64, KineticTheme.current().text(), true);
         if (draft.commands.isEmpty()) {
             graphics.centeredText(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_command_empty"),
-                    320, 196, KineticTheme.current().mutedText(), false);
+                    320, 196, KineticTheme.current().text(), false);
         }
         graphics.text(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_command_text"),
-                18, 337, KineticTheme.current().mutedText(), true);
+                18, 337, KineticTheme.current().text(), true);
     }
 
     @Override
@@ -212,6 +217,11 @@ final class CommandManageScreen extends KineticPage {
 
     @Override
     protected void renderTooltips(int mouseX, int mouseY) {
+        if (KineticTheme.hovering(mouseX, mouseY, ICON_X, ICON_Y, ICON_SIZE, ICON_SIZE)) {
+            showTooltip(List.of(ShopGuiSupport.stack(iconId).getHoverName(),
+                    KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_command_icon_tooltip")));
+            return;
+        }
         if (grid == null) return;
         int index = grid.itemAt(mouseX, mouseY);
         if (index < 0 || index >= draft.commands.size()) return;
@@ -237,6 +247,10 @@ final class CommandManageScreen extends KineticPage {
 
     @Override
     protected boolean onMouseClick(MouseInput input) {
+        if (input.isLeft() && input.inside(ICON_X, ICON_Y, ICON_SIZE, ICON_SIZE)) {
+            openIconSelector();
+            return true;
+        }
         if (!input.isRight() || grid == null) return false;
         int index = grid.itemAt(input.x(), input.y());
         if (index < 0 || index >= draft.commands.size()) return false;

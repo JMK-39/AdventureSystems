@@ -59,7 +59,7 @@ public class MainScreen extends KineticPage {
                 .onClick(Network::sendToggleHudCurrency).build();
         ui.button(368, 37, 60).text(KineticI18n.translatable("gui.adventuresystems.curios.wallet.close"))
                 .onClick(this::close).build();
-        list = ui.add(new WalletRows(22, 68, 406, 206));
+        list = ui.add(new WalletRows());
         list.setItems(rows);
         list.setScrollOffset(scrollOffset);
         rowActions.clear();
@@ -188,8 +188,8 @@ public class MainScreen extends KineticPage {
         private static final int EXPAND_WIDTH = 62;
         private static final int BUTTON_GAP = 4;
 
-        private WalletRows(int x, int y, int width, int height) {
-            super(x, y, width, height, ROW_HEIGHT);
+        private WalletRows() {
+            super(22, 68, 406, 206, ROW_HEIGHT);
         }
 
         @Override
@@ -220,7 +220,7 @@ public class MainScreen extends KineticPage {
                             formatCompact(Data.readAmount(balances, row.from())))
                     : exchangeRatio(row.from(), row.to());
             graphics.scrollingText(detail, x + 28, y + 15, textRight - x - 34,
-                    KineticTheme.current().mutedText(), false);
+                    KineticTheme.current().text(), false);
             boolean fullyVisible = y >= controlY() && y + height <= controlY() + controlHeight();
             KineticButton action = rowActions.get(index);
             action.moveTo(actionX, y + 6);

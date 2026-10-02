@@ -97,7 +97,7 @@ public class TipManager extends SimplePreparableReloadListener<Void> {
             if (paused && player != null && level != null) {
                 if (!tip.requiredDimension.isEmpty()) {
                     hasCondition = true;
-                    if (currentDimension == null || !currentDimension.toString().equals(tip.requiredDimension)) {
+                    if (!currentDimension.toString().equals(tip.requiredDimension)) {
                         matches = false;
                     }
                 }

@@ -108,7 +108,6 @@ public final class BindingStoreFTB {
             try {
                 parsedNbt = TagParser.parseTag(normalizedNbt);
             } catch (Throwable ignored) {
-                parsedNbt = null;
             }
         }
         return new IndexedBinding(entry, normalizedNbt, parsedNbt);

@@ -37,6 +37,8 @@ import java.text.NumberFormat;
 import java.util.*;
 
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.LongTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -53,10 +55,6 @@ public class ShopScreen extends KineticPage {
 
     private static final int BUTTON_HEIGHT = 20;
     private static final int TOP_BUTTON_WIDTH = 48;
-    private static final int EDIT_MODE_BUTTON_WIDTH = 82;
-    private static final int NEW_BUTTON_WIDTH = 62;
-    private static final int BACKPACK_BUTTON_WIDTH = 82;
-    private static final int RS_BUTTON_WIDTH = 72;
     private static final int BACK_BUTTON_WIDTH = 52;
     private static final int CLOSE_BUTTON_WIDTH = 52;
     private static final int DETAIL_WIDTH = 160;
@@ -76,6 +74,9 @@ public class ShopScreen extends KineticPage {
     private static final int PAGE_TAB_EDGE_PADDING = 2;
     private static final int MAX_PAGE_BUTTON_WIDGETS = 16;
     private static final int SEARCH_BOX_WIDTH = 150;
+    private static final int REWARD_PICKER_VISIBLE_ROWS = 5;
+    private static final int REWARD_PICKER_ROW_HEIGHT = 20;
+    private static final int CHOICE_OVERLAY_BUTTON_WIDTH = 86;
     private static final int PAGE_SCROLLBAR_HEIGHT = 4;
     private static final int LIST_SCROLLBAR_WIDTH = 4;
     private static final int DETAIL_GAP = 6;
@@ -151,7 +152,6 @@ public class ShopScreen extends KineticPage {
     private KineticButton sellModeButton;
     private KineticButton editorModeButton;
     private KineticButton backpackSourceButton;
-    private KineticButton rsSourceButton;
     private KineticNumberField amountBox;
     private KineticTextField searchBox;
     private KineticButton favoritesPageButton;
@@ -187,6 +187,7 @@ public class ShopScreen extends KineticPage {
     private int dragMouseY;
     private boolean useBackpackSource;
     private boolean useRsSource;
+    private String pendingSelectKey;
 
     private boolean isRewardPickerOpen() {
         return overlayLayers.isOpen(OverlayLayer.REWARD_PICKER);
@@ -275,6 +276,7 @@ public class ShopScreen extends KineticPage {
         if (isAttached()) {
             rebuildRows();
             selectRowByKey(selectedKey);
+            if (selectedKey.startsWith("local:")) selectNewestRow();
             updateDetailWidgetState();
         }
         if (changed && isAttached()) rebuild();
@@ -308,62 +310,52 @@ public class ShopScreen extends KineticPage {
 
         buyModeButton = addButton(
                 buyButtonX(), top + 6, TOP_BUTTON_WIDTH,
-                KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_buy_tab"), null,
+                KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_buy_tab"),
                 () -> switchMode(Shop.Mode.BUY)
         );
         sellModeButton = addButton(
                 sellButtonX(), top + 6, TOP_BUTTON_WIDTH,
-                KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_sell_tab"), null,
+                KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_sell_tab"),
                 () -> switchMode(Shop.Mode.SELL)
         );
-        editorModeButton = addButton(
-                editorModeButtonX(), top + 6, EDIT_MODE_BUTTON_WIDTH,
-                editorModeButtonText(), null,
-                Network::sendToggleShopEditorMode
-        );
-        setControlEnabled(editorModeButton, canEdit);
-        if (editorMode) {
-            addButton(
-                    newEntryButtonX(), top + 6, NEW_BUTTON_WIDTH,
-                    KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_new_entry"), null,
-                    this::openNewEditor
+        // 编辑相关操作收进“编辑 ▾”菜单（只有可编辑的玩家才显示），物品来源开关收进“物品来源 ▾”菜单。
+        if (canEdit) {
+            editorModeButton = addButton(
+                    editorModeButtonX(), top + 6, editorMenuButtonWidth(),
+                    KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_menu_editor"),
+                    this::openEditorMenu
             );
         }
         backpackSourceButton = addButton(
-                backpackButtonX(), top + 6, BACKPACK_BUTTON_WIDTH,
-                sourceButtonText(true), null,
-                Network::sendToggleShopBackpack
-        );
-        rsSourceButton = addButton(
-                rsButtonX(), top + 6, RS_BUTTON_WIDTH,
-                sourceButtonText(false), null,
-                Network::sendToggleShopRs
+                backpackButtonX(), top + 6, sourceMenuButtonWidth(),
+                KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_menu_source"),
+                this::openSourceMenu
         );
         addButton(
                 backButtonX(), top + 6, BACK_BUTTON_WIDTH,
-                KineticI18n.translatable("gui.adventuresystems.curios.wallet.back"), null,
+                KineticI18n.translatable("gui.adventuresystems.curios.wallet.back"),
                 this::returnToPreviousScreen
         );
         addButton(
                 closeButtonX(), top + 6, CLOSE_BUTTON_WIDTH,
-                KineticI18n.translatable("gui.adventuresystems.curios.wallet.close"), null,
+                KineticI18n.translatable("gui.adventuresystems.curios.wallet.close"),
                 this::close
         );
         favoritesPageButton = addButton(
                 listLeft(), pageTabsY(), pageButtonWidthForPage(FAVORITES_PAGE),
-                pageButtonLabel(FAVORITES_PAGE), null,
+                pageButtonLabel(FAVORITES_PAGE),
                 () -> selectPage(FAVORITES_PAGE)
         );
         allPageButton = addButton(
                 listLeft() + pageButtonWidthForPage(FAVORITES_PAGE) + PAGE_TAB_GAP,
                 pageTabsY(), pageButtonWidthForPage(ALL_PAGE),
-                pageButtonLabel(ALL_PAGE), null,
+                pageButtonLabel(ALL_PAGE),
                 () -> selectPage(ALL_PAGE)
         );
 
         pagePrevButton = addButton(
                 fixedPageTabsEndX(), pageTabsY(), PAGE_TAB_ARROW_WIDTH,
-                KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_page_previous"), null,
+                KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_page_previous"),
                 () -> {
                     pageScroll = Math.max(0, pageScroll - pageScrollStep());
                     clampPageScroll();
@@ -373,7 +365,7 @@ public class ShopScreen extends KineticPage {
 
         for (int i = 0; i < MAX_PAGE_BUTTON_WIDGETS; i++) {
             int slot = i;
-            KineticButton pageButton = addButton(0, 0, 40, Component.empty(), null, () -> selectVisiblePage(slot));
+            KineticButton pageButton = addButton(0, 0, 40, Component.empty(), () -> selectVisiblePage(slot));
             setControlVisible(pageButton, false);
             setControlEnabled(pageButton, false);
             pageButtons.add(pageButton);
@@ -381,7 +373,7 @@ public class ShopScreen extends KineticPage {
 
         pageNextButton = addButton(
                 pageRightArrowX(), pageTabsY(), PAGE_TAB_ARROW_WIDTH,
-                KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_page_next"), null,
+                KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_page_next"),
                 () -> {
                     pageScroll = Math.min(maxPageScroll(), pageScroll + pageScrollStep());
                     clampPageScroll();
@@ -389,7 +381,7 @@ public class ShopScreen extends KineticPage {
                 }
         );
 
-        searchBox = ui.textField(searchBoxX(), searchBoxY(), searchBoxWidth())
+        searchBox = ui.textField(searchBoxX(), searchBoxY(), SEARCH_BOX_WIDTH)
                 .label(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_search"))
                 .placeholder(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_search_hint"))
                 .firstShownTextAsDefault().build();
@@ -419,39 +411,46 @@ public class ShopScreen extends KineticPage {
 
         rewardPreviewToggleButton = addButton(
                 detailContentX(), 0, DETAIL_SECTION_BUTTON_SIZE,
-                sectionToggleButtonText(rewardPreviewExpanded), null,
+                sectionToggleButtonText(rewardPreviewExpanded),
                 this::toggleRewardPreviewSection
         );
 
         questButton = addButton(
-                questButtonX(), questButtonY(), questButtonWidth(), Component.empty(), null,
+                questButtonX(), questButtonY(), questButtonWidth(), Component.empty(),
                 this::handleQuestButtonClick
         );
         amountMinusButton = addCompactButton(
                 detailAmountQuickButtonX(0), detailAmountQuickButtonY(), detailAmountQuickButtonWidth(),
-                KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_amount_minus"), null,
+                KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_amount_minus"),
                 () -> adjustAmount(-1)
         );
         amountPlusButton = addCompactButton(
                 detailAmountQuickButtonX(1), detailAmountQuickButtonY(), detailAmountQuickButtonWidth(),
-                KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_amount_plus"), null,
+                KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_amount_plus"),
                 () -> adjustAmount(1)
         );
         amountTenButton = addCompactButton(
                 detailAmountQuickButtonX(2), detailAmountQuickButtonY(), detailAmountQuickButtonWidth(),
-                KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_amount_ten"), null,
+                KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_amount_ten"),
                 () -> setAmount(Math.min(64, Math.max(1, amount) * 10))
         );
         amountMaxButton = addCompactButton(
                 detailAmountQuickButtonX(3), detailAmountQuickButtonY(), detailAmountQuickButtonWidth(),
-                KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_amount_max"), null,
+                KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_amount_max"),
                 () -> setAmount(maxUsefulTradeAmount())
         );
         tradeButton = addButton(
-                detailTradeButtonX(), detailTradeButtonY(), detailTradeButtonWidth(), Component.empty(), null,
+                detailTradeButtonX(), detailTradeButtonY(), detailTradeButtonWidth(), Component.empty(),
                 this::tradeSelectedEntry
         );
         rebuildRows();
+        if (pendingSelectKey != null) {
+            String key = pendingSelectKey;
+            pendingSelectKey = null;
+            selectedIndex = -1;
+            selectRowByKey(key);
+            if (key.startsWith("local:") && selectedEntry() == null) selectNewestRow();
+        }
         updateDetailWidgetState();
     }
 
@@ -498,19 +497,8 @@ public class ShopScreen extends KineticPage {
         Shop.Entry entry = selectedEntry();
         if (buyModeButton != null) buyModeButton.setSelected(mode == Shop.Mode.BUY);
         if (sellModeButton != null) sellModeButton.setSelected(mode == Shop.Mode.SELL);
-        if (editorModeButton != null) {
-            editorModeButton.setText(editorModeButtonText());
-            setControlEnabled(editorModeButton, canEdit);
-            editorModeButton.setSelected(editorMode);
-        }
-        if (backpackSourceButton != null) {
-            backpackSourceButton.setText(sourceButtonText(true));
-            backpackSourceButton.setSelected(useBackpackSource);
-        }
-        if (rsSourceButton != null) {
-            rsSourceButton.setText(sourceButtonText(false));
-            rsSourceButton.setSelected(useRsSource);
-        }
+        if (editorModeButton != null) editorModeButton.setSelected(editorMode);
+        if (backpackSourceButton != null) backpackSourceButton.setSelected(false);
         boolean choiceBuy = entry != null && mode == Shop.Mode.BUY && entry.selectable();
         boolean amountActive = detailTradeControlsVisible(entry);
         if (entry != null && !amountActive && !choiceBuy && amount != 1) {
@@ -525,7 +513,7 @@ public class ShopScreen extends KineticPage {
             setControlEnabled(amountBox, amountActive);
             int enteredAmount = parseCount(amountBox.textValue());
             amountBox.setValidationError(amountActive && (enteredAmount < 1
-                    || entry != null && !choiceBuy && !canTrade(entry, enteredAmount)));
+                    || !choiceBuy && !canTrade(entry, enteredAmount)));
         }
         if (amountSlider != null) {
             amountSlider.moveControlX(detailAmountSliderX());
@@ -714,7 +702,7 @@ public class ShopScreen extends KineticPage {
     private int pageJumpOffset(int selectionIndex) {
         if (selectionIndex <= 1) return 0;
         int pageIndex = selectionIndex - 2;
-        if (pageIndex < 0 || pageIndex >= pages.size()) return pageScroll;
+        if (pageIndex >= pages.size()) return pageScroll;
         return categoryPageStart(pageIndex)
                 - (categoryViewportWidth() - pageButtonWidthForPage(pages.get(pageIndex))) / 2;
     }
@@ -745,7 +733,8 @@ public class ShopScreen extends KineticPage {
         ItemStack displayStack = cellDisplayStack(entry);
         renderItemCheckerSlot(graphics, itemSlotX, itemSlotY, PRODUCT_SLOT_SIZE);
         renderProductItem(graphics, displayStack, itemSlotX + 1, itemSlotY + 1);
-        if (hasMultipleRewards(entry)) renderSmallPlus(graphics, itemSlotX + PRODUCT_SLOT_SIZE - 6, itemSlotY + PRODUCT_SLOT_SIZE - 6);
+        // “+”放在格子左上角：右下角是物品数量。
+        if (hasMultipleRewards(entry)) renderSmallPlus(graphics, itemSlotX + 1, itemSlotY + 1);
 
         renderCellStatus(graphics, entry, cell, itemSlotX + PRODUCT_SLOT_SIZE + 3);
 
@@ -1087,27 +1076,13 @@ public class ShopScreen extends KineticPage {
         }
         if (editorModeButton != null && isHover(mouseX, mouseY, editorModeButton.controlX(), editorModeButton.controlY(), editorModeButton.controlWidth(), BUTTON_HEIGHT)) {
             tooltip.add(KineticI18n.translatable("gui.adventuresystems.curios.wallet.tooltip_name", editorModeButtonText()));
-            tooltip.add(KineticI18n.translatable(canEdit
-                    ? editorMode
-                    ? "gui.adventuresystems.curios.wallet.shop_editor_mode_on_tip"
-                    : "gui.adventuresystems.curios.wallet.shop_editor_mode_off_tip"
-                    : "gui.adventuresystems.curios.wallet.shop_editor_mode_no_permission_tip"));
-            return tooltip;
-        }
-        if (editorMode && isHover(mouseX, mouseY, newEntryButtonX(), top + 6, NEW_BUTTON_WIDTH, BUTTON_HEIGHT)) {
-            tooltip.add(KineticI18n.translatable("gui.adventuresystems.curios.wallet.tooltip_name", KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_new_entry")));
-            tooltip.add(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_tooltip_new_entry"));
+            tooltip.add(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_menu_editor_tip"));
             return tooltip;
         }
         if (backpackSourceButton != null && isHover(mouseX, mouseY, backpackSourceButton.controlX(), backpackSourceButton.controlY(), backpackSourceButton.controlWidth(), BUTTON_HEIGHT)) {
-            tooltip.add(KineticI18n.translatable("gui.adventuresystems.curios.wallet.tooltip_name", sourceButtonText(true)));
-            tooltip.add(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_source_backpack_tip"));
-            tooltip.add(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_source_priority_tip"));
-            return tooltip;
-        }
-        if (rsSourceButton != null && isHover(mouseX, mouseY, rsSourceButton.controlX(), rsSourceButton.controlY(), rsSourceButton.controlWidth(), BUTTON_HEIGHT)) {
-            tooltip.add(KineticI18n.translatable("gui.adventuresystems.curios.wallet.tooltip_name", sourceButtonText(false)));
-            tooltip.add(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_source_rs_tip"));
+            tooltip.add(KineticI18n.translatable("gui.adventuresystems.curios.wallet.tooltip_name", KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_menu_source")));
+            tooltip.add(sourceButtonText(true));
+            tooltip.add(sourceButtonText(false));
             tooltip.add(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_source_priority_tip"));
             return tooltip;
         }
@@ -1161,7 +1136,7 @@ public class ShopScreen extends KineticPage {
         Shop.Entry entry = row.entry();
         if (entry == null) return tooltip;
 
-        tooltip.add(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_tooltip_entry_name", entryDisplayName(entry, cellDisplayStack(entry))));
+        tooltip.add(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_tooltip_entry_name", entryDisplayName(entry, cellContentStack(entry))));
         appendEntryDescriptionTooltip(tooltip, entry);
         tooltip.add(KineticI18n.translatable(mode == Shop.Mode.BUY ? "gui.adventuresystems.curios.wallet.shop_tooltip_click_buy_view" : "gui.adventuresystems.curios.wallet.shop_tooltip_click_sell_view"));
         tooltip.add(KineticI18n.translatable(editorMode
@@ -1782,7 +1757,13 @@ public class ShopScreen extends KineticPage {
         return rewardPreviewScroller.smoothOffset();
     }
 
+    /** 列表格里显示的图标：设置了自定义图标就用它，否则用商品本身（多奖励时轮播）。 */
     private ItemStack cellDisplayStack(Shop.Entry entry) {
+        if (entry != null && entry.hasCustomIcon()) return entry.icon();
+        return cellContentStack(entry);
+    }
+
+    private ItemStack cellContentStack(Shop.Entry entry) {
         if (entry == null) return ItemStack.EMPTY;
         if (hasMultipleRewards(entry)) {
             Shop.Reward reward = cycleReward(entry);
@@ -1801,7 +1782,7 @@ public class ShopScreen extends KineticPage {
             Shop.Reward reward = selectedReward(entry);
             if (reward != null && !reward.empty()) return reward.stack();
         }
-        return cellDisplayStack(entry);
+        return cellContentStack(entry);
     }
 
     private boolean hasMultipleRewards(Shop.Entry entry) {
@@ -1821,7 +1802,7 @@ public class ShopScreen extends KineticPage {
     private Shop.Reward cycleReward(Shop.Entry entry) {
         if (entry == null || entry.rewards() == null || entry.rewards().isEmpty()) return null;
         int count = entry.rewards().size();
-        int index = (int) ((System.currentTimeMillis() / 650L) % count);
+        int index = (int) ((System.currentTimeMillis() / 1000L) % count);
         return entry.rewards().get(index);
     }
 
@@ -1836,10 +1817,14 @@ public class ShopScreen extends KineticPage {
         return Math.max(1, Math.min(64, amount)) + (selectedRewardIndex(entry) + 1) * 1000;
     }
 
+    /** 多奖励标记：画在物品之上（否则会被物品图标和数量盖住）。 */
     private void renderSmallPlus(KineticGraphics graphics, int x, int y) {
+        graphics.push();
+        graphics.raise(1);
         KineticTheme.stateSurface(graphics, x - 1, y - 1, 8, 8, KineticTheme.Surface.PANEL_ALT, false, false, false);
         graphics.text(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_multi_reward_plus"),
                 x, y - 1, KineticTheme.current().translatedText(), true);
+        graphics.pop();
     }
 
     private boolean isSelectableRewardIcon(int mouseX, int mouseY) {
@@ -1859,22 +1844,16 @@ public class ShopScreen extends KineticPage {
         return Math.max(84, left + panelWidth - 6 - detailContentX());
     }
 
-    private int rewardPickerVisibleRows() {
-        return 5;
-    }
 
-    private int rewardPickerRowHeight() {
-        return 20;
-    }
 
     private int rewardPickerHeight(Shop.Entry entry) {
-        int rows = Math.min(rewardPickerVisibleRows(), entry == null || entry.rewards() == null ? 0 : entry.rewards().size());
-        return 18 + rows * rewardPickerRowHeight() + 6;
+        int rows = Math.min(REWARD_PICKER_VISIBLE_ROWS, entry == null || entry.rewards() == null ? 0 : entry.rewards().size());
+        return 18 + rows * REWARD_PICKER_ROW_HEIGHT + 6;
     }
 
     private int rewardPickerMaxScroll(Shop.Entry entry) {
         if (!isSelectableRewardEntry(entry)) return 0;
-        return Math.max(0, entry.rewards().size() - rewardPickerVisibleRows());
+        return Math.max(0, entry.rewards().size() - REWARD_PICKER_VISIBLE_ROWS);
     }
 
     private boolean isInsideRewardPicker(int mouseX, int mouseY) {
@@ -1904,24 +1883,24 @@ public class ShopScreen extends KineticPage {
         rewardPickerScroll = Math.max(0D, Math.min(rewardPickerScroll, rewardPickerMax));
         double visualRewardPickerScroll = rewardPickerScrollSmoothing.follow(rewardPickerScroll, rewardPickerMax);
         int rewardPickerStart = Math.max(0, Math.min((int) Math.floor(visualRewardPickerScroll), rewardPickerMax));
-        int rewardPickerShift = (int) Math.round((visualRewardPickerScroll - rewardPickerStart) * rewardPickerRowHeight());
+        int rewardPickerShift = (int) Math.round((visualRewardPickerScroll - rewardPickerStart) * REWARD_PICKER_ROW_HEIGHT);
         int listY = y + 18;
         int selected = selectedRewardIndex(entry);
         enableShopScissor(graphics, x + 2, listY, x + width - 2, y + height);
         try {
-            for (int row = 0; row < rewardPickerVisibleRows() + 2; row++) {
+            for (int row = 0; row < REWARD_PICKER_VISIBLE_ROWS + 2; row++) {
                 int index = rewardPickerStart + row;
                 if (index >= entry.rewards().size()) break;
-                int rowY = listY + row * rewardPickerRowHeight() - rewardPickerShift;
-                if (rowY + rewardPickerRowHeight() <= listY || rowY >= y + height) continue;
-                boolean hover = isHover(mouseX, mouseY, x + 2, rowY, width - 4, rewardPickerRowHeight());
+                int rowY = listY + row * REWARD_PICKER_ROW_HEIGHT - rewardPickerShift;
+                if (rowY + REWARD_PICKER_ROW_HEIGHT <= listY || rowY >= y + height) continue;
+                boolean hover = isHover(mouseX, mouseY, x + 2, rowY, width - 4, REWARD_PICKER_ROW_HEIGHT);
                 boolean active = index == selected;
                 KineticTheme.stateSurface(
                         graphics,
                         x + 2,
                         rowY,
                         width - 4,
-                        rewardPickerRowHeight() - 1,
+                        REWARD_PICKER_ROW_HEIGHT - 1,
                         KineticTheme.Surface.PANEL_ALT,
                         active,
                         hover,
@@ -1946,9 +1925,9 @@ public class ShopScreen extends KineticPage {
         if (!isRewardPickerOpen() || !isSelectableRewardEntry(entry) || !isInsideRewardPicker(mouseX, mouseY)) return ItemStack.EMPTY;
         int listY = rewardPickerY() + 18;
         double visualScroll = rewardPickerScrollSmoothing.follow(rewardPickerScroll, rewardPickerMaxScroll(entry));
-        int index = (int) Math.floor((mouseY - listY) / (double) rewardPickerRowHeight() + visualScroll);
-        int row = (int) Math.floor((mouseY - listY) / (double) rewardPickerRowHeight());
-        if (row >= rewardPickerVisibleRows() || index >= entry.rewards().size()) return ItemStack.EMPTY;
+        int index = (int) Math.floor((mouseY - listY) / (double) REWARD_PICKER_ROW_HEIGHT + visualScroll);
+        int row = (int) Math.floor((mouseY - listY) / (double) REWARD_PICKER_ROW_HEIGHT);
+        if (row >= REWARD_PICKER_VISIBLE_ROWS || index >= entry.rewards().size()) return ItemStack.EMPTY;
         Shop.Reward reward = entry.rewards().get(index);
         return reward.empty() ? ItemStack.EMPTY : reward.stack();
     }
@@ -1959,10 +1938,10 @@ public class ShopScreen extends KineticPage {
         if (!isInsideRewardPicker(mouseX, mouseY)) return false;
         int listY = rewardPickerY() + 18;
         if (mouseY < listY) return true;
-        int row = (mouseY - listY) / rewardPickerRowHeight();
+        int row = (mouseY - listY) / REWARD_PICKER_ROW_HEIGHT;
         double visualScroll = rewardPickerScrollSmoothing.follow(rewardPickerScroll, rewardPickerMaxScroll(entry));
-        int index = (int) Math.floor((mouseY - listY) / (double) rewardPickerRowHeight() + visualScroll);
-        if (row < rewardPickerVisibleRows() && index >= 0 && index < entry.rewards().size()) {
+        int index = (int) Math.floor((mouseY - listY) / (double) REWARD_PICKER_ROW_HEIGHT + visualScroll);
+        if (row < REWARD_PICKER_VISIBLE_ROWS && index >= 0 && index < entry.rewards().size()) {
             selectedRewardIndices.put(entry.key(), index);
             overlayLayers.close(OverlayLayer.REWARD_PICKER);
             return true;
@@ -2043,11 +2022,11 @@ public class ShopScreen extends KineticPage {
             closeChoiceOverlay();
             return;
         }
-        if (isHover(mouseX, mouseY, choiceOverlayCancelX(), choiceOverlayButtonY(), choiceOverlayButtonWidth(), BUTTON_HEIGHT)) {
+        if (isHover(mouseX, mouseY, choiceOverlayCancelX(), choiceOverlayButtonY(), CHOICE_OVERLAY_BUTTON_WIDTH, BUTTON_HEIGHT)) {
             closeChoiceOverlay();
             return;
         }
-        if (isHover(mouseX, mouseY, choiceOverlayConfirmX(), choiceOverlayButtonY(), choiceOverlayButtonWidth(), BUTTON_HEIGHT)) {
+        if (isHover(mouseX, mouseY, choiceOverlayConfirmX(), choiceOverlayButtonY(), CHOICE_OVERLAY_BUTTON_WIDTH, BUTTON_HEIGHT)) {
             confirmChoiceOverlay();
             return;
         }
@@ -2084,16 +2063,13 @@ public class ShopScreen extends KineticPage {
     }
 
     private int choiceOverlayConfirmX() {
-        return choiceOverlayX() + choiceOverlayWidth() - choiceOverlayButtonWidth() - 12;
+        return choiceOverlayX() + choiceOverlayWidth() - CHOICE_OVERLAY_BUTTON_WIDTH - 12;
     }
 
     private int choiceOverlayButtonY() {
         return choiceOverlayY() + 7;
     }
 
-    private int choiceOverlayButtonWidth() {
-        return 86;
-    }
 
     private void renderChoiceOverlay(KineticGraphics graphics, int mouseX, int mouseY) {
         Shop.Entry entry = selectedEntry();
@@ -2114,13 +2090,13 @@ public class ShopScreen extends KineticPage {
         );
         renderChoiceOverlayGrid(graphics, entry, mouseX, mouseY);
         renderChoiceOverlayScrollbar(graphics, entry, mouseX, mouseY);
-        KineticTheme.button(graphics, choiceOverlayCancelX(), choiceOverlayButtonY(), choiceOverlayButtonWidth(),
+        KineticTheme.button(graphics, choiceOverlayCancelX(), choiceOverlayButtonY(), CHOICE_OVERLAY_BUTTON_WIDTH,
                 BUTTON_HEIGHT, KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_choice_cancel"),
-                isHover(mouseX, mouseY, choiceOverlayCancelX(), choiceOverlayButtonY(), choiceOverlayButtonWidth(), BUTTON_HEIGHT),
+                isHover(mouseX, mouseY, choiceOverlayCancelX(), choiceOverlayButtonY(), CHOICE_OVERLAY_BUTTON_WIDTH, BUTTON_HEIGHT),
                 true, false);
-        KineticTheme.button(graphics, choiceOverlayConfirmX(), choiceOverlayButtonY(), choiceOverlayButtonWidth(),
+        KineticTheme.button(graphics, choiceOverlayConfirmX(), choiceOverlayButtonY(), CHOICE_OVERLAY_BUTTON_WIDTH,
                 BUTTON_HEIGHT, KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_choice_confirm"),
-                isHover(mouseX, mouseY, choiceOverlayConfirmX(), choiceOverlayButtonY(), choiceOverlayButtonWidth(), BUTTON_HEIGHT),
+                isHover(mouseX, mouseY, choiceOverlayConfirmX(), choiceOverlayButtonY(), CHOICE_OVERLAY_BUTTON_WIDTH, BUTTON_HEIGHT),
                 choiceOverlaySelectedIndex >= 0, false);
         graphics.pop();
     }
@@ -2155,7 +2131,7 @@ public class ShopScreen extends KineticPage {
                             KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_gacha_marker"),
                             slotX + CHOICE_OVERLAY_SLOT / 2,
                             slotY + 9,
-                            KineticTheme.current().mutedText(),
+                            KineticTheme.current().text(),
                             true
                     );
                 } else {
@@ -2198,12 +2174,12 @@ public class ShopScreen extends KineticPage {
     private List<Component> choiceOverlayTooltipAt(int mouseX, int mouseY) {
         List<Component> tooltip = new ArrayList<>();
         if (!isChoiceOverlayOpen()) return tooltip;
-        if (isHover(mouseX, mouseY, choiceOverlayConfirmX(), choiceOverlayButtonY(), choiceOverlayButtonWidth(), BUTTON_HEIGHT)) {
+        if (isHover(mouseX, mouseY, choiceOverlayConfirmX(), choiceOverlayButtonY(), CHOICE_OVERLAY_BUTTON_WIDTH, BUTTON_HEIGHT)) {
             tooltip.add(KineticI18n.translatable("gui.adventuresystems.curios.wallet.tooltip_name", KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_choice_confirm")));
             tooltip.add(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_choice_confirm_tip"));
             return tooltip;
         }
-        if (isHover(mouseX, mouseY, choiceOverlayCancelX(), choiceOverlayButtonY(), choiceOverlayButtonWidth(), BUTTON_HEIGHT)) {
+        if (isHover(mouseX, mouseY, choiceOverlayCancelX(), choiceOverlayButtonY(), CHOICE_OVERLAY_BUTTON_WIDTH, BUTTON_HEIGHT)) {
             tooltip.add(KineticI18n.translatable("gui.adventuresystems.curios.wallet.tooltip_name", KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_choice_cancel")));
             tooltip.add(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_choice_cancel_tip"));
             return tooltip;
@@ -2253,7 +2229,7 @@ public class ShopScreen extends KineticPage {
     }
 
     private static String percent(double value) {
-        return String.format(Locale.ROOT, "%.2f%%", value);
+        return ShopGuiSupport.percent(value);
     }
 
     @Override
@@ -2412,7 +2388,9 @@ public class ShopScreen extends KineticPage {
     }
 
     private void openNewEditor() {
-        openChild(new ShopEntryEditorScreen(this, new ShopGuiSupport.EditorDraft(mode)));
+        ShopGuiSupport.EditorDraft draft = new ShopGuiSupport.EditorDraft(mode);
+        draft.pageName = activeConcretePage();
+        openChild(new ShopEntryEditorScreen(this, draft));
     }
 
     private void openEditEditor(Shop.Entry entry) {
@@ -2433,8 +2411,13 @@ public class ShopScreen extends KineticPage {
         questPickerScroller.release(MouseButton.LEFT);
         choiceOverlayScroller.release(MouseButton.LEFT);
 
-        int currentIndex = contextEntry.index();
-        int lastIndex = Math.max(0, modeEntryCount() - 1);
+        // 排序只在当前分页内进行：移到最前 / 最后、上移 / 下移都以同一分页里相邻的商品为准。
+        List<Shop.Entry> siblings = pageSiblings(contextEntry);
+        int position = indexOfEntry(siblings, contextEntry);
+        Shop.Entry first = siblings.isEmpty() ? null : siblings.get(0);
+        Shop.Entry previous = position > 0 ? siblings.get(position - 1) : null;
+        Shop.Entry next = position >= 0 && position < siblings.size() - 1 ? siblings.get(position + 1) : null;
+        Shop.Entry last = siblings.isEmpty() ? null : siblings.get(siblings.size() - 1);
         List<KineticOverlays.MenuItem> items = new ArrayList<>();
         items.add(KineticOverlays.MenuItem.action(
                 KineticI18n.translatable(isFavorite(contextEntry)
@@ -2451,20 +2434,21 @@ public class ShopScreen extends KineticPage {
                     KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_context_copy"),
                     this::copyContextEntry
             ));
-            items.add(contextMenuAction(
-                    "gui.adventuresystems.curios.wallet.shop_context_move_front", currentIndex > 0, () -> moveContextEntry(0)
+            items.add(contextMenuMoveAction(
+                    "gui.adventuresystems.curios.wallet.shop_context_move_front", previous != null && first != null,
+                    first
             ));
-            items.add(contextMenuAction(
-                    "gui.adventuresystems.curios.wallet.shop_context_move_up", currentIndex > 0,
-                    () -> moveContextEntry(contextEntry == null ? 0 : contextEntry.index() - 1)
+            items.add(contextMenuMoveAction(
+                    "gui.adventuresystems.curios.wallet.shop_context_move_up", previous != null,
+                    previous
             ));
-            items.add(contextMenuAction(
-                    "gui.adventuresystems.curios.wallet.shop_context_move_down", currentIndex < lastIndex,
-                    () -> moveContextEntry(contextEntry == null ? 0 : contextEntry.index() + 1)
+            items.add(contextMenuMoveAction(
+                    "gui.adventuresystems.curios.wallet.shop_context_move_down", next != null,
+                    next
             ));
-            items.add(contextMenuAction(
-                    "gui.adventuresystems.curios.wallet.shop_context_move_end", currentIndex < lastIndex,
-                    () -> moveContextEntry(Integer.MAX_VALUE)
+            items.add(contextMenuMoveAction(
+                    "gui.adventuresystems.curios.wallet.shop_context_move_end", next != null && last != null,
+                    last
             ));
             items.add(KineticOverlays.MenuItem.danger(
                     KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_context_delete"),
@@ -2474,10 +2458,10 @@ public class ShopScreen extends KineticPage {
         openContextMenu(mouseX, mouseY, items);
     }
 
-    private KineticOverlays.MenuItem contextMenuAction(String translationKey, boolean enabled, Runnable action) {
+    private KineticOverlays.MenuItem contextMenuMoveAction(String translationKey, boolean enabled, Shop.Entry target) {
         Component label = KineticI18n.translatable(translationKey);
-        return enabled
-                ? KineticOverlays.MenuItem.action(label, action)
+        return enabled && target != null
+                ? KineticOverlays.MenuItem.action(label, () -> moveContextEntry(target.index()))
                 : KineticOverlays.MenuItem.disabled(label);
     }
 
@@ -2486,8 +2470,25 @@ public class ShopScreen extends KineticPage {
         contextEntry = null;
     }
 
-    private int modeEntryCount() {
-        return entryCount(mode);
+    /**
+     * 与 {@code entry} 同在当前分页（全部 / 收藏 / 具体分页）里的商品，按全局顺序排列；不受搜索影响。
+     * 服务器的移动是“取出后插入到目标序号”，所以移到某个相邻商品的序号即可排到它的前面（上移）或后面（下移）。
+     */
+    private List<Shop.Entry> pageSiblings(Shop.Entry entry) {
+        List<Shop.Entry> result = new ArrayList<>();
+        if (entry == null) return result;
+        for (Shop.Entry candidate : Shop.entriesFromTag(shopTag, entry.mode())) {
+            if (!entryExcludedFromActivePage(candidate)) result.add(candidate);
+        }
+        result.sort(java.util.Comparator.comparingInt(Shop.Entry::index));
+        return result;
+    }
+
+    private static int indexOfEntry(List<Shop.Entry> entries, Shop.Entry entry) {
+        for (int i = 0; i < entries.size(); i++) {
+            if (entries.get(i).index() == entry.index()) return i;
+        }
+        return -1;
     }
 
     int entryCount(Shop.Mode entryMode) {
@@ -2528,7 +2529,9 @@ public class ShopScreen extends KineticPage {
     private void moveContextEntry(int targetIndex) {
         Shop.Entry entry = contextEntry;
         closeShopContextMenu();
-        if (entry != null) Network.sendMoveShopEntry(entry.mode(), entry.index(), targetIndex);
+        if (entry == null) return;
+        Network.sendMoveShopEntry(entry.mode(), entry.index(), targetIndex);
+        applyLocalMove(entry.mode(), entry.index(), targetIndex, entry.key());
     }
 
     private void deleteContextEntry() {
@@ -2536,9 +2539,155 @@ public class ShopScreen extends KineticPage {
         closeShopContextMenu();
         if (entry != null) {
             Network.sendRemoveShopEntry(entry.mode(), entry.index());
+            applyLocalRemove(entry.mode(), entry.index());
             selectedIndex = -1;
             updateDetailWidgetState();
         }
+    }
+
+    // ---- 本地内存更新：编辑操作先改本地数据立即显示，服务器保存后广播的刷新再覆盖为权威数据 ----
+
+    private ListTag localEntryList(Shop.Mode entryMode, boolean create) {
+        if (shopTag == null || entryMode == null) return null;
+        String key = entryMode == Shop.Mode.BUY ? "Buy" : "Sell";
+        if (!shopTag.contains(key, Tag.TAG_LIST)) {
+            if (!create) return null;
+            shopTag.put(key, new ListTag());
+        }
+        return shopTag.getList(key, Tag.TAG_COMPOUND);
+    }
+
+    /** 与服务器 {@code Shop.move} 相同：取出 from 后插入到 to，其它商品依次让位。 */
+    private void applyLocalMove(Shop.Mode entryMode, int from, int to, String selectKey) {
+        ListTag list = localEntryList(entryMode, false);
+        if (list == null || from == to || from < 0 || to < 0) return;
+        List<CompoundTag> tags = new ArrayList<>();
+        for (int i = 0; i < list.size(); i++) {
+            CompoundTag tag = list.getCompound(i);
+            int index = tag.getInt("Index");
+            int moved;
+            if (index == from) moved = to;
+            else if (index > from && index <= to) moved = index - 1;
+            else if (index >= to && index < from) moved = index + 1;
+            else moved = index;
+            tag.putInt("Index", moved);
+            tags.add(tag);
+        }
+        tags.sort(Comparator.comparingInt(tag -> tag.getInt("Index")));
+        list.clear();
+        list.addAll(tags);
+        refreshAfterLocalEdit(selectKey);
+    }
+
+    void applyLocalRemove(Shop.Mode entryMode, int index) {
+        ListTag list = localEntryList(entryMode, false);
+        if (list == null) return;
+        for (int i = list.size() - 1; i >= 0; i--) {
+            CompoundTag tag = list.getCompound(i);
+            int current = tag.getInt("Index");
+            if (current == index) list.remove(i);
+            else if (current > index) tag.putInt("Index", current - 1);
+        }
+        refreshAfterLocalEdit(null);
+    }
+
+    /** 编辑器保存时调用：修改已有商品或在末尾追加新商品，并切到它所在的分页选中它。 */
+    void applyLocalSave(ShopGuiSupport.EditorDraft draft) {
+        if (draft == null || draft.mode == null) return;
+        ListTag list = localEntryList(draft.mode, true);
+        if (list == null) return;
+        CompoundTag tag = null;
+        int maxIndex = -1;
+        for (int i = 0; i < list.size(); i++) {
+            CompoundTag candidate = list.getCompound(i);
+            int index = candidate.getInt("Index");
+            maxIndex = Math.max(maxIndex, index);
+            if (draft.index >= 0 && index == draft.index) tag = candidate;
+        }
+        if (tag == null) {
+            tag = new CompoundTag();
+            tag.putInt("Index", maxIndex + 1);
+            tag.putString("Key", "local:" + UUID.randomUUID());
+            tag.putBoolean("Unlocked", true);
+            list.add(tag);
+        }
+        ItemStack stack = ShopGuiSupport.stack(draft.itemId);
+        if (!stack.isEmpty()) {
+            stack.setCount(Math.max(1, Math.min(64, draft.count)));
+            tag.put("Item", stack.save(new CompoundTag()));
+        }
+        tag.putString("Currency", draft.currencyId == null ? "" : draft.currencyId);
+        tag.putLong("Price", draft.price);
+        tag.putInt("TimedLimitSeconds", Math.max(0, draft.dailyLimit));
+        tag.putInt("TotalLimit", Math.max(0, draft.totalLimit));
+        tag.putString("PageName", draft.pageName == null ? "" : draft.pageName.trim());
+        tag.putString("DisplayName", draft.displayName == null ? "" : draft.displayName);
+        tag.putString("Description", draft.description == null ? "" : draft.description);
+        tag.putString("Command", draft.commandText == null ? "" : draft.commandText);
+        tag.putInt("RequiredQuestCount", Math.max(0, draft.requiredQuestCount));
+        ListTag questIds = new ListTag();
+        for (Long id : draft.questIds) {
+            if (id != null) questIds.add(LongTag.valueOf(id));
+        }
+        tag.put("RequiredQuestIds", questIds);
+        tag.putBoolean("Gacha", draft.gacha);
+        tag.putBoolean("Selectable", draft.selectable);
+        ItemStack icon = draft.iconId == null || draft.iconId.isBlank() ? ItemStack.EMPTY : ShopGuiSupport.stack(draft.iconId);
+        if (icon.isEmpty()) tag.remove("Icon");
+        else tag.put("Icon", icon.save(new CompoundTag()));
+
+        if (mode != draft.mode) {
+            mode = draft.mode;
+            resetScrollImmediately();
+        }
+        String page = draft.pageName == null ? "" : draft.pageName.trim();
+        if (!Objects.equals(activePageName, ALL_PAGE) && !Objects.equals(activePageName, page)) activePageName = page;
+        refreshAfterLocalEdit(tag.getString("Key"));
+    }
+
+    /** 本地新建的商品被服务器数据替换后，重新选中当前分页里最新追加的那件。 */
+    private void selectNewestRow() {
+        int best = -1;
+        int bestIndex = -1;
+        for (int i = 0; i < rows.size(); i++) {
+            Shop.Entry entry = rows.get(i).entry();
+            if (entry != null && entry.index() > bestIndex) {
+                bestIndex = entry.index();
+                best = i;
+            }
+        }
+        if (best >= 0) selectRowByKey(rows.get(best).entry().key());
+    }
+
+    private void refreshAfterLocalEdit(String selectKey) {
+        searchTextCache.clear();
+        if (!isAttached()) {
+            pendingSelectKey = selectKey;
+            return;
+        }
+        rebuildRows();
+        if (selectKey != null) selectRowByKey(selectKey);
+        updateDetailWidgetState();
+    }
+
+    /** 编辑器分页选择器的候选：当前模式的分页在前，另一模式独有的分页在后；不含默认空分页。 */
+    List<String> knownPageNames(Shop.Mode preferred) {
+        List<String> result = new ArrayList<>();
+        Shop.Mode first = preferred == null ? mode : preferred;
+        Shop.Mode second = first == Shop.Mode.BUY ? Shop.Mode.SELL : Shop.Mode.BUY;
+        for (Shop.Mode entryMode : new Shop.Mode[]{first, second}) {
+            for (Shop.Entry entry : Shop.entriesFromTag(shopTag, entryMode)) {
+                String page = pageName(entry);
+                if (!page.isBlank() && !result.contains(page)) result.add(page);
+            }
+        }
+        return result;
+    }
+
+    /** 当前浏览的具体分页名（全部 / 收藏时为空），新建商品默认放进这个分页。 */
+    String activeConcretePage() {
+        if (Objects.equals(activePageName, ALL_PAGE) || Objects.equals(activePageName, FAVORITES_PAGE)) return "";
+        return activePageName == null ? "" : activePageName;
     }
 
     private Component sourceButtonText(boolean backpack) {
@@ -3118,13 +3267,49 @@ public class ShopScreen extends KineticPage {
     }
 
     private int editorModeButtonX() {
-        return editorMode
-                ? newEntryButtonX() + NEW_BUTTON_WIDTH + 4
-                : sellButtonX() + TOP_BUTTON_WIDTH + 4;
+        return sellButtonX() + TOP_BUTTON_WIDTH + 8;
     }
 
-    private int newEntryButtonX() {
-        return sellButtonX() + TOP_BUTTON_WIDTH + 4;
+    private static int fitButtonWidth(Component label) {
+        return KineticText.width(label) + 14;
+    }
+
+    private int editorMenuButtonWidth() {
+        return fitButtonWidth(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_menu_editor"));
+    }
+
+    private int sourceMenuButtonWidth() {
+        return fitButtonWidth(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_menu_source"));
+    }
+
+    // 开关项直接用“名称:开/关”和绿/红文字表示状态，不用橘黄选中边框（那是“选中”的意思，容易误读）。
+    private void openEditorMenu() {
+        if (editorModeButton == null) return;
+        List<KineticOverlays.MenuItem> items = new ArrayList<>();
+        items.add(KineticOverlays.MenuItem.action(editorModeButtonText(),
+                KineticI18n.translatable(editorMode
+                        ? "gui.adventuresystems.curios.wallet.shop_editor_mode_on_tip"
+                        : "gui.adventuresystems.curios.wallet.shop_editor_mode_off_tip"),
+                Network::sendToggleShopEditorMode));
+        Component newEntry = KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_new_entry");
+        items.add(editorMode
+                ? KineticOverlays.MenuItem.action(newEntry,
+                        KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_tooltip_new_entry"), this::openNewEditor)
+                : KineticOverlays.MenuItem.disabled(newEntry,
+                        KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_menu_editor_need_mode")));
+        openContextMenu(editorModeButton.controlX(), editorModeButton.controlY() + BUTTON_HEIGHT + 2, items);
+    }
+
+    private void openSourceMenu() {
+        if (backpackSourceButton == null) return;
+        List<KineticOverlays.MenuItem> items = new ArrayList<>();
+        items.add(KineticOverlays.MenuItem.action(sourceButtonText(true),
+                KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_source_backpack_tip"),
+                Network::sendToggleShopBackpack));
+        items.add(KineticOverlays.MenuItem.action(sourceButtonText(false),
+                KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_source_rs_tip"),
+                Network::sendToggleShopRs));
+        openContextMenu(backpackSourceButton.controlX(), backpackSourceButton.controlY() + BUTTON_HEIGHT + 2, items);
     }
 
     private int closeButtonX() {
@@ -3135,12 +3320,8 @@ public class ShopScreen extends KineticPage {
         return closeButtonX() - 4 - BACK_BUTTON_WIDTH;
     }
 
-    private int rsButtonX() {
-        return backButtonX() - 6 - RS_BUTTON_WIDTH;
-    }
-
     private int backpackButtonX() {
-        return rsButtonX() - 4 - BACKPACK_BUTTON_WIDTH;
+        return backButtonX() - 8 - sourceMenuButtonWidth();
     }
 
     private int shopTitleX() {
@@ -3163,9 +3344,6 @@ public class ShopScreen extends KineticPage {
         return pageScrollBarY() + PAGE_SCROLLBAR_HEIGHT + 14;
     }
 
-    private int searchBoxWidth() {
-        return SEARCH_BOX_WIDTH;
-    }
 
     private int searchBoxX() {
         return detailX() + 4;
@@ -3784,6 +3962,7 @@ public class ShopScreen extends KineticPage {
         clearDragState();
         if (source == null || target == null || source.index() == target.index()) return;
         Network.sendMoveShopEntry(source.mode(), source.index(), target.index());
+        applyLocalMove(source.mode(), source.index(), target.index(), source.key());
     }
 
     private void clearDragState() {
@@ -4178,12 +4357,12 @@ public class ShopScreen extends KineticPage {
         }
         boolean deltaVisible() { return System.currentTimeMillis() - start < 1000L; }
     }
-    private KineticButton addButton(int x, int y, int width, Component label, Component tooltip, Runnable action) {
-        return ui().button(x, y, width).text(label).tooltip(tooltip).onClick(action).build();
+    private KineticButton addButton(int x, int y, int width, Component label, Runnable action) {
+        return ui().button(x, y, width).text(label).onClick(action).build();
     }
 
-    private KineticButton addCompactButton(int x, int y, int width, Component label, Component tooltip, Runnable action) {
-        return ui().button(x, y, width).compact().text(label).tooltip(tooltip).onClick(action).build();
+    private KineticButton addCompactButton(int x, int y, int width, Component label, Runnable action) {
+        return ui().button(x, y, width).compact().text(label).onClick(action).build();
     }
 
     private void confirmChoiceOverlay() {

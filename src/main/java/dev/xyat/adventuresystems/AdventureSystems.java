@@ -10,8 +10,8 @@ public final class AdventureSystems {
     public static final String MODID = "adventuresystems";
 
     public AdventureSystems() {
-        new TipsModule();
-        new CuriosModule();
-        new FtbModule();
+        TipsModule.install();
+        CuriosModule.install();
+        FtbModule.install();
     }
 }

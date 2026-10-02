@@ -57,7 +57,7 @@ public final class Client {
         if (!equipped) {
             hudVisible = false;
             hudBalances = new CompoundTag();
-            if (KineticGui.currentPage(MainScreen.class) != null || KineticGui.currentPage(ShopScreen.class) != null) {
+            if (KineticGui.currentPage(MainScreen.class) != null || KineticGui.findPage(ShopScreen.class) != null) {
                 KineticGui.closeScreen();
             }
             return;
@@ -75,7 +75,7 @@ public final class Client {
         if (walletPage != null) {
             walletPage.updateBalances(hudBalances, hudVisible);
         } else {
-            ShopScreen shopPage = KineticGui.currentPage(ShopScreen.class);
+            ShopScreen shopPage = KineticGui.findPage(ShopScreen.class);
             if (shopPage != null) shopPage.updateBalances(hudBalances);
         }
     }
@@ -88,7 +88,7 @@ public final class Client {
         CompoundTag safeBalances = balances == null ? new CompoundTag() : balances.copy();
         CompoundTag safeShop = shop == null ? new CompoundTag() : shop.copy();
         hudBalances = safeBalances.copy();
-        ShopScreen screen = KineticGui.currentPage(ShopScreen.class);
+        ShopScreen screen = KineticGui.findPage(ShopScreen.class);
         if (screen != null) {
             screen.updateShop(safeBalances, safeShop, editorMode);
             return;
@@ -106,7 +106,7 @@ public final class Client {
         CompoundTag safeBalances = balances == null ? new CompoundTag() : balances.copy();
         CompoundTag safeShop = shop == null ? new CompoundTag() : shop.copy();
         hudBalances = safeBalances.copy();
-        ShopScreen screen = KineticGui.currentPage(ShopScreen.class);
+        ShopScreen screen = KineticGui.findPage(ShopScreen.class);
         if (screen != null) {
             screen.updateShop(safeBalances, safeShop, editorMode);
         }
@@ -162,7 +162,7 @@ public final class Client {
         hudVisible = false;
         hudBalances = new CompoundTag();
         clearPendingShopParent();
-        if (KineticGui.currentPage(MainScreen.class) != null || KineticGui.currentPage(ShopScreen.class) != null) {
+        if (KineticGui.currentPage(MainScreen.class) != null || KineticGui.findPage(ShopScreen.class) != null) {
             KineticGui.closeScreen();
         }
     }

@@ -16,6 +16,10 @@ public final class TipsModule {
     public static final Logger LOGGER = LogUtils.getLogger();
 
     public TipsModule() {
+        install();
+    }
+
+    public static void install() {
         GeneralConfig.load();
         KTServerConfigApi.registerActionPage(TipsConfigGui.EDITOR_PAGE_ID);
         TipsNetwork.register();

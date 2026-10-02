@@ -8,7 +8,6 @@ import dev.xyat.kineticcore.api.client.gui.render.KineticGraphics;
 import dev.xyat.kineticcore.api.client.gui.selector.KineticSelectors;
 import dev.xyat.kineticcore.api.client.gui.theme.KineticTheme;
 import dev.xyat.kineticcore.api.client.gui.ui.KineticUi;
-import dev.xyat.kineticcore.api.client.gui.widget.KineticTextField;
 import dev.xyat.kineticcore.api.client.gui.widget.list.ItemActionItem;
 import dev.xyat.kineticcore.api.client.gui.widget.list.KineticItemActionList;
 import dev.xyat.kineticcore.api.client.search.KineticSearch;
@@ -31,7 +30,6 @@ public class ItemBlacklistScreenFTB extends KineticPage {
 
     private final List<String> allEntries = new ArrayList<>();
     private final List<String> filtered = new ArrayList<>();
-    private KineticTextField searchBox;
     private KineticItemActionList listWidget;
     private String searchText = "";
     private int listScroll;
@@ -47,7 +45,7 @@ public class ItemBlacklistScreenFTB extends KineticPage {
         if (listWidget != null) listScroll = listWidget.scrollOffset();
         listWidget = null;
         reloadEntries();
-        searchBox = ui.textField(LIST_X + 110, 54, 350)
+        ui.textField(LIST_X + 110, 54, 350)
                 .label(KineticI18n.translatable("gui.adventuresystems.ftb.search"))
                 .placeholder(KineticI18n.translatable("placeholder.adventuresystems.ftb_item.binding_search"))
                 .value(searchText)

@@ -6,8 +6,6 @@ import dev.xyat.kineticcore.api.resource.KineticResourceIds;
 import dev.xyat.adventuresystems.curios.config.CuriosConfig;
 import dev.xyat.kineticcore.api.client.gui.overlay.KineticOverlays;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.LivingEntity;

@@ -14,7 +14,7 @@ public final class ItemClientModuleFTB {
     }
 
     public static void register() {
-        if (enabled) return;
+        if (isEnabled()) return;
         FTBClientConfig.register();
 
         enabled = true;

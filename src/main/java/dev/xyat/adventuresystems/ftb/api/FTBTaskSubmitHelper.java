@@ -20,8 +20,7 @@ public final class FTBTaskSubmitHelper {
     }
 
     public static boolean isCustomSubmitAllowed(TeamData data, ItemTask task) {
-        if (data == null || !isCustomSubmitAllowed(task)) return false;
-        return data.canStartTasks(task.getQuest());
+        return data != null && isCustomSubmitAllowed(task) && data.canStartTasks(task.getQuest());
     }
 
     public static boolean isCustomSubmitAllowed(ItemTask task) {
@@ -48,11 +47,7 @@ public final class FTBTaskSubmitHelper {
         int completedTimes = 0;
         long submittedItems = 0L;
 
-        for (int i = 0; i < requested; i++) {
-            if (!isCustomSubmitAllowed(data, task)) {
-                break;
-            }
-
+        for (int i = 0; i < requested && isCustomSubmitAllowed(data, task); i++) {
             if (data.isCompleted(quest) || data.isCompleted(task)) {
                 break;
             }

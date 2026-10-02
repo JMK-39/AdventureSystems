@@ -62,8 +62,13 @@ final class ShopGuiSupport {
         return NumberFormat.getIntegerInstance(Locale.ROOT).format(Math.max(0L, value));
     }
 
+    /** 概率百分比：整数不带小数点，最多保留 5 位小数（0.00001%），去掉末尾多余的 0，例如 1.005% 而不是 1.00500%。 */
     static String percent(double value) {
-        return String.format(Locale.ROOT, "%.2f%%", Math.max(0.0D, value));
+        if (!Double.isFinite(value) || value <= 0.0D) return "0%";
+        java.math.BigDecimal decimal = java.math.BigDecimal.valueOf(value)
+                .setScale(5, java.math.RoundingMode.HALF_UP).stripTrailingZeros();
+        if (decimal.signum() == 0) return "0%";
+        return decimal.toPlainString() + "%";
     }
 
     static Map<Long, QuestDisplay> loadQuestDisplays() {
@@ -112,12 +117,14 @@ final class ShopGuiSupport {
         String displayName = "";
         String description = "";
         String commandText = "";
+        /** 自定义列表图标（物品串）；空 = 使用商品本身的图标。 */
+        String iconId = "";
         int requiredQuestCount = 0;
         List<Long> questIds = new ArrayList<>();
         boolean gacha = false;
         boolean selectable = false;
-        List<RewardDraft> rewards = new ArrayList<>();
-        List<CommandDraft> commands = new ArrayList<>();
+        final List<RewardDraft> rewards = new ArrayList<>();
+        final List<CommandDraft> commands = new ArrayList<>();
 
         EditorDraft(Shop.Mode mode) {
             this.mode = mode;
@@ -139,6 +146,7 @@ final class ShopGuiSupport {
             this.displayName = entry.displayName();
             this.description = entry.description();
             this.commandText = entry.command();
+            this.iconId = entry.hasCustomIcon() ? StackCodec.toConfigString(entry.icon(), 1) : "";
             if (this.commandText != null && !this.commandText.isBlank()) {
                 this.commands.add(new CommandDraft(this.itemId, this.displayName, this.commandText));
             }
@@ -194,6 +202,10 @@ final class ShopGuiSupport {
                 String command = commandText.trim();
                 if (command.startsWith("/")) command = command.substring(1);
                 b.append("command=").append(command.replace("|", " ").replace(";", " "));
+            }
+            if (iconId != null && !iconId.isBlank()) {
+                if (!b.isEmpty()) b.append(";");
+                b.append("icon=").append(iconId);
             }
             if (selectable) {
                 if (!b.isEmpty()) b.append(";");

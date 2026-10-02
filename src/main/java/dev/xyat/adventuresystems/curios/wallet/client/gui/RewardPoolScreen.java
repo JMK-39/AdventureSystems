@@ -73,7 +73,7 @@ final class RewardPoolScreen extends KineticPage {
                 .allowNegative(false).range(1, 999999999).value(selectedWeight)
                 .onChange(value -> updateSelectedWeight()).firstShownTextAsDefault().build();
         boolean editable = selectedIndex >= 0 && selectedIndex < draft.rewards.size();
-        countBox.setEnabled(editable && !draft.rewards.get(Math.max(0, selectedIndex)).empty());
+        countBox.setEnabled(editable && !draft.rewards.get(selectedIndex).empty());
         weightBox.setEnabled(editable && gachaMode());
     }
 
@@ -98,7 +98,7 @@ final class RewardPoolScreen extends KineticPage {
     private void refreshList() {
         if (list != null) list.setItems(listItems());
         boolean editable = selectedIndex >= 0 && selectedIndex < draft.rewards.size();
-        if (countBox != null) countBox.setEnabled(editable && !draft.rewards.get(Math.max(0, selectedIndex)).empty());
+        if (countBox != null) countBox.setEnabled(editable && !draft.rewards.get(selectedIndex).empty());
         if (weightBox != null) weightBox.setEnabled(editable && gachaMode());
     }
 
@@ -215,13 +215,13 @@ final class RewardPoolScreen extends KineticPage {
         KineticTheme.panel(graphics, 0, 0, 640, 360);
         graphics.centeredText(title(), 320, 10, KineticTheme.current().text(), false);
         graphics.text(KineticI18n.translatable(primaryHintKey()), 14, 26, KineticTheme.current().text(), true);
-        graphics.text(KineticI18n.translatable(secondaryHintKey()), 14, 38, KineticTheme.current().mutedText(), true);
+        graphics.text(KineticI18n.translatable(secondaryHintKey()), 14, 38, KineticTheme.current().text(), true);
         graphics.text(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_reward_column_count"),
-                14, 318, KineticTheme.current().mutedText(), true);
+                14, 318, KineticTheme.current().text(), true);
         if (gachaMode()) graphics.text(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_reward_column_weight"),
-                182, 318, KineticTheme.current().mutedText(), true);
+                182, 318, KineticTheme.current().text(), true);
         if (draft.rewards.isEmpty()) graphics.centeredText(KineticI18n.translatable(emptyListKey()),
-                320, 180, KineticTheme.current().mutedText(), false);
+                320, 180, KineticTheme.current().text(), false);
     }
 
     private static String titleKey(ShopGuiSupport.EditorDraft draft) {

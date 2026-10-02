@@ -130,11 +130,7 @@ public final class BlacklistStoreFTB {
             }
         }
 
-        if (!TAG_INDEX.isEmpty() && stack.getTags().anyMatch(tag -> TAG_INDEX.contains(tag.location().toString()))) {
-            return true;
-        }
-
-        return false;
+        return !TAG_INDEX.isEmpty() && stack.getTags().anyMatch(tag -> TAG_INDEX.contains(tag.location().toString()));
     }
 
     public static void add(String target) {

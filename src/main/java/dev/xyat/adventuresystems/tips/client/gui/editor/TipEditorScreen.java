@@ -299,28 +299,28 @@ public class TipEditorScreen extends KineticPage {
         int currentY = this.dynamicCondY + 15;
         if (input.isRight()) {
             if (hasText(conditions.structure)) {
-                if (isHover((int) mouseX, (int) mouseY, x, currentY, 150, 10)) {
+                if (isHover(mouseX, mouseY, x, currentY, 150, 10)) {
                     conditions.structure = null;
                     return true;
                 }
                 currentY += 12;
             }
             if (hasText(conditions.biome)) {
-                if (isHover((int) mouseX, (int) mouseY, x, currentY, 150, 10)) {
+                if (isHover(mouseX, mouseY, x, currentY, 150, 10)) {
                     conditions.biome = null;
                     return true;
                 }
                 currentY += 12;
             }
             if (hasText(conditions.dimension)) {
-                if (isHover((int) mouseX, (int) mouseY, x, currentY, 150, 10)) {
+                if (isHover(mouseX, mouseY, x, currentY, 150, 10)) {
                     conditions.dimension = null;
                     return true;
                 }
                 currentY += 12;
             }
             if (hasText(conditions.advancement)) {
-                if (isHover((int) mouseX, (int) mouseY, x, currentY, 150, 10)) {
+                if (isHover(mouseX, mouseY, x, currentY, 150, 10)) {
                     conditions.advancement = null;
                     return true;
                 }
@@ -336,7 +336,7 @@ public class TipEditorScreen extends KineticPage {
         if (conditions.items != null) {
             int itemX = x;
             for (int i = 0; i < conditions.items.size(); i++) {
-                if (isHover((int) mouseX, (int) mouseY, itemX, currentY, 16, 16)) {
+                if (isHover(mouseX, mouseY, itemX, currentY, 16, 16)) {
                     if (input.isRight()) {
                         conditions.items.remove(i);
                         return true;
@@ -353,7 +353,7 @@ public class TipEditorScreen extends KineticPage {
         if (conditions.curios != null) {
             int itemX = x + 35;
             for (int i = 0; i < conditions.curios.size(); i++) {
-                if (isHover((int) mouseX, (int) mouseY, itemX, currentY, 16, 16)) {
+                if (isHover(mouseX, mouseY, itemX, currentY, 16, 16)) {
                     if (input.isRight()) {
                         conditions.curios.remove(i);
                         return true;

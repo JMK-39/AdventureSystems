@@ -75,10 +75,10 @@ final class QuestManageScreen extends KineticPage {
         KineticTheme.panel(graphics, 20, 12, 440, 296);
         graphics.centeredText(title(), 240, 20, KineticTheme.current().text(), false);
         graphics.text(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_quest_manage_hint_top"),
-                38, 43, KineticTheme.current().mutedText(), true);
+                38, 43, KineticTheme.current().text(), true);
         if (draft.questIds.isEmpty()) {
             graphics.centeredText(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_quest_manage_empty"),
-                    240, 160, KineticTheme.current().mutedText(), false);
+                    240, 160, KineticTheme.current().text(), false);
         }
     }
 }
