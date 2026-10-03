@@ -24,6 +24,7 @@ AdventureSystems 使用 Java 21、Gradle 9.8.0、Stonecutter 0.9.8、ModDevGradl
 | Original migration baseline comparison / 原迁移提交基线对比 | 180 non-text classes, 73,752 ordered javap lines and 30 non-text resources identical |
 | Release JAR inspection / 发布 JAR 检查 | Forge 184 / NeoForge 187 classes; class version 65; 3 Mixin configs each; correct loader metadata; no validation fixture/test agent |
 | Existing 1.21.1 client / 现有 1.21.1 客户端 | 17 runtime checks, 0 failures; actual pause screen and screenshot verified; world saved and client exited normally |
+| Native item/structure condition runtime / 物品与结构条件运行检查 | 19 checks, 0 failures; six scenarios and real two-tip rotation; inventory and position restored |
 | All 12 addon resource tasks / 全部 12 个附属资源任务 | PASS offline; exact English/Chinese key parity enforced |
 | Negative language fixtures / 语言失败用例 | Mismatched keys, generated keys and non-string values each fail; valid pair passes |
 
@@ -93,3 +94,38 @@ CHANGELOG.md 新日志在上，保留旧历史；README 与外部 AdventureSyste
 Preexisting AdventureSystems edits were backed up before migration and retained in the final implementation. Sibling guard commits use a separate Git index to avoid including unrelated working or staged changes, including CombatSystems' staged IDE files. No pushes or releases were performed.
 
 迁移前已备份 AdventureSystems 原有修改，并保留在最终实现中。其他附属的语言约束提交使用独立 Git 索引，避免混入已有工作区或暂存区修改，包含 CombatSystems 已暂存的 IDE 文件。没有推送或发布。
+
+## Conditional tip follow-up / 条件提示补充验证
+
+2026-10-04. The existing 1.21.1 profile was launched by command. No game downloads, memory changes or desktop input were used. The test located a genuine minecraft:village_plains structure, tested a standable position inside a structure piece (301, 70, -284) and a nearby position outside all detected structure pieces (306, 71, -250). Item/village examples came from the user's existing configuration. The combined AND entry was temporary in-memory test data; configuration files were not changed.
+
+使用现有 1.21.1 实例命令启动，不下载游戏、不改内存、不发送桌面输入。测试定位真实 minecraft:village_plains 结构，使用结构片段内可站立位置 (301, 70, -284) 与附近不属于已检测结构片段的位置 (306, 71, -250)。物品和村庄条目来自用户现有配置；组合 AND 条件条目仅为内存中的临时测试数据，没有改写提示文件。
+
+| Scenario / 场景 | Undamaged sword / 未损坏剑 | Village / 村庄 | Combined AND / 两者同时 | Actual screen / 实际界面 |
+| --- | --- | --- | --- | --- |
+| Empty outside / 结构外空手 | false | false | false | No conditional tip / 不显示条件提示 |
+| Sword only outside / 结构外仅持合金剑 | true | false | false | Component tip visible / 组件提示显示 |
+| Damaged sword outside / 结构外损坏合金剑 | false | false | false | No conditional tip / 不显示条件提示 |
+| Village empty / 村庄结构内空手 | false | true | false | Village tip visible / 村庄提示显示 |
+| Village and sword / 村庄结构内持剑 | true | true | true | Both original tips rotated in the same actual pause menu / 两条原有提示在真实暂停菜单中轮换 |
+| Leave village empty / 离开村庄结构后空手 | false | false | false | Cached village match cleared / 旧村庄匹配清除 |
+
+The item example requires the native component predicate damage=0 in WEAK mode. Therefore a sword with damage=1 intentionally does not match. Structure matching currently requires being within a real structure piece bounding box; being visually near a village does not by itself satisfy this predicate.
+
+物品示例使用原生组件 damage=0 与 WEAK 匹配，因此 damage=1 的剑按配置应不匹配。当前结构检测要求玩家位于实际结构片段包围盒中，仅在视觉上靠近村庄并不自动满足条件。
+
+18 positive/negative condition assertions plus one actual two-tip rotation assertion passed: ADVENTURE_CONDITIONS_PASS checks=19 failures=0 restored=true. Village information came through the real request/response channel when opening PauseScreen; the test did not manually assign the structure cache. The user inventory was saved with native registry-aware inventory serialization, restored exactly (inventory=true), and original dimension/position/rotation/selected slot restored before normal world save and exit. Existing 17 general runtime checks also passed.
+
+18 项条件正反断言与 1 项实际双提示轮换断言通过。村庄信息来自打开 PauseScreen 后的真实网络请求／响应，测试未直接改写结构缓存。背包使用原生注册表相关存储保存并恢复，确认 inventory=true；原维度、位置、视角与选中槽位均恢复后正常保存退出。此前 17 项通用运行检查亦通过。
+
+Evidence / 证据：
+
+- .gradle/migration/tips-conditions-final-client.log
+- .gradle/migration/tips-condition-sword-only-outside.png
+- .gradle/migration/tips-condition-village-empty.png
+- .gradle/migration/tips-condition-combined-sword.png
+- .gradle/migration/tips-condition-combined-village.png
+
+Only test fixtures and this verification record changed. Production release hashes remain unchanged. The temporary validation JAR was removed from mods after the client exited.
+
+本次仅修改测试与验证记录，正式 JAR 哈希不变；客户端退出后已将临时验证 JAR 移出 mods。

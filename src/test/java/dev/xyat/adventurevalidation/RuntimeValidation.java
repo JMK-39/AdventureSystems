@@ -38,7 +38,7 @@ public final class RuntimeValidation {
                         LOG.info("ADVENTURE_PAUSE_MENU frames={} structure={} tip={}",pauseFrames,dev.xyat.adventuresystems.tips.client.TipCache.currentStructure,tip.getText().getString());
                     });
                     LOG.info("ADVENTURE_CLIENT_VALIDATION_{} checks={} failures={}",failures==0?"PASS":"FAIL",checks,failures);
-                    dev.xyat.kineticcore.api.runtime.KineticClientRuntime.execute(dev.xyat.kineticcore.api.runtime.KineticClientRuntime::stopClient);
+                    TipsConditionsValidation.start();
                     return;
                 }
                 if(++clientTicks<100)return;clientTested=true;
