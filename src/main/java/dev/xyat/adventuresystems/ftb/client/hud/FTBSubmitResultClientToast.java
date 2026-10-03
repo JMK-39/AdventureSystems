@@ -1,6 +1,6 @@
 package dev.xyat.adventuresystems.ftb.client.hud;
 
-import dev.xyat.kineticcore.api.text.KineticI18n;
+import dev.xyat.adventuresystems.text.AdventureText;
 import net.minecraft.network.chat.Component;
 
 public final class FTBSubmitResultClientToast {
@@ -14,13 +14,13 @@ public final class FTBSubmitResultClientToast {
 
         Component message;
         if (completed == 0 && submitted > 0L) {
-            message = KineticI18n.translatable("toast.adventuresystems.ftb.submit.partial_items", number(submitted));
+            message = AdventureText.translatable("toast.adventuresystems.ftb.submit.partial_items", number(submitted));
         } else if (completed == 0) {
-            message = KineticI18n.translatable("toast.adventuresystems.ftb.submit.none", number(requested));
+            message = AdventureText.translatable("toast.adventuresystems.ftb.submit.none", number(requested));
         } else if (completed < requested) {
-            message = KineticI18n.translatable("toast.adventuresystems.ftb.submit.partial", number(requested), number(completed));
+            message = AdventureText.translatable("toast.adventuresystems.ftb.submit.partial", number(requested), number(completed));
         } else {
-            message = KineticI18n.translatable("toast.adventuresystems.ftb.submit.success", number(completed));
+            message = AdventureText.translatable("toast.adventuresystems.ftb.submit.success", number(completed));
         }
 
         FTBToastUtil.showLong("adventuresystems.ftb.submit.result", message);

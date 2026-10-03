@@ -18,6 +18,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(value = SubmitTaskMessage.class, remap = false)
 public abstract class SubmitTaskMessageMixin {
+    //? if >=1.21 {
+    /*@Inject(method = "handle", at = @At("HEAD"), cancellable = true)
+    private static void adventuresystems_ftb$rewriteSubmitHandle(SubmitTaskMessage message, NetworkManager.PacketContext context, CallbackInfo ci) {
+        dev.xyat.adventuresystems.ftb.api.FTBTaskSubmitInterceptor.handle(message.taskId(), context);
+        ci.cancel();
+    }
+    *///?} else {
     @Shadow
     @Final
     private long taskId;
@@ -53,4 +60,5 @@ public abstract class SubmitTaskMessageMixin {
         sqf.withPlayerContext(player, () -> FTBTaskSubmitHelper.submit(player, data, itemTask, 1));
         ci.cancel();
     }
+    //?}
 }

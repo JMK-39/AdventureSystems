@@ -1,5 +1,9 @@
 package dev.xyat.adventuresystems.tips.client.gui.editor;
 
+//? if >=1.21 {
+/*import dev.xyat.adventuresystems.data.AdventureItemData;
+*///?}
+
 import dev.xyat.adventuresystems.tips.TipsNetwork;
 import dev.xyat.adventuresystems.tips.api.HelpTip;
 import dev.xyat.adventuresystems.tips.client.TipRenderer;
@@ -21,7 +25,7 @@ import dev.xyat.kineticcore.api.client.gui.widget.list.SelectionItem;
 import dev.xyat.kineticcore.api.config.client.KTConfigApi;
 import dev.xyat.kineticcore.api.registry.KineticRegistries;
 import dev.xyat.kineticcore.api.resource.KineticResourceIds;
-import dev.xyat.kineticcore.api.text.KineticI18n;
+import dev.xyat.adventuresystems.text.AdventureText;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
@@ -64,7 +68,7 @@ public class TipEditorScreen extends KineticPage {
             String languageCode,
             List<HelpTip.JsonModel.Entry> entries
     ) {
-        super(KineticI18n.translatable("gui.adventuresystems.tips.tips.editor.title"), PageLayout.NATIVE);
+        super(AdventureText.translatable("gui.adventuresystems.tips.tips.editor.title"), PageLayout.NATIVE);
         this.languageCode = languageCode == null ? "en_us" : languageCode;
         this.allEntries = entries == null ? new ArrayList<>() : new ArrayList<>(entries);
         this.displayEntries = new ArrayList<>(this.allEntries);
@@ -104,10 +108,10 @@ public class TipEditorScreen extends KineticPage {
 
         this.leftW = (int) (guiW * 0.30D);
         int maxLabelW = Math.max(
-                KineticText.width(KineticI18n.translatable("gui.adventuresystems.tips.tips.label.content")),
+                KineticText.width(AdventureText.translatable("gui.adventuresystems.tips.tips.label.content")),
                 Math.max(
-                        KineticText.width(KineticI18n.translatable("gui.adventuresystems.tips.tips.label.setting")),
-                        KineticText.width(KineticI18n.translatable("gui.adventuresystems.tips.tips.label.condition"))
+                        KineticText.width(AdventureText.translatable("gui.adventuresystems.tips.tips.label.setting")),
+                        KineticText.width(AdventureText.translatable("gui.adventuresystems.tips.tips.label.condition"))
                 )
         ) + 8;
 
@@ -117,7 +121,7 @@ public class TipEditorScreen extends KineticPage {
         updateSearch(searchText);
         ui.textField(x0 + 10, y0 + 10, leftW - 15)
                 .label(Component.empty())
-                .placeholder(KineticI18n.translatable("gui.adventuresystems.tips.tips.search"))
+                .placeholder(AdventureText.translatable("gui.adventuresystems.tips.tips.search"))
                 .value(searchText)
                 .onChange(value -> {
                     searchText = value;
@@ -145,14 +149,14 @@ public class TipEditorScreen extends KineticPage {
                     .onClick(() -> insertCode(code)).build();
         }
         ui.button(editX + paletteWidth + 8, curY + (swatchRows - 1) * (swatchSize + swatchGap), 24)
-                .compact().text(KineticI18n.translatable("gui.adventuresystems.tips.tips.reset_short"))
-                .tooltip(KineticI18n.translatable("gui.adventuresystems.tips.tips.reset_tooltip"))
+                .compact().text(AdventureText.translatable("gui.adventuresystems.tips.tips.reset_short"))
+                .tooltip(AdventureText.translatable("gui.adventuresystems.tips.tips.reset_tooltip"))
                 .onClick(() -> insertCode("§r")).build();
 
         curY += swatchRows * swatchSize + (swatchRows - 1) * swatchGap + 12;
         this.textInput = ui.textField(editX, curY, editW)
                 .label(Component.empty())
-                .placeholder(KineticI18n.translatable("gui.adventuresystems.tips.tips.content_hint_amp"))
+                .placeholder(AdventureText.translatable("gui.adventuresystems.tips.tips.content_hint_amp"))
                 .maxLength(512)
                 .value(selectedEntry != null && selectedEntry.text != null ? selectedEntry.text : "")
                 .onChange(value -> {
@@ -187,33 +191,33 @@ public class TipEditorScreen extends KineticPage {
 
         curY += vGap;
         int thirdW = (editW - 20) / 3;
-        ui.button(editX, curY, thirdW).text(KineticI18n.translatable("gui.adventuresystems.tips.tips.add_item"))
+        ui.button(editX, curY, thirdW).text(AdventureText.translatable("gui.adventuresystems.tips.tips.add_item"))
                 .onClick(() -> openItemSelector(false)).build();
-        ui.button(editX + thirdW + 10, curY, thirdW).text(KineticI18n.translatable("gui.adventuresystems.tips.tips.add_curios"))
+        ui.button(editX + thirdW + 10, curY, thirdW).text(AdventureText.translatable("gui.adventuresystems.tips.tips.add_curios"))
                 .onClick(() -> openItemSelector(true)).build();
         ui.button(editX + (thirdW + 10) * 2, curY, thirdW)
-                .text(KineticI18n.translatable("gui.adventuresystems.tips.tips.set_structure"))
+                .text(AdventureText.translatable("gui.adventuresystems.tips.tips.set_structure"))
                 .onClick(() -> openRegistrySelector("structures")).build();
 
         curY += KineticPage.CONTROL_HEIGHT + 5;
-        ui.button(editX, curY, thirdW).text(KineticI18n.translatable("gui.adventuresystems.tips.tips.set_biome"))
+        ui.button(editX, curY, thirdW).text(AdventureText.translatable("gui.adventuresystems.tips.tips.set_biome"))
                 .onClick(() -> openRegistrySelector("biomes")).build();
         ui.button(editX + thirdW + 10, curY, thirdW)
-                .text(KineticI18n.translatable("gui.adventuresystems.tips.tips.set_advancement"))
+                .text(AdventureText.translatable("gui.adventuresystems.tips.tips.set_advancement"))
                 .onClick(() -> openRegistrySelector("advancements")).build();
         ui.button(editX + (thirdW + 10) * 2, curY, thirdW)
-                .text(KineticI18n.translatable("gui.adventuresystems.tips.tips.set_dimension"))
+                .text(AdventureText.translatable("gui.adventuresystems.tips.tips.set_dimension"))
                 .onClick(() -> openRegistrySelector("dimensions")).build();
 
         this.dynamicCondY = curY + KineticPage.CONTROL_HEIGHT + 15;
         ui.button(x0 + 10, y0 + guiH - 30, 75)
-                .text(KineticI18n.translatable("gui.adventuresystems.tips.tips.new"))
+                .text(AdventureText.translatable("gui.adventuresystems.tips.tips.new"))
                 .onClick(this::addNew).build();
         ui.button(x0 + guiW - 170, y0 + guiH - 30, 75)
-                .text(KineticI18n.translatable("gui.adventuresystems.tips.tips.save"))
+                .text(AdventureText.translatable("gui.adventuresystems.tips.tips.save"))
                 .onClick(this::save).build();
         ui.button(x0 + guiW - 85, y0 + guiH - 30, 75)
-                .text(KineticI18n.translatable("gui.adventuresystems.tips.tips.back"))
+                .text(AdventureText.translatable("gui.adventuresystems.tips.tips.back"))
                 .onClick(this::close).build();
         updateUI();
     }
@@ -247,26 +251,26 @@ public class TipEditorScreen extends KineticPage {
             int fontHeight = KineticText.lineHeight();
             drawRightAligned(
                     graphics,
-                    KineticI18n.translatable("gui.adventuresystems.tips.tips.label.content"),
+                    AdventureText.translatable("gui.adventuresystems.tips.tips.label.content"),
                     labelX,
                     textInput.controlY() + (textInput.controlHeight() - fontHeight) / 2
             );
             drawRightAligned(
                     graphics,
-                    KineticI18n.translatable("gui.adventuresystems.tips.tips.label.setting"),
+                    AdventureText.translatable("gui.adventuresystems.tips.tips.label.setting"),
                     labelX,
                     stageBtn.controlY() + (stageBtn.controlHeight() - fontHeight) / 2
             );
             drawRightAligned(
                     graphics,
-                    KineticI18n.translatable("gui.adventuresystems.tips.tips.label.condition"),
+                    AdventureText.translatable("gui.adventuresystems.tips.tips.label.condition"),
                     labelX,
                     dynamicCondY - KineticPage.CONTROL_HEIGHT - 15
             );
         }
 
         graphics.text(
-                KineticI18n.translatable("gui.adventuresystems.tips.tips.delete_hint"),
+                AdventureText.translatable("gui.adventuresystems.tips.tips.delete_hint"),
                 editX,
                 dynamicCondY,
                 KineticTheme.current().text(),
@@ -389,7 +393,14 @@ public class TipEditorScreen extends KineticPage {
             if (selectedEntry.conditions == null) selectedEntry.conditions = new HelpTip.JsonModel.Conditions();
             HelpTip.JsonModel.ItemCheck check = new HelpTip.JsonModel.ItemCheck();
             check.id = itemId.toString();
+            //? if >=1.21 {
+            /*check.componentMode = "NONE";
+            String itemText = AdventureItemData.toItemText(stack);
+            int componentStart = itemText.indexOf('[');
+            check.components = componentStart < 0 ? null : itemText.substring(componentStart);
+            *///?} else {
             check.nbtMode = "NONE";
+            //?}
             if (curio) {
                 if (selectedEntry.conditions.curios == null) selectedEntry.conditions.curios = new ArrayList<>();
                 selectedEntry.conditions.curios.add(check);
@@ -419,19 +430,19 @@ public class TipEditorScreen extends KineticPage {
         HelpTip.JsonModel.Conditions conditions = selectedEntry.conditions;
         int currentY = y;
         if (hasText(conditions.structure)) {
-            drawConditionLine(graphics, mouseX, mouseY, x, currentY, KineticI18n.translatable("gui.adventuresystems.tips.tips.cond_prefix.structure").append(conditions.structure));
+            drawConditionLine(graphics, mouseX, mouseY, x, currentY, AdventureText.translatable("gui.adventuresystems.tips.tips.cond_prefix.structure").append(conditions.structure));
             currentY += 12;
         }
         if (hasText(conditions.biome)) {
-            drawConditionLine(graphics, mouseX, mouseY, x, currentY, KineticI18n.translatable("gui.adventuresystems.tips.tips.cond_prefix.biome").append(conditions.biome));
+            drawConditionLine(graphics, mouseX, mouseY, x, currentY, AdventureText.translatable("gui.adventuresystems.tips.tips.cond_prefix.biome").append(conditions.biome));
             currentY += 12;
         }
         if (hasText(conditions.dimension)) {
-            drawConditionLine(graphics, mouseX, mouseY, x, currentY, KineticI18n.translatable("gui.adventuresystems.tips.tips.cond_prefix.dimension").append(conditions.dimension));
+            drawConditionLine(graphics, mouseX, mouseY, x, currentY, AdventureText.translatable("gui.adventuresystems.tips.tips.cond_prefix.dimension").append(conditions.dimension));
             currentY += 12;
         }
         if (hasText(conditions.advancement)) {
-            drawConditionLine(graphics, mouseX, mouseY, x, currentY, KineticI18n.translatable("gui.adventuresystems.tips.tips.cond_prefix.advancement").append(conditions.advancement));
+            drawConditionLine(graphics, mouseX, mouseY, x, currentY, AdventureText.translatable("gui.adventuresystems.tips.tips.cond_prefix.advancement").append(conditions.advancement));
             currentY += 12;
         }
         if (conditions.items != null) {
@@ -444,7 +455,7 @@ public class TipEditorScreen extends KineticPage {
         }
         if (conditions.curios != null) {
             graphics.text(
-                    KineticI18n.translatable("gui.adventuresystems.tips.tips.condition.normal", KineticI18n.translatable("gui.adventuresystems.tips.tips.cond_prefix.curios")),
+                    AdventureText.translatable("gui.adventuresystems.tips.tips.condition.normal", AdventureText.translatable("gui.adventuresystems.tips.tips.cond_prefix.curios")),
                     x,
                     currentY,
                     KineticTheme.current().text(),
@@ -462,7 +473,7 @@ public class TipEditorScreen extends KineticPage {
         String key = isHover(mouseX, mouseY, x, y, 150, 10)
                 ? "gui.adventuresystems.tips.tips.condition.hover"
                 : "gui.adventuresystems.tips.tips.condition.normal";
-        graphics.text(KineticI18n.translatable(key, text), x, y, KineticTheme.current().text(), true);
+        graphics.text(AdventureText.translatable(key, text), x, y, KineticTheme.current().text(), true);
     }
 
     private void renderItemCheck(KineticGraphics graphics, int mouseX, int mouseY, int x, int y, HelpTip.JsonModel.ItemCheck check) {
@@ -470,12 +481,22 @@ public class TipEditorScreen extends KineticPage {
         if (id == null) return;
         var item = KineticRegistries.items().get(id);
         if (item == null) return;
+        //? if >=1.21 {
+        /*ItemStack stack = stackFor(check);
+        if (stack.isEmpty()) return;
+        *///?} else {
         ItemStack stack = new ItemStack(item);
+        //?}
         boolean hovered = isHover(mouseX, mouseY, x, y, 18, 18);
         KineticTheme.itemSlot(graphics, x, y, 18, 4, hovered);
         graphics.item(stack, x + 1, y + 1);
+        //? if >=1.21 {
+        /*if ("WEAK".equals(check.componentMode)) graphics.itemDecorations(stack, x + 1, y + 1, "W");
+        else if ("STRONG".equals(check.componentMode)) graphics.itemDecorations(stack, x + 1, y + 1, "S");
+        *///?} else {
         if ("WEAK".equals(check.nbtMode)) graphics.itemDecorations(stack, x + 1, y + 1, "W");
         else if ("STRONG".equals(check.nbtMode)) graphics.itemDecorations(stack, x + 1, y + 1, "S");
+        //?}
     }
 
     @Override
@@ -513,16 +534,30 @@ public class TipEditorScreen extends KineticPage {
 
     private ItemStack stackFor(HelpTip.JsonModel.ItemCheck check) {
         if (check == null || check.id == null) return ItemStack.EMPTY;
+        //? if >=1.21 {
+        /*try {
+            return AdventureItemData.parseItemText(check.id + (check.components == null ? "" : check.components));
+        } catch (RuntimeException exception) {
+            return ItemStack.EMPTY;
+        }
+        *///?} else {
         ResourceLocation id = KineticResourceIds.tryParse(check.id);
         if (id == null) return ItemStack.EMPTY;
         var item = KineticRegistries.items().get(id);
         return item == null ? ItemStack.EMPTY : new ItemStack(item);
+        //?}
     }
 
     private void cycleNbtMode(HelpTip.JsonModel.ItemCheck check) {
+        //? if >=1.21 {
+        /*if ("NONE".equals(check.componentMode) || check.componentMode == null) check.componentMode = "WEAK";
+        else if ("WEAK".equals(check.componentMode)) check.componentMode = "STRONG";
+        else check.componentMode = "NONE";
+        *///?} else {
         if ("NONE".equals(check.nbtMode) || check.nbtMode == null) check.nbtMode = "WEAK";
         else if ("WEAK".equals(check.nbtMode)) check.nbtMode = "STRONG";
         else check.nbtMode = "NONE";
+        //?}
     }
 
     private boolean hasText(String value) {
@@ -554,14 +589,14 @@ public class TipEditorScreen extends KineticPage {
     }
 
     private Component stageText() {
-        return KineticI18n.translatable(
+        return AdventureText.translatable(
                 "gui.adventuresystems.tips.tips.stage",
                 selectedEntry != null ? selectedEntry.stage : "any"
         );
     }
 
     private Component durationText() {
-        return KineticI18n.translatable(
+        return AdventureText.translatable(
                 "gui.adventuresystems.tips.tips.duration",
                 selectedEntry != null ? String.format(Locale.ROOT, "%.1f", selectedEntry.time / 1000.0D) : "3.0"
         );
@@ -613,9 +648,9 @@ public class TipEditorScreen extends KineticPage {
 
     private Component tipLabel(HelpTip.JsonModel.Entry entry) {
         if (entry == null || entry.text == null || entry.text.isEmpty()) {
-            return KineticI18n.translatable("gui.adventuresystems.tips.tips.unnamed");
+            return AdventureText.translatable("gui.adventuresystems.tips.tips.unnamed");
         }
-        return Component.literal(TipRenderer.COLOR_PATTERN.matcher(entry.text).replaceAll(""));
+        return AdventureText.literal(entry.text);
     }
 
     private void save() {
@@ -630,7 +665,7 @@ public class TipEditorScreen extends KineticPage {
             KTConfigApi.notifySaved(TipsConfigGui.EDITOR_PAGE_ID);
             commitDraft();
         } else {
-            KineticOverlays.toast(KineticI18n.translatable("msg.adventuresystems.tips.tips.save_failed"));
+            KineticOverlays.toast(AdventureText.translatable("msg.adventuresystems.tips.tips.save_failed"));
         }
     }
 

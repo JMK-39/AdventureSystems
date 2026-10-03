@@ -1,3 +1,76 @@
+//? if >=1.21 {
+/*package dev.xyat.adventuresystems.curios.wallet.data;
+import dev.xyat.adventuresystems.data.AdventureItemData;
+import net.minecraft.world.item.ItemStack;
+
+/^** Native component expressions followed by the shop count suffix. *^/
+public final class StackCodec {
+    private StackCodec() {}
+    public static ItemStack fromConfigString(String text) {
+        if (text == null || text.isBlank()) return ItemStack.EMPTY;
+        String raw = text.trim();
+        int count = 1;
+        int suffix = raw.lastIndexOf('*');
+        // Stars inside component strings are not count delimiters.
+        if (suffix > raw.lastIndexOf(']') && suffix > 0) {
+            String number = raw.substring(suffix + 1).trim();
+            if (number.matches("[+-]?[0-9]+")) {
+                try { count = Integer.parseInt(number); } catch (NumberFormatException invalid) { return ItemStack.EMPTY; }
+                raw = raw.substring(0, suffix).trim();
+            }
+        }
+        try {
+            ItemStack stack = AdventureItemData.parseItemText(raw);
+            if (!stack.isEmpty()) stack.setCount(safeCount(count, stack.getMaxStackSize()));
+            return stack;
+        } catch (RuntimeException invalid) { return ItemStack.EMPTY; }
+    }
+    public static ItemStack fromConfigString(String text, int count) {
+        ItemStack stack = fromConfigString(text);
+        if (!stack.isEmpty()) stack.setCount(safeCount(count, stack.getMaxStackSize()));
+        return stack;
+    }
+    public static String toConfigString(ItemStack stack, int count) {
+        if (stack == null || stack.isEmpty()) return "";
+        return AdventureItemData.toItemText(stack) + "*" + safeCount(count, stack.getMaxStackSize());
+    }
+    public static String withCount(String text, int count) { return toConfigString(fromConfigString(text), count); }
+    /^** Split shop grammar only outside quoted strings and component containers. *^/
+    public static String[] splitTopLevel(String text, char delimiter) {
+        java.util.List<String> parts = new java.util.ArrayList<>();
+        int start = 0;
+        for (int index : delimiterIndices(text, delimiter)) {
+            parts.add(text.substring(start, index));
+            start = index + 1;
+        }
+        parts.add(text.substring(start));
+        return parts.toArray(String[]::new);
+    }
+    public static int topLevelIndex(String text, char delimiter) {
+        var indices = delimiterIndices(text, delimiter);
+        return indices.isEmpty() ? -1 : indices.get(0);
+    }
+    private static java.util.List<Integer> delimiterIndices(String text, char delimiter) {
+        java.util.List<Integer> indices = new java.util.ArrayList<>();
+        int depth = 0;
+        char quote = 0;
+        boolean escaped = false;
+        for (int i = 0; i < text.length(); i++) {
+            char current = text.charAt(i);
+            if (quote != 0) {
+                if (escaped) escaped = false;
+                else if (current == '\\') escaped = true;
+                else if (current == quote) quote = 0;
+            } else if (depth > 0 && (current == '\'' || current == '"')) quote = current;
+            else if (current == '[' || current == '{') depth++;
+            else if (current == ']' || current == '}') depth--;
+            else if (depth == 0 && current == delimiter) indices.add(i);
+        }
+        return indices;
+    }
+    private static int safeCount(int count, int maxStackSize) { return Math.max(1, Math.min(count, Math.max(1, maxStackSize))); }
+}
+*///?} else {
 package dev.xyat.adventuresystems.curios.wallet.data;
 
 import dev.xyat.kineticcore.api.registry.KineticRegistries;
@@ -139,3 +212,4 @@ public final class StackCodec {
 
 }
 
+//?}

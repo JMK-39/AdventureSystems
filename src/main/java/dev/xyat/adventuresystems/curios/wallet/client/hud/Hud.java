@@ -1,6 +1,6 @@
 package dev.xyat.adventuresystems.curios.wallet.client.hud;
 
-import dev.xyat.kineticcore.api.text.KineticI18n;
+import dev.xyat.adventuresystems.text.AdventureText;
 import dev.xyat.adventuresystems.curios.config.CuriosConfig;
 import dev.xyat.adventuresystems.curios.wallet.client.Client;
 import dev.xyat.adventuresystems.curios.wallet.data.CurrencyType;
@@ -93,7 +93,7 @@ public final class Hud {
 
     private static void renderCell(KineticGraphics graphics, int x, int y, CurrencyType currency, long amount) {
         graphics.item(stack(currency.itemId()), x, y);
-        Component text = KineticI18n.translatable("gui.adventuresystems.curios.wallet.hud_amount", compact(amount));
+        Component text = AdventureText.translatable("gui.adventuresystems.curios.wallet.hud_amount", compact(amount));
         graphics.text(text, x + 18, y + 4, KineticTheme.current().text(), true);
     }
 

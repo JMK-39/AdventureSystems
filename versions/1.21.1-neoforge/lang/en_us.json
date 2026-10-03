@@ -1,0 +1,8 @@
+{
+  "gui.adventuresystems.tips.tips.nbt_hint": "Components Data (Optional)",
+  "gui.adventuresystems.tips.tips.nbt_mode.none": "Components: Ignore",
+  "gui.adventuresystems.tips.tips.nbt_mode.strong": "Components: Strong Match (Equal)",
+  "gui.adventuresystems.tips.tips.nbt_mode.weak": "Components: Weak Match (Contains)",
+  "cfg.adventuresystems.tips.tips.editor.tooltip": "§aEdit tip text, stage, duration, biome/structure/dimension/advancement conditions, and item/Curios Components conditions. §6Opening the editor on a multiplayer server requires permission level 2.",
+  "msg.adventuresystems.tips.tips.save_failed": "§cTip configuration was not saved. Check text, duration, condition IDs, item/Components data, or disk access."
+}

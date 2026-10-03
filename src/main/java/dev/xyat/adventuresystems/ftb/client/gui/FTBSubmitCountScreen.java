@@ -12,7 +12,7 @@ import dev.xyat.kineticcore.api.client.gui.ui.KineticUi;
 import dev.xyat.kineticcore.api.client.gui.ui.NumberType;
 import dev.xyat.kineticcore.api.client.gui.widget.KineticNumberField;
 import dev.xyat.kineticcore.api.runtime.KineticClientRuntime;
-import dev.xyat.kineticcore.api.text.KineticI18n;
+import dev.xyat.adventuresystems.text.AdventureText;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
@@ -40,7 +40,7 @@ public class FTBSubmitCountScreen extends KineticPage {
     private int cachedTotalEstimatedTimes;
 
     public FTBSubmitCountScreen(ItemTask task) {
-        super(KineticI18n.translatable("screen.adventuresystems.ftb.submit"));
+        super(AdventureText.translatable("screen.adventuresystems.ftb.submit"));
         this.task = task;
         useCanvas(460, 270, 6);
         setPausesGame(false);
@@ -51,7 +51,7 @@ public class FTBSubmitCountScreen extends KineticPage {
         left = (width() - PANEL_W) / 2;
         top = (height() - PANEL_H) / 2;
         countBox = ui.numberField(left + MARGIN_X, top + 52, PANEL_W - MARGIN_X * 2, NumberType.INT)
-                .label(KineticI18n.translatable("placeholder.adventuresystems.ftb.submit.count"))
+                .label(AdventureText.translatable("placeholder.adventuresystems.ftb.submit.count"))
                 .allowNegative(false)
                 .range(1, 1_000_000)
                 .onChange(value -> countValue = value)
@@ -59,10 +59,10 @@ public class FTBSubmitCountScreen extends KineticPage {
         countBox.setTextValue(countValue);
         int buttonY = top + PANEL_H - 38;
         ui.button(left + MARGIN_X, buttonY, BUTTON_W)
-                .text(KineticI18n.translatable("button.adventuresystems.ftb.submit.confirm"))
+                .text(AdventureText.translatable("button.adventuresystems.ftb.submit.confirm"))
                 .onClick(this::submit).build();
         ui.button(left + PANEL_W - MARGIN_X - BUTTON_W, buttonY, BUTTON_W)
-                .text(KineticI18n.translatable("gui.cancel"))
+                .text(AdventureText.translatable("gui.cancel"))
                 .onClick(this::close).build();
         refreshStats(true);
         focus(countBox);
@@ -148,7 +148,7 @@ public class FTBSubmitCountScreen extends KineticPage {
         KineticTheme.canvasBackground(graphics, width(), height());
         KineticTheme.panel(graphics, left, top, PANEL_W, PANEL_H);
         graphics.centeredText(title(), left + PANEL_W / 2, top + 14, KineticTheme.current().text(), true);
-        graphics.text(KineticI18n.translatable("label.adventuresystems.ftb.submit.desc"), left + MARGIN_X, top + 34, KineticTheme.current().mutedText(), false);
+        graphics.text(AdventureText.translatable("label.adventuresystems.ftb.submit.desc"), left + MARGIN_X, top + 34, KineticTheme.current().mutedText(), false);
     }
 
     @Override
@@ -156,18 +156,18 @@ public class FTBSubmitCountScreen extends KineticPage {
         int lineX = left + MARGIN_X;
         int y = top + 86;
         int gap = 18;
-        drawLine(graphics, KineticI18n.translatable("label.adventuresystems.ftb.submit.exchanges", number(cachedCount)), lineX, y);
+        drawLine(graphics, AdventureText.translatable("label.adventuresystems.ftb.submit.exchanges", number(cachedCount)), lineX, y);
         y += gap;
-        drawLine(graphics, KineticI18n.translatable("label.adventuresystems.ftb.submit.required", number(cachedRequiredItems)), lineX, y);
+        drawLine(graphics, AdventureText.translatable("label.adventuresystems.ftb.submit.required", number(cachedRequiredItems)), lineX, y);
         y += gap;
-        drawLine(graphics, KineticI18n.translatable("label.adventuresystems.ftb.submit.inventory", number(cachedInventoryItems)), lineX, y);
+        drawLine(graphics, AdventureText.translatable("label.adventuresystems.ftb.submit.inventory", number(cachedInventoryItems)), lineX, y);
         y += gap;
-        drawLine(graphics, KineticI18n.translatable("label.adventuresystems.ftb.submit.inventory.times", number(cachedInventoryEstimatedTimes)), lineX, y);
+        drawLine(graphics, AdventureText.translatable("label.adventuresystems.ftb.submit.inventory.times", number(cachedInventoryEstimatedTimes)), lineX, y);
         y += gap;
         if (cachedVirtualSupported) {
-            drawLine(graphics, KineticI18n.translatable("label.adventuresystems.ftb.submit.virtual", number(cachedVirtualItems)), lineX, y);
+            drawLine(graphics, AdventureText.translatable("label.adventuresystems.ftb.submit.virtual", number(cachedVirtualItems)), lineX, y);
             y += gap;
-            drawLine(graphics, KineticI18n.translatable("label.adventuresystems.ftb.submit.total", number(cachedTotalEstimatedTimes)), lineX, y);
+            drawLine(graphics, AdventureText.translatable("label.adventuresystems.ftb.submit.total", number(cachedTotalEstimatedTimes)), lineX, y);
         }
     }
 

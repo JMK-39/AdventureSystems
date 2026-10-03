@@ -177,6 +177,12 @@ public final class QuestMatchCacheFTB {
     }
 
     private static boolean matches(CachedItemTask cachedTask, ItemStack stack, String targetItemId) {
+        //? if >=1.21 {
+        /*if (BindingStoreFTB.shouldForceFuzzyNbt(cachedTask.filterStack(), stack)) {
+            return BindingStoreFTB.matchesForcedFuzzyNbt(cachedTask.filterStack(), stack);
+        }
+        return cachedTask.task().test(stack);
+        *///?} else {
         if (cachedTask.isFilter()) {
             return cachedTask.task().test(stack);
         }
@@ -198,8 +204,20 @@ public final class QuestMatchCacheFTB {
         }
 
         return true;
+        //?}
     }
 
+    //? if >=1.21 {
+    /*private static boolean readMatchNbt(ItemTask itemTask) {
+        // FTB's native matcher also consults components for filters and special items.
+        // Include the full patch in cache keys even when the task uses NONE matching.
+        return true;
+    }
+
+    private static boolean hasRelevantNbt(ItemStack stack, String itemId) {
+        return stack != null && !stack.isEmpty() && !stack.getComponentsPatch().isEmpty();
+    }
+    *///?} else {
     private static boolean readMatchNbt(ItemTask itemTask) {
         boolean matchNbt = false;
         try {
@@ -276,6 +294,7 @@ public final class QuestMatchCacheFTB {
 
         return BindingStoreFTB.containsFuzzy(expTag, actTag);
     }
+    //?}
 
     private static String runtimeKey(ItemStack stack, String itemId) {
         List<CachedItemTask> idTasks = TASKS_BY_ITEM.get(itemId);

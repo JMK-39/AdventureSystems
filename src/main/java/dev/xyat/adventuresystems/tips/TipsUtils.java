@@ -8,8 +8,12 @@ import dev.xyat.kineticcore.api.runtime.KineticPlatform;
 import dev.xyat.kineticcore.api.text.KineticI18n;
 import net.minecraft.Util;
 import net.minecraft.core.Registry;
+//? if >=1.21 {
+/*import java.util.Objects;
+*///?} else {
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtUtils;
+//?}
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
@@ -30,6 +34,22 @@ import java.util.stream.Collectors;
 public class TipsUtils {
     private static final Map<String, String> MOD_NAME_CACHE = new HashMap<>();
 
+    //? if >=1.21 {
+    /*public static boolean matchNbt(HelpTip.ItemMatcher req, ItemStack stack) {
+        if (req.mode() == HelpTip.ComponentMode.NONE) return true;
+        net.minecraft.core.component.DataComponentPatch components;
+        try { components=req.resolvedComponents(); } catch(RuntimeException unavailable) { return false; }
+        if (components == null) return true;
+        if (req.mode() == HelpTip.ComponentMode.STRONG) {
+            ItemStack expected = new ItemStack(stack.getItem().builtInRegistryHolder(), 1, components);
+            return expected.getComponentsPatch().equals(stack.getComponentsPatch());
+        }
+        for (var entry : components.entrySet()) {
+            if (!Objects.equals(entry.getValue().orElse(null), stack.get(entry.getKey()))) return false;
+        }
+        return true;
+    }
+    *///?} else {
     public static boolean matchNbt(HelpTip.ItemMatcher req, ItemStack stack) {
         if (req.mode() == HelpTip.NbtMode.NONE) return true;
         if (req.tag() == null) return true;
@@ -42,11 +62,16 @@ public class TipsUtils {
         }
         return NbtUtils.compareNbt(req.tag(), stackTag, true);
     }
+    //?}
 
     public static boolean hasAllCurios(Player player, List<HelpTip.ItemMatcher> matchers) {
         if (matchers == null || matchers.isEmpty()) return false;
 
+        //? if >=1.21 {
+        /*return CuriosApi.getCuriosInventory(player).map(inventory -> inventory.getEquippedCurios()).map(handler -> {
+        *///?} else {
         return CuriosApi.getCuriosHelper().getEquippedCurios(player).map(handler -> {
+        //?}
             for (HelpTip.ItemMatcher matcher : matchers) {
                 boolean found = false;
                 for (int i = 0; i < handler.getSlots(); i++) {

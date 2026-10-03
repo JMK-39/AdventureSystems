@@ -14,7 +14,7 @@ import dev.xyat.adventuresystems.ftb.util.ResolverFTB;
 import dev.xyat.kineticcore.api.client.gui.KineticGui;
 import dev.xyat.kineticcore.api.client.tooltip.KineticItemTooltips;
 import dev.xyat.kineticcore.api.runtime.KineticClientRuntime;
-import dev.xyat.kineticcore.api.text.KineticI18n;
+import dev.xyat.adventuresystems.text.AdventureText;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
@@ -47,12 +47,12 @@ public final class ClientEventsFTB {
         if (count == 0) return;
 
         Component singleKeyName = KeyMappingsFTB.OPEN_QUEST.translatedKeyMessage().copy();
-        lines.add(KineticI18n.translatable("tip.adventuresystems.ftb.open", singleKeyName));
+        lines.add(AdventureText.translatable("tip.adventuresystems.ftb.open", singleKeyName));
 
         if (count > 1) {
             Component multiKeyName = KeyMappingsFTB.OPEN_QUEST_MULTI.translatedKeyMessage().copy();
             Component countText = Component.literal(String.valueOf(count));
-            lines.add(KineticI18n.translatable(
+            lines.add(AdventureText.translatable(
                     "tip.adventuresystems.ftb.open.list",
                     multiKeyName,
                     countText
@@ -75,7 +75,7 @@ public final class ClientEventsFTB {
         if (refs.isEmpty()) {
             FTBToastUtil.showQuick(
                     "adventuresystems.ftb.no.quest",
-                    KineticI18n.translatable("msg.adventuresystems.ftb.no.quest")
+                    AdventureText.translatable("msg.adventuresystems.ftb.no.quest")
             );
             return true;
         }

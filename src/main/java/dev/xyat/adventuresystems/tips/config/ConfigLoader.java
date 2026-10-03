@@ -6,9 +6,17 @@ import dev.xyat.adventuresystems.tips.TipsModule;
 import dev.xyat.adventuresystems.tips.api.HelpTip;
 import dev.xyat.kineticcore.api.resource.KineticResourceIds;
 import dev.xyat.kineticcore.api.runtime.KineticPaths;
+//? if >=1.21 {
+/*import dev.xyat.adventuresystems.data.AdventureItemData;
+import com.mojang.brigadier.StringReader;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import net.minecraft.commands.arguments.item.ItemParser;
+import net.minecraft.core.component.DataComponentPatch;
+*///?} else {
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.TagParser;
-import net.minecraft.network.chat.Component;
+//?}
+import dev.xyat.adventuresystems.text.AdventureText;
 import net.minecraft.resources.ResourceLocation;
 
 import java.io.IOException;
@@ -102,6 +110,21 @@ public class ConfigLoader {
             if (check == null || check.id == null) return true;
             ResourceLocation id = KineticResourceIds.tryParse(check.id.trim());
             if (id == null) return true;
+            //? if >=1.21 {
+            /*if (check.hasLegacyItemData()) return true;
+            String mode = check.componentMode == null ? "NONE" : check.componentMode.toUpperCase(Locale.ROOT);
+            if (!("NONE".equals(mode) || "WEAK".equals(mode) || "STRONG".equals(mode))) return true;
+            if (check.components != null && check.components.length() > 32767) return true;
+            if (check.components != null && !check.components.isBlank()) {
+                try {
+                    String text=check.components.trim();
+                    if (!text.startsWith("[") || !text.endsWith("]")) return true;
+                    if (AdventureItemData.hasWorldRegistries()) parseComponents(check);
+                } catch (RuntimeException exception) {
+                    return true;
+                }
+            }
+            *///?} else {
             String mode = check.nbtMode == null ? "NONE" : check.nbtMode.toUpperCase(Locale.ROOT);
             if (!("NONE".equals(mode) || "WEAK".equals(mode) || "STRONG".equals(mode))) return true;
             if (check.nbt != null && check.nbt.length() > 32767) return true;
@@ -112,6 +135,7 @@ public class ConfigLoader {
                     return true;
                 }
             }
+            //?}
         }
         return false;
     }
@@ -126,7 +150,7 @@ public class ConfigLoader {
         for (HelpTip.JsonModel.Entry entry : entries) {
             if (entry == null || entry.text == null || entry.text.isEmpty()) continue;
 
-            HelpTip tip = new HelpTip(Component.literal(entry.text), entry.time);
+            HelpTip tip = new HelpTip(AdventureText.literal(entry.text), entry.time);
             if ("loading".equalsIgnoreCase(entry.stage)) tip.stage = 1;
             else if ("game".equalsIgnoreCase(entry.stage)) tip.stage = 2;
             else tip.stage = 0;
@@ -144,6 +168,42 @@ public class ConfigLoader {
         return result;
     }
 
+    //? if >=1.21 {
+    /*private static DataComponentPatch parseComponents(HelpTip.JsonModel.ItemCheck check) {
+        if (check.components == null || check.components.isBlank()) return DataComponentPatch.EMPTY;
+        String text = check.components.trim();
+        if (!text.startsWith("[") || !text.endsWith("]")) {
+            throw new IllegalArgumentException("Expected native item component syntax [component=value]");
+        }
+        try {
+            StringReader reader = new StringReader(check.id + text);
+            DataComponentPatch patch = new ItemParser(AdventureItemData.registryAccess()).parse(reader).components();
+            if (reader.canRead()) throw new IllegalArgumentException("Unexpected text after item components");
+            // Keep explicit default-valued predicates (for example damage=0) instead of normalizing through a stack.
+            return patch;
+        } catch (CommandSyntaxException exception) {
+            throw new IllegalArgumentException(exception.getMessage(), exception);
+        }
+    }
+
+    private static List<HelpTip.ItemMatcher> parseItems(List<HelpTip.JsonModel.ItemCheck> checks) {
+        List<HelpTip.ItemMatcher> list = new ArrayList<>();
+        if (checks == null) return list;
+        for (HelpTip.JsonModel.ItemCheck check : checks) {
+            if (check == null || check.id == null || check.id.isEmpty()) continue;
+            try {
+                HelpTip.ComponentMode mode = check.componentMode == null ? HelpTip.ComponentMode.NONE
+                        : HelpTip.ComponentMode.valueOf(check.componentMode.toUpperCase(Locale.ROOT));
+                if (!AdventureItemData.hasWorldRegistries() && check.components != null && !check.components.isBlank()) {
+                    list.add(new HelpTip.ItemMatcher(check.id, null, mode, check.components.trim()));
+                } else list.add(new HelpTip.ItemMatcher(check.id, parseComponents(check), mode));
+            } catch (RuntimeException exception) {
+                TipsModule.LOGGER.warn("TipsConfig: Invalid native item components for {}", check.id, exception);
+            }
+        }
+        return list;
+    }
+    *///?} else {
     private static List<HelpTip.ItemMatcher> parseItems(List<HelpTip.JsonModel.ItemCheck> checks) {
         List<HelpTip.ItemMatcher> list = new ArrayList<>();
         if (checks == null) return list;
@@ -162,6 +222,7 @@ public class ConfigLoader {
         }
         return list;
     }
+    //?}
 
     public static String normalizeLanguageCode(String languageCode) {
         String value = languageCode == null ? "" : languageCode.trim().toLowerCase(Locale.ROOT);
@@ -194,6 +255,61 @@ public class ConfigLoader {
         }
     }
 
+    //? if >=1.21 {
+    /*private static final String DEFAULT_JSON_CN = """
+        {
+          "tips":[
+            {
+              "stage": "loading",
+              "text": "§e[阶段演示] §f这是一条仅在 §b游戏加载阶段 §f显示的提示。适合放背景故事或性能说明。",
+              "time": 4000
+            },
+            {
+              "stage": "game",
+              "text": "§a§l[群系演示] §f检测到你位于下界荒地！猪灵通常在附近出没，建议穿一件金装。",
+              "conditions": {
+                "biome": "minecraft:nether_wastes"
+              }
+            },
+            {
+              "stage": "game",
+              "text": "§b§l[结构演示] §f你发现了一座村庄。记得寻找铁匠铺，那里通常有不错的补给。",
+              "conditions": {
+                "structure": "minecraft:village_plains"
+              }
+            },
+            {
+              "stage": "game",
+              "text": "§d§l[物品演示] §f你拿到了鞘翅！配合烟花火箭可以实现跨维度长距离飞行。",
+              "conditions": {
+                "items":[ { "id": "minecraft:elytra" } ]
+              }
+            },
+            {
+              "stage": "game",
+              "text": "§c§l[组件演示] §f你正拿着一把 §6强力武器§f。小心操作，别掉进岩浆了！",
+              "conditions": {
+                "items":[ { "id": "minecraft:netherite_sword", "components": "[damage=0]", "componentMode": "WEAK" } ]
+              }
+            },
+            {
+              "stage": "game",
+              "text": "§e§l[饰品演示] §f检测到你装备了精美戒指,至少能加幸运值~",
+              "conditions": {
+                "curios":[ { "id": "enigmaticlegacy:golden_ring" } ]
+              }
+            },
+            {
+              "stage": "game",
+              "text": "§6§l[成就演示] §f恭喜完成工业时代！准备好迈向自动化生产了吗？",
+              "conditions": {
+                "advancement": "minecraft:story/enter_the_end"
+              }
+            }
+          ]
+        }""";
+
+    *///?} else {
     private static final String DEFAULT_JSON_CN = """
         {
           "tips":[
@@ -246,6 +362,8 @@ public class ConfigLoader {
             }
           ]
         }""";
+
+    //?}
 
     private static final String DEFAULT_JSON_EN = """
         {

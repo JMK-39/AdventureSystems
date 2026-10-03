@@ -1,6 +1,10 @@
 package dev.xyat.adventuresystems.tips.api;
 
+//? if >=1.21 {
+/*import net.minecraft.core.component.DataComponentPatch;
+*///?} else {
 import net.minecraft.nbt.CompoundTag;
+//?}
 import net.minecraft.network.chat.Component;
 import java.util.Collections;
 import java.util.List;
@@ -30,12 +34,31 @@ public class HelpTip {
     public Component getText() { return textComponent; }
 
     // --- 运行时辅助类 ---
+    //? if >=1.21 {
+    /*public enum ComponentMode {
+        NONE, WEAK, STRONG
+    }
+
+    public record ItemMatcher(String itemId, DataComponentPatch components, ComponentMode mode, String deferredComponents) {
+        public ItemMatcher(String itemId, DataComponentPatch components, ComponentMode mode) { this(itemId,components,mode,null); }
+        public DataComponentPatch resolvedComponents() {
+            if (deferredComponents == null) return components;
+            try {
+                var reader=new com.mojang.brigadier.StringReader(itemId + deferredComponents);
+                var result=new net.minecraft.commands.arguments.item.ItemParser(dev.xyat.adventuresystems.data.AdventureItemData.registryAccess()).parse(reader);
+                if(reader.canRead())throw new IllegalArgumentException("Trailing item component text");
+                return result.components();
+            } catch(com.mojang.brigadier.exceptions.CommandSyntaxException error) { throw new IllegalArgumentException(error); }
+        }
+    }
+    *///?} else {
     public enum NbtMode {
         NONE, WEAK, STRONG
     }
 
     public record ItemMatcher(String itemId, CompoundTag tag, NbtMode mode) {
     }
+    //?}
 
     // --- JSON 解析模型 ---
     public static class JsonModel {
@@ -59,8 +82,20 @@ public class HelpTip {
 
         public static class ItemCheck {
             public String id;
+            //? if >=1.21 {
+            /*public String components;
+            public String componentMode = "NONE";
+            // Kept only so incompatible old JSON is rejected rather than silently losing its conditions.
+            private String nbt;
+            private String nbtMode;
+
+            public boolean hasLegacyItemData() {
+                return nbt != null || nbtMode != null;
+            }
+            *///?} else {
             public String nbt;
             public String nbtMode = "NONE";
+            //?}
         }
     }
 }

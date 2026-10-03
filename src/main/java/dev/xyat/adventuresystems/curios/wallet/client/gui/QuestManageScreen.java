@@ -6,7 +6,7 @@ import dev.xyat.kineticcore.api.client.gui.theme.KineticTheme;
 import dev.xyat.kineticcore.api.client.gui.ui.KineticUi;
 import dev.xyat.kineticcore.api.client.gui.widget.list.ActionItem;
 import dev.xyat.kineticcore.api.client.gui.widget.list.KineticActionList;
-import dev.xyat.kineticcore.api.text.KineticI18n;
+import dev.xyat.adventuresystems.text.AdventureText;
 import net.minecraft.network.chat.Component;
 
 import java.util.ArrayList;
@@ -20,7 +20,7 @@ final class QuestManageScreen extends KineticPage {
     private int scrollOffset;
 
     QuestManageScreen(ShopGuiSupport.EditorDraft draft) {
-        super(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_quest_manage_title"));
+        super(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_quest_manage_title"));
         this.draft = draft;
         useCanvas(480, 320, 6);
     }
@@ -29,12 +29,12 @@ final class QuestManageScreen extends KineticPage {
     protected void build(KineticUi ui) {
         if (list != null) scrollOffset = list.scrollOffset();
         ui.button(38, 274, 116)
-                .text(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_quest_manage_add"))
+                .text(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_quest_manage_add"))
                 .onClick(() -> openChild(new QuestPickerScreen(id -> {
                     if (id > 0 && !draft.questIds.contains(id)) draft.questIds.add(id);
                     refreshItems();
                 }))).build();
-        ui.button(362, 274, 80).text(KineticI18n.translatable("gui.done"))
+        ui.button(362, 274, 80).text(AdventureText.translatable("gui.done"))
                 .onClick(this::navigateBack).build();
         list = ui.actionList(32, 72, 416, 192, listItems())
                 .actionWidth(70).scrollOffset(scrollOffset)
@@ -46,14 +46,14 @@ final class QuestManageScreen extends KineticPage {
         for (long questId : draft.questIds) {
             ShopGuiSupport.QuestDisplay display = questDisplays.get(questId);
             String name = display == null ? String.valueOf(questId) : display.displayTitle();
-            String meta = display == null
-                    ? KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_quest_id_scaled", questId).getString()
-                    : display.displayMeta();
-            items.add(new ActionItem(Component.literal(name), Component.literal(meta),
-                    KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_quest_title_value", name),
+            Component meta = display == null
+                    ? AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_quest_id_scaled", questId)
+                    : AdventureText.literal(display.displayMeta());
+            items.add(new ActionItem(AdventureText.literal(name), meta,
+                    AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_quest_title_value", name),
                     true, false,
-                    KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_quest_manage_remove"),
-                    KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_quest_manage_remove_tip"),
+                    AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_quest_manage_remove"),
+                    AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_quest_manage_remove_tip"),
                     true, false));
         }
         return items;
@@ -74,10 +74,10 @@ final class QuestManageScreen extends KineticPage {
         KineticTheme.shadow(graphics, width(), height());
         KineticTheme.panel(graphics, 20, 12, 440, 296);
         graphics.centeredText(title(), 240, 20, KineticTheme.current().text(), false);
-        graphics.text(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_quest_manage_hint_top"),
+        graphics.text(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_quest_manage_hint_top"),
                 38, 43, KineticTheme.current().text(), true);
         if (draft.questIds.isEmpty()) {
-            graphics.centeredText(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_quest_manage_empty"),
+            graphics.centeredText(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_quest_manage_empty"),
                     240, 160, KineticTheme.current().text(), false);
         }
     }

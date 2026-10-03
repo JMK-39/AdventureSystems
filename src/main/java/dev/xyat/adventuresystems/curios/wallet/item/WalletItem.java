@@ -1,6 +1,6 @@
 package dev.xyat.adventuresystems.curios.wallet.item;
 
-import dev.xyat.kineticcore.api.text.KineticI18n;
+import dev.xyat.adventuresystems.text.AdventureText;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import dev.xyat.adventuresystems.curios.wallet.client.Client;
@@ -38,9 +38,19 @@ public class WalletItem extends Item implements ICurioItem {
 
     @Override
     public @NotNull Component getName(@NotNull ItemStack stack) {
-        return KineticI18n.translatable(ITEM_NAME_KEY);
+        return AdventureText.translatable(ITEM_NAME_KEY);
     }
 
+//? if >=1.21 {
+        /*    @Override
+    public @NotNull Multimap<net.minecraft.core.Holder<Attribute>, AttributeModifier> getAttributeModifiers(@NotNull SlotContext slotContext, @NotNull net.minecraft.resources.ResourceLocation id, @NotNull ItemStack stack) {
+        Multimap<net.minecraft.core.Holder<Attribute>, AttributeModifier> modifiers = LinkedHashMultimap.create();
+        if (CuriosConfig.enableCurrencyWallet && CuriosConfig.walletExtraBeltSlots > 0) {
+            CuriosApi.addSlotModifier(modifiers, "belt", id, CuriosConfig.walletExtraBeltSlots, AttributeModifier.Operation.ADD_VALUE);
+        }
+        return modifiers;
+    }
+        *///?} else {
     @Override
     public @NotNull Multimap<Attribute, AttributeModifier> getAttributeModifiers(@NotNull SlotContext slotContext, @NotNull UUID uuid, @NotNull ItemStack stack) {
         Multimap<Attribute, AttributeModifier> modifiers = LinkedHashMultimap.create();
@@ -50,6 +60,7 @@ public class WalletItem extends Item implements ICurioItem {
         return modifiers;
     }
 
+        //?}
     @Override
     public @NotNull InteractionResultHolder<ItemStack> use(@NotNull Level level, @NotNull Player player, @NotNull InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
@@ -68,11 +79,16 @@ public class WalletItem extends Item implements ICurioItem {
     }
 
     @Override
+//? if >=1.21 {
+        /*public void appendHoverText(@NotNull ItemStack stack, @NotNull Item.TooltipContext context, @NotNull List<Component> tooltip, @NotNull TooltipFlag flag) {
+        Level level = KineticPlatform.callOnClient(() -> dev.xyat.kineticcore.api.runtime.KineticClientRuntime::currentLevel, null);
+        *///?} else {
     public void appendHoverText(@NotNull ItemStack stack, @Nullable Level level, @NotNull List<Component> tooltip, @NotNull TooltipFlag flag) {
-        tooltip.add(KineticI18n.translatable("tip.adventuresystems.curios.wallet.title"));
-        tooltip.add(KineticI18n.translatable("tip.adventuresystems.curios.wallet.desc1", openKeyName(level)));
-        tooltip.add(KineticI18n.translatable("tip.adventuresystems.curios.wallet.desc2"));
-        tooltip.add(KineticI18n.translatable("tip.adventuresystems.curios.wallet.desc3", Long.toString(Math.round(CuriosConfig.walletMagnetRange))));
+        //?}
+        tooltip.add(AdventureText.translatable("tip.adventuresystems.curios.wallet.title"));
+        tooltip.add(AdventureText.translatable("tip.adventuresystems.curios.wallet.desc1", openKeyName(level)));
+        tooltip.add(AdventureText.translatable("tip.adventuresystems.curios.wallet.desc2"));
+        tooltip.add(AdventureText.translatable("tip.adventuresystems.curios.wallet.desc3", Long.toString(Math.round(CuriosConfig.walletMagnetRange))));
         appendClientAmounts(stack, level, tooltip);
     }
 

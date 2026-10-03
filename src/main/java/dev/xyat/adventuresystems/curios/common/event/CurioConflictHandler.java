@@ -1,7 +1,7 @@
 package dev.xyat.adventuresystems.curios.common.event;
 
 import dev.xyat.kineticcore.api.event.KineticExternalEvents;
-import dev.xyat.kineticcore.api.text.KineticI18n;
+import dev.xyat.adventuresystems.text.AdventureText;
 import dev.xyat.adventuresystems.curios.config.CuriosConfig;
 import dev.xyat.adventuresystems.curios.init.Items;
 import dev.xyat.kineticcore.api.client.gui.overlay.KineticOverlays;
@@ -44,10 +44,10 @@ public final class CurioConflictHandler {
                 if (conflictItem != null && conflictItem != net.minecraft.world.item.Items.AIR
                         && CuriosApi.getCuriosHelper().findFirstCurio(player, conflictItem).isPresent()) {
                     if (isClient) {
-                        KineticOverlays.toast(KineticI18n.translatable(
+                        KineticOverlays.toast(AdventureText.translatable(
                                 "msg.adventuresystems.curios.force_unequip",
-                                KineticI18n.translatable(targetItem.getDescriptionId()),
-                                KineticI18n.translatable(conflictItem.getDescriptionId())
+                                AdventureText.translatable(targetItem.getDescriptionId()),
+                                AdventureText.translatable(conflictItem.getDescriptionId())
                         ));
                     } else {
                         SlotContext context = slotResult.slotContext();

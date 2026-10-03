@@ -11,7 +11,7 @@ import dev.xyat.kineticcore.api.client.gui.ui.KineticUi;
 import dev.xyat.kineticcore.api.client.gui.widget.list.ItemActionItem;
 import dev.xyat.kineticcore.api.client.gui.widget.list.KineticItemActionList;
 import dev.xyat.kineticcore.api.client.search.KineticSearch;
-import dev.xyat.kineticcore.api.text.KineticI18n;
+import dev.xyat.adventuresystems.text.AdventureText;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 
@@ -35,7 +35,7 @@ public class ItemBlacklistScreenFTB extends KineticPage {
     private int listScroll;
 
     public ItemBlacklistScreenFTB() {
-        super(KineticI18n.translatable("screen.adventuresystems.ftb_item.blacklist"));
+        super(AdventureText.translatable("screen.adventuresystems.ftb_item.blacklist"));
         useCanvas(620, 360, 6);
         configureStandaloneDraft(BlacklistStoreFTB::getAll, BlacklistStoreFTB::replaceAll);
     }
@@ -46,16 +46,16 @@ public class ItemBlacklistScreenFTB extends KineticPage {
         listWidget = null;
         reloadEntries();
         ui.textField(LIST_X + 110, 54, 350)
-                .label(KineticI18n.translatable("gui.adventuresystems.ftb.search"))
-                .placeholder(KineticI18n.translatable("placeholder.adventuresystems.ftb_item.binding_search"))
+                .label(AdventureText.translatable("gui.adventuresystems.ftb.search"))
+                .placeholder(AdventureText.translatable("placeholder.adventuresystems.ftb_item.binding_search"))
                 .value(searchText)
                 .onChange(value -> {
                     searchText = value;
                     applySearch();
                 }).firstShownTextAsDefault().build();
-        ui.button(LIST_X, 54, 100).text(KineticI18n.translatable("button.adventuresystems.ftb_item.add_blacklist"))
+        ui.button(LIST_X, 54, 100).text(AdventureText.translatable("button.adventuresystems.ftb_item.add_blacklist"))
                 .onClick(this::openSelector).build();
-        ui.button(LIST_X + 470, 54, 100).text(KineticI18n.translatable("button.adventuresystems.ftb.save"))
+        ui.button(LIST_X + 470, 54, 100).text(AdventureText.translatable("button.adventuresystems.ftb.save"))
                 .onClick(this::save).build();
         listWidget = ui.itemActionList(LIST_X, LIST_Y, LIST_W, LIST_H, listItems())
                 .selected(-1).scrollOffset(listScroll).actionWidth(72)
@@ -88,8 +88,8 @@ public class ItemBlacklistScreenFTB extends KineticPage {
                     Component.literal(entry),
                     true,
                     false,
-                    KineticI18n.translatable("button.adventuresystems.ftb_item.delete"),
-                    KineticI18n.translatable("tip.adventuresystems.ftb.blacklist.remove"),
+                    AdventureText.translatable("button.adventuresystems.ftb_item.delete"),
+                    AdventureText.translatable("tip.adventuresystems.ftb.blacklist.remove"),
                     true
             ));
         }
@@ -105,7 +105,7 @@ public class ItemBlacklistScreenFTB extends KineticPage {
             if (target.isEmpty()) return;
             BlacklistStoreFTB.add(target);
             reloadEntries();
-            FTBToastUtil.show("adventuresystems_blacklist_added", KineticI18n.translatable("msg.adventuresystems.ftb_item.blacklist_added"));
+            FTBToastUtil.show("adventuresystems_blacklist_added", AdventureText.translatable("msg.adventuresystems.ftb_item.blacklist_added"));
         });
     }
 
@@ -113,17 +113,17 @@ public class ItemBlacklistScreenFTB extends KineticPage {
         if (index < 0 || index >= filtered.size()) return;
         BlacklistStoreFTB.remove(filtered.get(index));
         reloadEntries();
-        FTBToastUtil.show("adventuresystems_blacklist_removed", KineticI18n.translatable("msg.adventuresystems.ftb_item.blacklist_removed"));
+        FTBToastUtil.show("adventuresystems_blacklist_removed", AdventureText.translatable("msg.adventuresystems.ftb_item.blacklist_removed"));
     }
 
     @Override
     protected void renderBackground(KineticGraphics graphics, int mouseX, int mouseY, float partialTick) {
         KineticTheme.shadow(graphics, width(), height());
         KineticTheme.panel(graphics, PANEL_X, PANEL_Y, PANEL_W, PANEL_H);
-        graphics.text(KineticI18n.translatable("screen.adventuresystems.ftb_item.blacklist"), 24, 24, KineticTheme.current().text(), false);
-        graphics.text(KineticI18n.translatable("label.adventuresystems.ftb_item.blacklist_desc"), 150, 25, KineticTheme.current().mutedText(), false);
+        graphics.text(AdventureText.translatable("screen.adventuresystems.ftb_item.blacklist"), 24, 24, KineticTheme.current().text(), false);
+        graphics.text(AdventureText.translatable("label.adventuresystems.ftb_item.blacklist_desc"), 150, 25, KineticTheme.current().mutedText(), false);
         graphics.text(
-                KineticI18n.translatable(
+                AdventureText.translatable(
                         "label.adventuresystems.ftb_item.blacklist_count",
                         Component.literal(String.valueOf(filtered.size()))
                 ),

@@ -8,7 +8,7 @@ import dev.xyat.kineticcore.api.client.gui.ui.KineticUi;
 import dev.xyat.kineticcore.api.client.gui.widget.list.ActionItem;
 import dev.xyat.kineticcore.api.client.gui.widget.list.KineticActionList;
 import dev.xyat.kineticcore.api.client.search.KineticSearch;
-import dev.xyat.kineticcore.api.text.KineticI18n;
+import dev.xyat.adventuresystems.text.AdventureText;
 import net.minecraft.network.chat.Component;
 
 import java.util.ArrayList;
@@ -25,7 +25,7 @@ final class QuestPickerScreen extends KineticPage {
     private int scrollOffset;
 
     QuestPickerScreen(Consumer<Long> callback) {
-        super(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_pick_task_title"));
+        super(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_pick_task_title"));
         this.callback = callback;
         useCanvas(580, 336, 6);
         loadQuests();
@@ -36,15 +36,15 @@ final class QuestPickerScreen extends KineticPage {
     protected void build(KineticUi ui) {
         if (list != null) scrollOffset = list.scrollOffset();
         ui.textField(24, 42, 428)
-                .label(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_task_search"))
-                .placeholder(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_task_search"))
+                .label(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_task_search"))
+                .placeholder(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_task_search"))
                 .value(searchText)
                 .onChange(value -> {
                     searchText = value;
                     scrollOffset = 0;
                     applySearch();
                 }).firstShownTextAsDefault().build();
-        ui.button(464, 42, 82).text(KineticI18n.translatable("gui.done"))
+        ui.button(464, 42, 82).text(AdventureText.translatable("gui.done"))
                 .onClick(this::navigateBack).build();
         list = ui.actionList(24, 74, 532, 230, listItems())
                 .actionWidth(64).scrollOffset(scrollOffset)
@@ -81,12 +81,12 @@ final class QuestPickerScreen extends KineticPage {
     private List<ActionItem> listItems() {
         List<ActionItem> items = new ArrayList<>(filtered.size());
         for (QuestOption option : filtered) {
-            items.add(new ActionItem(Component.literal(option.displayTitle()),
-                    Component.literal(option.displayMeta()),
-                    KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_quest_id_scaled", option.id()),
+            items.add(new ActionItem(AdventureText.literal(option.displayTitle()),
+                    AdventureText.literal(option.displayMeta()),
+                    AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_quest_id_scaled", option.id()),
                     true, false,
-                    KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_task_pick_tip"),
-                    KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_task_pick_tip"),
+                    AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_task_pick_tip"),
+                    AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_task_pick_tip"),
                     true, false));
         }
         return items;
@@ -104,7 +104,7 @@ final class QuestPickerScreen extends KineticPage {
         KineticTheme.panel(graphics, 10, 10, 560, 316);
         graphics.centeredText(title(), 290, 20, KineticTheme.current().text(), false);
         if (all.isEmpty()) {
-            graphics.centeredText(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_task_empty"),
+            graphics.centeredText(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_task_empty"),
                     290, 166, KineticTheme.current().text(), false);
         }
     }

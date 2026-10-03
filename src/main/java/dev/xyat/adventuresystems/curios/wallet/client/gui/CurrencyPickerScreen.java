@@ -9,7 +9,7 @@ import dev.xyat.kineticcore.api.client.gui.render.KineticGraphics;
 import dev.xyat.kineticcore.api.client.gui.text.KineticText;
 import dev.xyat.kineticcore.api.client.gui.theme.KineticTheme;
 import dev.xyat.kineticcore.api.client.gui.ui.KineticUi;
-import dev.xyat.kineticcore.api.text.KineticI18n;
+import dev.xyat.adventuresystems.text.AdventureText;
 import net.minecraft.network.chat.Component;
 
 import java.util.ArrayList;
@@ -39,7 +39,7 @@ final class CurrencyPickerScreen extends KineticPage {
     private int scrollRows;
 
     CurrencyPickerScreen(ShopGuiSupport.EditorDraft draft) {
-        super(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_currency_picker_title"));
+        super(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_currency_picker_title"));
         this.draft = draft;
         this.currencies = new ArrayList<>(Data.currencies());
         this.currencies.sort(Comparator.comparingLong(CurrencyType::value));
@@ -48,7 +48,7 @@ final class CurrencyPickerScreen extends KineticPage {
 
     @Override
     protected void build(KineticUi ui) {
-        Component cancel = KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_cancel");
+        Component cancel = AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_cancel");
         int width = KineticText.width(cancel) + 24;
         ui.button(PANEL_X + (PANEL_W - width) / 2, CANCEL_Y, width).text(cancel).onClick(this::navigateBack).build();
     }
@@ -98,7 +98,7 @@ final class CurrencyPickerScreen extends KineticPage {
         KineticTheme.panel(graphics, PANEL_X, PANEL_Y, PANEL_W, PANEL_H);
         graphics.centeredText(title(), PANEL_X + PANEL_W / 2, PANEL_Y + 8, KineticTheme.current().text(), false);
         if (currencies.isEmpty()) {
-            graphics.centeredText(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_currency_picker_empty"),
+            graphics.centeredText(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_currency_picker_empty"),
                     PANEL_X + PANEL_W / 2, GRID_Y + GRID_H / 2 - 4, KineticTheme.current().text(), false);
             return;
         }
@@ -115,7 +115,7 @@ final class CurrencyPickerScreen extends KineticPage {
             Component name = ShopGuiSupport.stackNameComponent(currency.itemId());
             int textX = x + 24;
             int textWidth = boxWidth() - 28;
-            graphics.text(KineticText.ellipsize(name.getString(), textWidth), textX, y + 8, KineticTheme.current().text(), true);
+            graphics.text(AdventureText.ellipsize(name, textWidth, KineticText::width), textX, y + 8, KineticTheme.current().text(), true);
         }
     }
 
@@ -126,9 +126,9 @@ final class CurrencyPickerScreen extends KineticPage {
         CurrencyType currency = currencies.get(index);
         showTooltip(List.of(
                 ShopGuiSupport.stackNameComponent(currency.itemId()),
-                KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_tooltip_currency_value",
+                AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_tooltip_currency_value",
                         ShopGuiSupport.formatExact(currency.value())),
-                KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_currency_picker_select_tip")));
+                AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_currency_picker_select_tip")));
     }
 
     @Override

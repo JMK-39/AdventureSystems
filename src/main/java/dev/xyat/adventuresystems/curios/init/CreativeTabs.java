@@ -5,7 +5,7 @@ import dev.xyat.adventuresystems.curios.config.CuriosConfig;
 import dev.xyat.kineticcore.api.registry.KineticRegistryHandle;
 import dev.xyat.kineticcore.api.resource.KineticResourceIds;
 import dev.xyat.kineticcore.api.runtime.KineticCreativeTabs;
-import dev.xyat.kineticcore.api.text.KineticI18n;
+import dev.xyat.adventuresystems.text.AdventureText;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
 
@@ -13,7 +13,7 @@ public final class CreativeTabs {
     public static final KineticRegistryHandle<CreativeModeTab> MAIN_TAB = KineticCreativeTabs.register(
             KineticResourceIds.of(CuriosModule.MODID, "main"),
             () -> CreativeModeTab.builder()
-                    .title(KineticI18n.translatable("itemGroup.adventuresystems"))
+                    .title(AdventureText.translatable("itemGroup.adventuresystems"))
                     .icon(() -> {
                         if (CuriosConfig.enableHeartOfSteel) return new ItemStack(Items.HEART_OF_STEEL.get());
                         if (CuriosConfig.enableParadiseLost) return new ItemStack(Items.PARADISE_LOST.get());

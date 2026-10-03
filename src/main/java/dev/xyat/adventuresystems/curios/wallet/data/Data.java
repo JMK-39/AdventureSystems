@@ -68,7 +68,11 @@ public final class Data {
 
     public static Optional<ItemStack> equippedWallet(Player player) {
         if (player == null) return Optional.empty();
+//? if >=1.21 {
+        /*var slotResult = CuriosApi.getCuriosInventory(player).flatMap(handler -> handler.findFirstCurio(Items.CURRENCY_WALLET.get()));
+        *///?} else {
         var slotResult = CuriosApi.getCuriosHelper().findFirstCurio(player, Items.CURRENCY_WALLET.get());
+        //?}
         if (slotResult.isEmpty()) return Optional.empty();
         ItemStack stack = slotResult.get().stack();
         return isWalletStack(stack) ? Optional.of(stack) : Optional.empty();
@@ -80,15 +84,26 @@ public final class Data {
 
     public static void ensureWalletIdentity(ItemStack walletStack) {
         if (!isWalletStack(walletStack)) return;
+//? if >=1.21 {
+        /*dev.xyat.adventuresystems.data.AdventureItemData.updateCustomData(walletStack, tag -> {
+            if (!tag.hasUUID(WALLET_ID_KEY)) tag.putUUID(WALLET_ID_KEY, UUID.randomUUID());
+        });
+        *///?} else {
         CompoundTag tag = walletStack.getOrCreateTag();
         if (!tag.hasUUID(WALLET_ID_KEY)) {
             tag.putUUID(WALLET_ID_KEY, UUID.randomUUID());
         }
+        //?}
     }
 
     public static CompoundTag snapshot(ItemStack walletStack) {
+//? if >=1.21 {
+        /*if (!isWalletStack(walletStack)) return new CompoundTag();
+        CompoundTag tag = dev.xyat.adventuresystems.data.AdventureItemData.customData(walletStack);
+        *///?} else {
         if (!isWalletStack(walletStack) || !walletStack.hasTag()) return new CompoundTag();
         CompoundTag tag = walletStack.getTag();
+        //?}
         if (tag == null || !tag.contains(WALLET_BALANCES_KEY, Tag.TAG_COMPOUND)) return new CompoundTag();
         return tag.getCompound(WALLET_BALANCES_KEY).copy();
     }
@@ -111,6 +126,9 @@ public final class Data {
         long accepted = Math.min(space, amount);
         if (accepted <= 0L) return 0L;
         balances.putLong(id, current + accepted);
+        //? if >=1.21 {
+        /*dev.xyat.adventuresystems.data.AdventureItemData.updateCustomData(walletStack, tag -> tag.put(WALLET_BALANCES_KEY, balances));
+        *///?}
         return accepted;
     }
 
@@ -131,6 +149,9 @@ public final class Data {
         } else {
             balances.remove(id);
         }
+        //? if >=1.21 {
+        /*dev.xyat.adventuresystems.data.AdventureItemData.updateCustomData(walletStack, tag -> tag.put(WALLET_BALANCES_KEY, balances));
+        *///?}
         return removed;
     }
 
@@ -510,12 +531,21 @@ public final class Data {
         binding.putInt(RS_BOUND_X_KEY, pos.getX());
         binding.putInt(RS_BOUND_Y_KEY, pos.getY());
         binding.putInt(RS_BOUND_Z_KEY, pos.getZ());
+//? if >=1.21 {
+        /*dev.xyat.adventuresystems.data.AdventureItemData.updateCustomData(walletStack, tag -> tag.put(RS_BINDING_KEY, binding));
+        *///?} else {
         walletStack.getOrCreateTag().put(RS_BINDING_KEY, binding);
+        //?}
     }
 
     public static RsBinding rsBinding(ItemStack walletStack) {
+//? if >=1.21 {
+        /*if (!isWalletStack(walletStack)) return RsBinding.none();
+        CompoundTag tag = dev.xyat.adventuresystems.data.AdventureItemData.customData(walletStack);
+        *///?} else {
         if (!isWalletStack(walletStack) || !walletStack.hasTag()) return RsBinding.none();
         CompoundTag tag = walletStack.getTag();
+        //?}
         if (tag == null || !tag.contains(RS_BINDING_KEY, Tag.TAG_COMPOUND)) return RsBinding.none();
         CompoundTag binding = tag.getCompound(RS_BINDING_KEY);
         String dimension = binding.getString(RS_BOUND_DIM_KEY);
@@ -524,17 +554,27 @@ public final class Data {
     }
 
     public static boolean isMagnetDisabled(ItemStack walletStack) {
+//? if >=1.21 {
+        /*if (!isWalletStack(walletStack)) return false;
+        CompoundTag tag = dev.xyat.adventuresystems.data.AdventureItemData.customData(walletStack);
+        *///?} else {
         if (!isWalletStack(walletStack) || !walletStack.hasTag()) return false;
         CompoundTag tag = walletStack.getTag();
+        //?}
         return tag != null && tag.getBoolean(MAGNET_DISABLED_KEY);
     }
 
     public static boolean toggleMagnetDisabled(ItemStack walletStack) {
         if (!isWalletStack(walletStack)) return false;
         ensureWalletIdentity(walletStack);
+//? if >=1.21 {
+        /*boolean disabled = !dev.xyat.adventuresystems.data.AdventureItemData.customData(walletStack).getBoolean(MAGNET_DISABLED_KEY);
+        dev.xyat.adventuresystems.data.AdventureItemData.updateCustomData(walletStack, tag -> tag.putBoolean(MAGNET_DISABLED_KEY, disabled));
+        *///?} else {
         CompoundTag tag = walletStack.getOrCreateTag();
         boolean disabled = !tag.getBoolean(MAGNET_DISABLED_KEY);
         tag.putBoolean(MAGNET_DISABLED_KEY, disabled);
+        //?}
         return disabled;
     }
 
@@ -547,11 +587,15 @@ public final class Data {
 
     private static CompoundTag mutableBalances(ItemStack walletStack) {
         ensureWalletIdentity(walletStack);
+//? if >=1.21 {
+        /*return snapshot(walletStack);
+        *///?} else {
         CompoundTag tag = walletStack.getOrCreateTag();
         if (!tag.contains(WALLET_BALANCES_KEY, Tag.TAG_COMPOUND)) {
             tag.put(WALLET_BALANCES_KEY, new CompoundTag());
         }
         return tag.getCompound(WALLET_BALANCES_KEY);
+        //?}
     }
 
     private static boolean canAutoConvertForAutomaticPayment(CurrencyType source, CurrencyType target) {

@@ -35,7 +35,11 @@ public final class MaterialStorage {
                 BlockPos pos = binding.pos();
                 if (RefinedStorageCompat.hasNetwork(serverLevel, pos)) {
                     rsState = RsState.BOUND;
+//? if >=1.21 {
+        /*rs = RefinedStorageCompat.count(player, serverLevel, pos, target);
+        *///?} else {
                     rs = RefinedStorageCompat.count(serverLevel, pos, target);
+        //?}
                 } else {
                     rsState = RsState.MISSING;
                 }
@@ -77,7 +81,11 @@ public final class MaterialStorage {
             Optional<ItemStack> wallet = Data.equippedWallet(player);
             if (wallet.isPresent()) {
                 Data.RsBinding binding = Data.rsBinding(wallet.get());
+//? if >=1.21 {
+        /*fromRs = RefinedStorageCompat.extract(player, serverLevel, binding.pos(), target, remaining, false);
+        *///?} else {
                 fromRs = RefinedStorageCompat.extract(serverLevel, binding.pos(), target, remaining, false);
+        //?}
                 remaining -= fromRs;
             }
         }
@@ -107,7 +115,11 @@ public final class MaterialStorage {
         Data.RsBinding binding = Data.rsBinding(wallet.get());
         if (!binding.bound() || !(player.level() instanceof ServerLevel serverLevel)) return 0L;
         if (!RefinedStorageCompat.hasNetwork(serverLevel, binding.pos())) return 0L;
+//? if >=1.21 {
+        /*return RefinedStorageCompat.extract(player, serverLevel, binding.pos(), target, amount, false);
+        *///?} else {
         return RefinedStorageCompat.extract(serverLevel, binding.pos(), target, amount, false);
+        //?}
     }
 
     private static long inventoryCount(Inventory inventory, ItemStack target) {

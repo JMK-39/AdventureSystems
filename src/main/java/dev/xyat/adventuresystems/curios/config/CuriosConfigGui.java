@@ -7,7 +7,7 @@ import dev.xyat.adventuresystems.curios.wallet.client.Client;
 import dev.xyat.adventuresystems.curios.paradiselost.data.ParadiseLostCurve;
 import dev.xyat.adventuresystems.curios.wallet.client.hud.WalletHudEditorScreen;
 import net.minecraft.network.chat.Component;
-import dev.xyat.kineticcore.api.text.KineticI18n;
+import dev.xyat.adventuresystems.text.AdventureText;
 
 /** Registers CuriosModule configuration pages in KineticCore's config hub. */
 public final class CuriosConfigGui {
@@ -160,7 +160,7 @@ public final class CuriosConfigGui {
     }
 
     private static Component text(String path) {
-        return KineticI18n.translatable(KEY + path);
+        return AdventureText.translatable(KEY + path);
     }
 
     private static Component tooltip(String path) {

@@ -20,7 +20,13 @@ public final class FTBTaskSubmitHelper {
     }
 
     public static boolean isCustomSubmitAllowed(TeamData data, ItemTask task) {
+        //? if >=1.21 {
+        /*return data != null && !data.isLocked() && isCustomSubmitAllowed(task)
+                && data.canStartTasks(task.getQuest())
+                && !data.isRewardBlocked(task.getQuest().getRewards().iterator().next());
+        *///?} else {
         return data != null && isCustomSubmitAllowed(task) && data.canStartTasks(task.getQuest());
+        //?}
     }
 
     public static boolean isCustomSubmitAllowed(ItemTask task) {
@@ -42,6 +48,11 @@ public final class FTBTaskSubmitHelper {
         if (player == null || !isCustomSubmitAllowed(data, task)) {
             return new Result(requested, 0, 0L);
         }
+        //? if >=1.21 {
+        /*if (!data.getFile().isPlayerOnTeam(player, data)) {
+            return new Result(requested, 0, 0L);
+        }
+        *///?}
 
         Quest quest = task.getQuest();
         int completedTimes = 0;

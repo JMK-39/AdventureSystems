@@ -1,6 +1,6 @@
 package dev.xyat.adventuresystems.curios.wallet.client;
 
-import dev.xyat.kineticcore.api.text.KineticI18n;
+import dev.xyat.adventuresystems.text.AdventureText;
 import dev.xyat.adventuresystems.curios.wallet.client.gui.MainScreen;
 import dev.xyat.adventuresystems.curios.wallet.client.gui.ShopScreen;
 import dev.xyat.adventuresystems.curios.wallet.data.CurrencyType;
@@ -122,9 +122,9 @@ public final class Client {
         Object[] args = split.length <= 1 ? new Object[0] : unpackToastArgs(split);
         Component message;
         if ("msg.adventuresystems.curios.wallet.merchant_manual_exchange_required".equals(key) && args.length == 0) {
-            message = KineticI18n.translatable(key, Component.literal(openKeyName()));
+            message = AdventureText.translatable(key, Component.literal(openKeyName()));
         } else {
-            message = args.length == 0 ? KineticI18n.translatable(key) : KineticI18n.translatable(key, args);
+            message = args.length == 0 ? AdventureText.translatable(key) : AdventureText.translatable(key, args);
         }
         KineticOverlays.toast(
                 "currency_wallet_notice",
@@ -146,7 +146,7 @@ public final class Client {
 
     private static Object unpackToastArg(String value) {
         if (value == null) return "";
-        if (value.startsWith("tr:")) return KineticI18n.translatable(value.substring(3));
+        if (value.startsWith("tr:")) return AdventureText.translatable(value.substring(3));
         return value;
     }
 
@@ -186,20 +186,20 @@ public final class Client {
         List<CurrencyType> currencies = Data.currencies();
         if (currencies.isEmpty()) return;
         CompoundTag balances = Data.snapshot(walletStack);
-        tooltip.add(KineticI18n.translatable("tip.adventuresystems.curios.wallet.amounts_title"));
+        tooltip.add(AdventureText.translatable("tip.adventuresystems.curios.wallet.amounts_title"));
         for (CurrencyType currency : currencies) {
             ItemStack stack = new ItemStack(currency.item());
             long amount = Data.readAmount(balances, currency.itemId());
-            tooltip.add(KineticI18n.translatable(
+            tooltip.add(AdventureText.translatable(
                     "tip.adventuresystems.curios.wallet.amount_line",
-                    KineticI18n.translatable(stack.getDescriptionId()),
+                    AdventureText.translatable(stack.getDescriptionId()),
                     Component.literal(formatExact(amount))
             ));
         }
-        tooltip.add(KineticI18n.translatable(Data.isMagnetDisabled(walletStack)
+        tooltip.add(AdventureText.translatable(Data.isMagnetDisabled(walletStack)
                 ? "tip.adventuresystems.curios.wallet.magnet_disabled"
                 : "tip.adventuresystems.curios.wallet.magnet_enabled"));
-        tooltip.add(KineticI18n.translatable("tip.adventuresystems.curios.wallet.right_click_controls"));
+        tooltip.add(AdventureText.translatable("tip.adventuresystems.curios.wallet.right_click_controls"));
         appendRsTooltip(walletStack, tooltip);
     }
 
@@ -207,7 +207,7 @@ public final class Client {
         if (!KineticPlatform.isModLoaded("refinedstorage")) return;
         Data.RsBinding binding = Data.rsBinding(walletStack);
         if (!binding.bound()) {
-            tooltip.add(KineticI18n.translatable("tip.adventuresystems.curios.wallet.rs_unbound"));
+            tooltip.add(AdventureText.translatable("tip.adventuresystems.curios.wallet.rs_unbound"));
             return;
         }
         var level = KineticClientRuntime.currentLevel();
@@ -215,11 +215,11 @@ public final class Client {
         if (level != null && level.dimension().location().toString().equals(binding.dimension())) {
             ResourceLocation id = KineticRegistries.blocks().id(level.getBlockState(pos).getBlock());
             if (id == null || !"refinedstorage".equals(id.getNamespace()) || !id.getPath().contains("controller")) {
-                tooltip.add(KineticI18n.translatable("tip.adventuresystems.curios.wallet.rs_missing", pos.getX(), pos.getY(), pos.getZ()));
+                tooltip.add(AdventureText.translatable("tip.adventuresystems.curios.wallet.rs_missing", pos.getX(), pos.getY(), pos.getZ()));
                 return;
             }
         }
-        tooltip.add(KineticI18n.translatable("tip.adventuresystems.curios.wallet.rs_bound", pos.getX(), pos.getY(), pos.getZ()));
+        tooltip.add(AdventureText.translatable("tip.adventuresystems.curios.wallet.rs_bound", pos.getX(), pos.getY(), pos.getZ()));
     }
 
     private static String formatExact(long value) {

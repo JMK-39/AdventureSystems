@@ -4,7 +4,7 @@ import dev.xyat.adventuresystems.tips.TipsNetwork;
 import dev.xyat.kineticcore.api.config.client.KTConfigApi;
 import dev.xyat.kineticcore.api.config.client.KTConfigPage;
 import dev.xyat.kineticcore.api.config.client.KTConfigScope;
-import dev.xyat.kineticcore.api.text.KineticI18n;
+import dev.xyat.adventuresystems.text.AdventureText;
 
 public final class TipsConfigGui {
     public static final String PAGE_ID = "adventuresystems:tips";
@@ -16,35 +16,35 @@ public final class TipsConfigGui {
     public static void load() {
         KTConfigApi.register(KTConfigPage.builder(
                         PAGE_ID,
-                        KineticI18n.translatable("cfg.adventuresystems.tips.tips.title")
+                        AdventureText.translatable("cfg.adventuresystems.tips.tips.title")
                 )
                 .scope(KTConfigScope.CLIENT_LOCAL)
                 .applyTiming(KTConfigPage.ApplyTiming.IMMEDIATE)
-                .pageDescription(KineticI18n.translatable("cfg.adventuresystems.tips.tips.description"))
+                .pageDescription(AdventureText.translatable("cfg.adventuresystems.tips.tips.description"))
                 .booleanValue(
                         "enable_tips",
-                        KineticI18n.translatable("cfg.adventuresystems.tips.tips.enable"),
+                        AdventureText.translatable("cfg.adventuresystems.tips.tips.enable"),
                         GeneralConfig::isEnabled,
                         GeneralConfig::setEnabled,
                         true,
-                        KineticI18n.translatable("cfg.adventuresystems.tips.tips.enable.tooltip")
+                        AdventureText.translatable("cfg.adventuresystems.tips.tips.enable.tooltip")
                 )
                 .onSave(GeneralConfig::save)
                 .build());
 
         KTConfigApi.register(KTConfigPage.builder(
                         EDITOR_PAGE_ID,
-                        KineticI18n.translatable("cfg.adventuresystems.tips.tips.editor.section")
+                        AdventureText.translatable("cfg.adventuresystems.tips.tips.editor.section")
                 )
                 .scope(KTConfigScope.SERVER_AUTHORITATIVE)
                 .serverManaged()
                 .applyTiming(KTConfigPage.ApplyTiming.IMMEDIATE)
-                .pageDescription(KineticI18n.translatable("cfg.adventuresystems.tips.tips.editor.tooltip"))
+                .pageDescription(AdventureText.translatable("cfg.adventuresystems.tips.tips.editor.tooltip"))
                 .action(
                         "open_editor",
-                        KineticI18n.translatable("cfg.adventuresystems.tips.tips.editor"),
+                        AdventureText.translatable("cfg.adventuresystems.tips.tips.editor"),
                         TipsNetwork::requestEditor,
-                        KineticI18n.translatable("cfg.adventuresystems.tips.tips.editor.tooltip")
+                        AdventureText.translatable("cfg.adventuresystems.tips.tips.editor.tooltip")
                 )
                 .build());
     }

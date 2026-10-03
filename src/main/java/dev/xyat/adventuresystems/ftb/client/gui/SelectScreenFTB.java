@@ -10,7 +10,7 @@ import dev.xyat.kineticcore.api.client.gui.ui.KineticUi;
 import dev.xyat.kineticcore.api.client.gui.widget.list.ActionItem;
 import dev.xyat.kineticcore.api.client.gui.widget.list.KineticActionList;
 import dev.xyat.kineticcore.api.client.search.KineticSearch;
-import dev.xyat.kineticcore.api.text.KineticI18n;
+import dev.xyat.adventuresystems.text.AdventureText;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 
@@ -31,7 +31,7 @@ public class SelectScreenFTB extends KineticPage {
     private int listScroll;
 
     public SelectScreenFTB(ItemStack stack, List<RefFTB> refs) {
-        super(KineticI18n.translatable("screen.adventuresystems.ftb.select"));
+        super(AdventureText.translatable("screen.adventuresystems.ftb.select"));
         this.stack = stack;
         this.allRefs = new ArrayList<>(refs);
         this.filtered.addAll(refs);
@@ -44,15 +44,15 @@ public class SelectScreenFTB extends KineticPage {
         listWidget = null;
         applySearch();
         ui.textField(LIST_X, 48, 360)
-                .label(KineticI18n.translatable("gui.adventuresystems.ftb.search"))
-                .placeholder(KineticI18n.translatable("placeholder.adventuresystems.ftb.select.search"))
-                .tooltip(KineticI18n.translatable("tip.adventuresystems.ftb.search.desc"))
+                .label(AdventureText.translatable("gui.adventuresystems.ftb.search"))
+                .placeholder(AdventureText.translatable("placeholder.adventuresystems.ftb.select.search"))
+                .tooltip(AdventureText.translatable("tip.adventuresystems.ftb.search.desc"))
                 .value(searchText)
                 .onChange(value -> {
                     searchText = value;
                     applySearch();
                 }).firstShownTextAsDefault().build();
-        ui.button(528, 329, 88).text(KineticI18n.translatable("gui.done"))
+        ui.button(528, 329, 88).text(AdventureText.translatable("gui.done"))
                 .onClick(this::close).build();
         listWidget = ui.actionList(LIST_X, LIST_Y, LIST_W, LIST_H, listItems())
                 .selected(-1).scrollOffset(listScroll).actionWidth(116)
@@ -71,22 +71,22 @@ public class SelectScreenFTB extends KineticPage {
     private List<ActionItem> listItems() {
         List<ActionItem> items = new ArrayList<>(filtered.size());
         for (RefFTB ref : filtered) {
-            Component title = KineticI18n.translatable(
+            Component title = AdventureText.translatable(
                     "label.adventuresystems.ftb.quest.title",
-                    Component.literal(ref.title())
+                    AdventureText.literal(ref.title())
             );
-            Component secondary = KineticI18n.translatable(
+            Component secondary = AdventureText.translatable(
                     "label.adventuresystems.ftb.quest.meta",
-                    Component.literal(ref.chapter() + "  ·  " + ref.source())
+                    AdventureText.literal(ref.chapter() + "  ·  " + ref.source())
             );
             items.add(new ActionItem(
                     title,
                     secondary,
-                    KineticI18n.translatable("tip.adventuresystems.ftb.list.open"),
+                    AdventureText.translatable("tip.adventuresystems.ftb.list.open"),
                     true,
                     false,
-                    KineticI18n.translatable("tip.adventuresystems.ftb.favorite.title"),
-                    KineticI18n.translatable("tip.adventuresystems.ftb.favorite.desc"),
+                    AdventureText.translatable("tip.adventuresystems.ftb.favorite.title"),
+                    AdventureText.translatable("tip.adventuresystems.ftb.favorite.desc"),
                     true,
                     false
             ));
@@ -117,12 +117,12 @@ public class SelectScreenFTB extends KineticPage {
     protected void renderBackground(KineticGraphics graphics, int mouseX, int mouseY, float partialTick) {
         KineticTheme.shadow(graphics, width(), height());
         KineticTheme.panel(graphics, 10, 10, 620, 340);
-        graphics.text(KineticI18n.translatable("screen.adventuresystems.ftb.select"), 24, 24, KineticTheme.current().text(), false);
-        graphics.text(KineticI18n.translatable("label.adventuresystems.ftb.select.subtitle"), 170, 25, KineticTheme.current().mutedText(), false);
+        graphics.text(AdventureText.translatable("screen.adventuresystems.ftb.select"), 24, 24, KineticTheme.current().text(), false);
+        graphics.text(AdventureText.translatable("label.adventuresystems.ftb.select.subtitle"), 170, 25, KineticTheme.current().mutedText(), false);
         KineticTheme.itemSlot(graphics, 410, 48);
         KineticTheme.item(graphics, stack, 410, 48, 18, 1.0F, false);
         graphics.text(
-                KineticI18n.translatable("label.adventuresystems.ftb.item.name", stack.getHoverName().copy()),
+                AdventureText.translatable("label.adventuresystems.ftb.item.name", stack.getHoverName().copy()),
                 435,
                 54,
                 KineticTheme.current().text(),

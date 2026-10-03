@@ -12,7 +12,7 @@ import dev.ftb.mods.ftbquests.quest.task.ItemTask;
 import dev.xyat.adventuresystems.ftb.api.FTBTaskSubmitHelper;
 import dev.xyat.adventuresystems.ftb.client.gui.FTBSubmitCountScreen;
 import dev.xyat.kineticcore.api.client.gui.KineticGui;
-import dev.xyat.kineticcore.api.text.KineticI18n;
+import dev.xyat.adventuresystems.text.AdventureText;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -49,9 +49,13 @@ public abstract class ValidItemsScreenSubmitLimitMixin extends BaseScreen {
             return;
         }
 
+        //? if >=1.21 {
+        /*SimpleTextButton replacementButton = new dev.xyat.adventuresystems.ftb.client.gui.FTBSubmitLimitButton(
+                this, originalButton, this.adventuresystems_ftb$submitTask);
+        *///?} else {
         SimpleTextButton replacementButton = new SimpleTextButton(
                 this,
-                KineticI18n.translatable("button.adventuresystems.ftb.submit.confirm"),
+                AdventureText.translatable("button.adventuresystems.ftb.submit.confirm"),
                 Color4I.empty()
         ) {
             private void adventuresystems_ftb$syncBounds() {
@@ -86,7 +90,7 @@ public abstract class ValidItemsScreenSubmitLimitMixin extends BaseScreen {
 
             @Override
             public void addMouseOverText(TooltipList list) {
-                list.add(KineticI18n.translatable("tip.adventuresystems.ftb.submit.button"));
+                list.add(AdventureText.translatable("tip.adventuresystems.ftb.submit.button"));
             }
 
             @Override
@@ -94,6 +98,7 @@ public abstract class ValidItemsScreenSubmitLimitMixin extends BaseScreen {
                 return true;
             }
         };
+        //?}
 
         widgets.set(submitButtonIndex, replacementButton);
     }

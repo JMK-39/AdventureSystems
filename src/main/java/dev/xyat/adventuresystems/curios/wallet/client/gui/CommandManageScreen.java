@@ -16,7 +16,7 @@ import dev.xyat.kineticcore.api.client.gui.widget.list.ItemGridItem;
 import dev.xyat.kineticcore.api.client.gui.widget.list.ItemGridOutline;
 import dev.xyat.kineticcore.api.client.gui.widget.list.KineticItemGrid;
 import dev.xyat.kineticcore.api.client.gui.overlay.KineticOverlays;
-import dev.xyat.kineticcore.api.text.KineticI18n;
+import dev.xyat.adventuresystems.text.AdventureText;
 import net.minecraft.network.chat.Component;
 
 import java.util.ArrayList;
@@ -45,7 +45,7 @@ final class CommandManageScreen extends KineticPage {
     private KineticCommandAssist assist;
 
     CommandManageScreen(ShopGuiSupport.EditorDraft draft) {
-        super(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_command_manage_title"));
+        super(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_manage_title"));
         this.draft = draft;
         useCanvas(640, 360, 6);
     }
@@ -57,20 +57,20 @@ final class CommandManageScreen extends KineticPage {
         if (grid != null) gridScroll = grid.scrollOffset();
         if (iconId.isBlank()) iconId = fallbackIconId();
         nameBox = ui.textField(188, 41, 306)
-                .label(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_command_name"))
-                .placeholder(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_command_name"))
-                .tooltip(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_command_name_tooltip"))
+                .label(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_name"))
+                .placeholder(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_name"))
+                .tooltip(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_name_tooltip"))
                 .maxLength(64).value(nameText).onChange(value -> nameText = value).firstShownTextAsDefault().build();
         saveButton = ui.button(SAVE_X, 40, ACTION_W).text(saveButtonText()).onClick(this::saveCommand).build();
-        ui.button(NEW_X, 40, ACTION_W).text(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_command_new"))
-                .tooltip(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_command_clear_tooltip"))
+        ui.button(NEW_X, 40, ACTION_W).text(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_new"))
+                .tooltip(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_clear_tooltip"))
                 .onClick(this::clearEditor).build();
-        ui.button(NEW_X, 8, ACTION_W).text(KineticI18n.translatable("gui.done"))
-                .tooltip(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_command_done_tooltip"))
+        ui.button(NEW_X, 8, ACTION_W).text(AdventureText.translatable("gui.done"))
+                .tooltip(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_done_tooltip"))
                 .onClick(this::navigateBack).build();
         commandBox = ui.textField(84, 332, 536)
-                .label(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_command_text"))
-                .placeholder(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_command_text"))
+                .label(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_text"))
+                .placeholder(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_text"))
                 .maxLength(2048).value(commandText).firstShownTextAsDefault().build();
         assist = KineticCommandAssist.attach(commandBox, width(), height(), false, 8,
                 value -> commandText = value);
@@ -83,7 +83,7 @@ final class CommandManageScreen extends KineticPage {
     }
 
     private Component saveButtonText() {
-        return KineticI18n.translatable(selectedIndex >= 0
+        return AdventureText.translatable(selectedIndex >= 0
                 ? "gui.adventuresystems.curios.wallet.shop_command_update"
                 : "gui.adventuresystems.curios.wallet.shop_command_add");
     }
@@ -133,7 +133,7 @@ final class CommandManageScreen extends KineticPage {
     }
 
     private static void toast(String id, String key) {
-        KineticOverlays.toast(id, KineticI18n.translatable(key), KineticOverlays.Position.BOTTOM_CENTER, 2200, 0, -30);
+        KineticOverlays.toast(id, AdventureText.translatable(key), KineticOverlays.Position.BOTTOM_CENTER, 2200, 0, -30);
     }
 
     private void clearEditor() {
@@ -193,20 +193,20 @@ final class CommandManageScreen extends KineticPage {
         KineticTheme.shadow(graphics, width(), height());
         KineticTheme.panel(graphics, 0, 0, 640, 360);
         graphics.centeredText(title(), 320, 10, KineticTheme.current().text(), false);
-        graphics.text(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_command_icon_preview"),
+        graphics.text(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_icon_preview"),
                 18, 46, KineticTheme.current().text(), true);
         boolean iconHovered = KineticTheme.hovering(mouseX, mouseY, ICON_X, ICON_Y, ICON_SIZE, ICON_SIZE);
         KineticTheme.itemSlot(graphics, ICON_X, ICON_Y, ICON_SIZE, ICON_SIZE, 4, false, iconHovered, false);
         graphics.item(ShopGuiSupport.stack(iconId), ICON_X + 2, ICON_Y + 2);
-        graphics.text(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_command_name"),
+        graphics.text(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_name"),
                 120, 46, KineticTheme.current().text(), true);
-        graphics.text(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_command_list"),
+        graphics.text(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_list"),
                 16, 64, KineticTheme.current().text(), true);
         if (draft.commands.isEmpty()) {
-            graphics.centeredText(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_command_empty"),
+            graphics.centeredText(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_empty"),
                     320, 196, KineticTheme.current().text(), false);
         }
-        graphics.text(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_command_text"),
+        graphics.text(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_text"),
                 18, 337, KineticTheme.current().text(), true);
     }
 
@@ -219,19 +219,19 @@ final class CommandManageScreen extends KineticPage {
     protected void renderTooltips(int mouseX, int mouseY) {
         if (KineticTheme.hovering(mouseX, mouseY, ICON_X, ICON_Y, ICON_SIZE, ICON_SIZE)) {
             showTooltip(List.of(ShopGuiSupport.stack(iconId).getHoverName(),
-                    KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_command_icon_tooltip")));
+                    AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_icon_tooltip")));
             return;
         }
         if (grid == null) return;
         int index = grid.itemAt(mouseX, mouseY);
         if (index < 0 || index >= draft.commands.size()) return;
         ShopGuiSupport.CommandDraft command = draft.commands.get(index);
-        String name = command.displayName() == null || command.displayName().isBlank()
-                ? KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_command_empty_name").getString()
-                : command.displayName();
+        Component name = command.displayName() == null || command.displayName().isBlank()
+                ? AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_empty_name")
+                : AdventureText.literal(command.displayName());
         showTooltip(List.of(
-                KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_command_tooltip_name", name),
-                KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_command_tooltip_command",
+                AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_tooltip_name", name),
+                AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_tooltip_command",
                         commandInputText(command.command()))), 280);
     }
 

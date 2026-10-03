@@ -360,7 +360,11 @@ public final class Shop {
         CompoundTag tag = new CompoundTag();
         tag.putInt("Index", entry.index());
         tag.putString("Key", entry.key());
+//? if >=1.21 {
+        /*tag.put("Item", entry.stack().saveOptional(dev.xyat.adventuresystems.data.AdventureItemData.registryAccess()));
+        *///?} else {
         tag.put("Item", entry.stack().save(new CompoundTag()));
+        //?}
         tag.putString("Currency", entry.currencyId());
         tag.putLong("Price", entry.price());
         tag.putInt("DailyLimit", entry.dailyLimit());
@@ -392,13 +396,21 @@ public final class Shop {
         tag.putBoolean("Unlocked", entry.unlocked());
         tag.putBoolean("Gacha", entry.gacha());
         tag.putBoolean("Selectable", entry.selectable());
+//? if >=1.21 {
+        /*if (entry.icon() != null && !entry.icon().isEmpty()) tag.put("Icon", entry.icon().saveOptional(dev.xyat.adventuresystems.data.AdventureItemData.registryAccess()));
+        *///?} else {
         if (entry.icon() != null && !entry.icon().isEmpty()) tag.put("Icon", entry.icon().save(new CompoundTag()));
+        //?}
         tag.put("Rewards", rewardsTag(entry.rewards()));
         return tag;
     }
 
     private static Entry entryFromTag(Mode mode, CompoundTag tag) {
+//? if >=1.21 {
+        /*ItemStack stack = ItemStack.parseOptional(dev.xyat.adventuresystems.data.AdventureItemData.registryAccess(), tag.getCompound("Item"));
+        *///?} else {
         ItemStack stack = ItemStack.of(tag.getCompound("Item"));
+        //?}
         String currency = tag.getString("Currency");
         long price = tag.getLong("Price");
         int index = tag.getInt("Index");
@@ -417,7 +429,11 @@ public final class Shop {
         boolean hasBackpack = tag.getBoolean("HasBackpack");
         boolean rsLoaded = tag.getBoolean("RsLoaded");
         String rsState = tag.getString("RsState");
+//? if >=1.21 {
+        /*ItemStack icon = tag.contains("Icon", Tag.TAG_COMPOUND) ? ItemStack.parseOptional(dev.xyat.adventuresystems.data.AdventureItemData.registryAccess(), tag.getCompound("Icon")) : ItemStack.EMPTY;
+        *///?} else {
         ItemStack icon = tag.contains("Icon", Tag.TAG_COMPOUND) ? ItemStack.of(tag.getCompound("Icon")) : ItemStack.EMPTY;
+        //?}
         long sellProgress = tag.getLong("SellProgress");
         String pageName = tag.getString("PageName");
         String displayName = tag.getString("DisplayName");
@@ -500,7 +516,11 @@ public final class Shop {
     private static Entry parseEntry(Mode mode, int index, String line, ServerPlayer player, EntryBuildContext context) {
         if (line == null) return null;
         String trimmed = line.trim();
+//? if >=1.21 {
+        /*String[] parts = StackCodec.splitTopLevel(trimmed, '|');
+        *///?} else {
         String[] parts = trimmed.split("\\|");
+        //?}
         if (parts.length < 3) return null;
         ItemStack parsedStack = StackCodec.fromConfigString(parts[0].trim());
         if (parsedStack.isEmpty()) return null;
@@ -629,7 +649,11 @@ public final class Shop {
     private static List<String> splitOptionTokens(String text) {
         List<String> result = new ArrayList<>();
         if (text == null || text.isBlank()) return result;
+//? if >=1.21 {
+        /*for (String raw : StackCodec.splitTopLevel(text, ';')) {
+        *///?} else {
         for (String raw : text.split(";")) {
+        //?}
             String value = raw.trim();
             if (!value.isEmpty()) result.add(value);
         }
@@ -895,7 +919,11 @@ public final class Shop {
     private static List<Reward> parseRewards(String text) {
         List<Reward> rewards = new ArrayList<>();
         if (text == null || text.isBlank()) return rewards;
+//? if >=1.21 {
+        /*for (String raw : StackCodec.splitTopLevel(text, ',')) {
+        *///?} else {
         for (String raw : text.split(",")) {
+        //?}
             Reward reward = parseReward(raw.trim());
             if (reward != null) rewards.add(reward);
         }
@@ -904,7 +932,11 @@ public final class Shop {
 
     private static Reward parseReward(String text) {
         if (text == null || text.isBlank()) return null;
+//? if >=1.21 {
+        /*int at = StackCodec.topLevelIndex(text, '@');
+        *///?} else {
         int at = text.indexOf('@');
+        //?}
         if (at <= 0 || at >= text.length() - 1) return null;
         String itemText = text.substring(0, at).trim();
         String weightAndOptions = text.substring(at + 1).trim();
@@ -948,7 +980,11 @@ public final class Shop {
         for (Reward reward : rewards) {
             CompoundTag tag = new CompoundTag();
             tag.putBoolean("Empty", reward.empty());
+//? if >=1.21 {
+        /*if (!reward.empty()) tag.put("Item", reward.stack().saveOptional(dev.xyat.adventuresystems.data.AdventureItemData.registryAccess()));
+        *///?} else {
             if (!reward.empty()) tag.put("Item", reward.stack().save(new CompoundTag()));
+        //?}
             tag.putInt("Weight", reward.weight());
             tag.putDouble("Chance", reward.chance());
             tag.putString("DisplayName", reward.displayName() == null ? "" : reward.displayName());
@@ -970,7 +1006,11 @@ public final class Shop {
         List<Reward> rewards = new ArrayList<>();
         for (int i = 0; i < list.size(); i++) {
             CompoundTag tag = list.getCompound(i);
+//? if >=1.21 {
+        /*ItemStack stack = tag.getBoolean("Empty") ? ItemStack.EMPTY : ItemStack.parseOptional(dev.xyat.adventuresystems.data.AdventureItemData.registryAccess(), tag.getCompound("Item"));
+        *///?} else {
             ItemStack stack = tag.getBoolean("Empty") ? ItemStack.EMPTY : ItemStack.of(tag.getCompound("Item"));
+        //?}
             int weight = tag.getInt("Weight");
             double chance = tag.getDouble("Chance");
             String displayName = tag.getString("DisplayName");
@@ -1115,7 +1155,11 @@ public final class Shop {
 
     private static String entryUid(String line) {
         if (line == null || line.isBlank()) return "";
+//? if >=1.21 {
+        /*String[] parts = StackCodec.splitTopLevel(line, '|');
+        *///?} else {
         String[] parts = line.split("\\|");
+        //?}
         for (String part : parts) {
             String value = part == null ? "" : part.trim();
             if (!value.regionMatches(true, 0, "uid=", 0, 4)) continue;

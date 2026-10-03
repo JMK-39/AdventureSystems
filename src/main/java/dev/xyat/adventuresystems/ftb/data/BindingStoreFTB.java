@@ -138,7 +138,11 @@ public final class BindingStoreFTB {
         }
 
         ItemBindingEntryFTB entry = new ItemBindingEntryFTB(itemId);
+        //? if >=1.21 {
+        /*if (!stack.getComponentsPatch().isEmpty()) {
+        *///?} else {
         if (stack.hasTag()) {
+        //?}
             entry.nbt = stackNbtString(stack);
             entry.matchNbt = true;
             entry.refreshKey();
@@ -307,12 +311,22 @@ public final class BindingStoreFTB {
     public static String cacheKeyForStack(ItemStack stack) {
         String itemId = itemKey(stack);
         if (itemId.isEmpty()) return "";
+        //? if >=1.21 {
+        /*CompoundTag patch = FTBItemComponents.encode(stack);
+        String nbt = patch.isEmpty() ? "" : patch.toString();
+        *///?} else {
         String nbt = stackNbtString(stack);
+        //?}
         return nbt.isEmpty() ? itemId : itemId + "|nbt:" + nbt;
     }
 
     public static String stackNbtString(ItemStack stack) {
         if (stack == null || stack.isEmpty()) return "";
+        //? if >=1.21 {
+        /*CompoundTag patch = FTBItemComponents.encode(stack);
+        if ("minecraft:enchanted_book".equals(itemKey(stack))) patch = FTBItemComponents.storedEnchantments(stack);
+        return patch.isEmpty() ? "" : patch.toString();
+        *///?} else {
         CompoundTag tag = stack.getTag();
         if (tag == null || tag.isEmpty()) return "";
 
@@ -353,6 +367,7 @@ public final class BindingStoreFTB {
         }
 
         return tag.toString();
+        //?}
     }
 
     public static boolean isValidTarget(String target) {
@@ -427,7 +442,11 @@ public final class BindingStoreFTB {
 
         if (!stack.isEmpty() && nbtStr != null && !nbtStr.isEmpty()) {
             try {
+                //? if >=1.21 {
+                /*FTBItemComponents.apply(stack, TagParser.parseTag(ItemBindingEntryFTB.normalizeNbt(nbtStr)), FTBItemComponents.registries());
+                *///?} else {
                 stack.setTag(TagParser.parseTag(ItemBindingEntryFTB.normalizeNbt(nbtStr)));
+                //?}
             } catch (Throwable ignored) {
             }
         }
@@ -438,7 +457,11 @@ public final class BindingStoreFTB {
         String normalized = ItemBindingEntryFTB.normalizeNbt(nbt);
         if (normalized.isEmpty()) return false;
         try {
+            //? if >=1.21 {
+            /*FTBItemComponents.apply(new ItemStack(net.minecraft.world.item.Items.STONE), TagParser.parseTag(normalized), FTBItemComponents.registries());
+            *///?} else {
             TagParser.parseTag(normalized);
+            //?}
             return false;
         } catch (Throwable ignored) {
             return true;
@@ -459,7 +482,11 @@ public final class BindingStoreFTB {
         if (expected == null) return false;
         if (expected.isEmpty()) return true;
         if (stack == null || stack.isEmpty()) return false;
+        //? if >=1.21 {
+        /*CompoundTag actual = FTBItemComponents.encode(stack);
+        *///?} else {
         CompoundTag actual = stack.getTag();
+        //?}
         if (actual == null) return false;
         return containsFuzzy(expected, actual);
     }
@@ -544,11 +571,18 @@ public final class BindingStoreFTB {
 
     private static boolean hasStoredEnchantments(ItemStack stack) {
         if (stack == null || stack.isEmpty()) return false;
+        //? if >=1.21 {
+        /*return FTBItemComponents.hasStoredEnchantments(stack);
+        *///?} else {
         CompoundTag tag = stack.getTag();
         return tag != null && tag.contains("StoredEnchantments");
+        //?}
     }
 
     private static CompoundTag cleanEnchantedBookTag(ItemStack stack) {
+        //? if >=1.21 {
+        /*return FTBItemComponents.storedEnchantments(stack);
+        *///?} else {
         CompoundTag clean = new CompoundTag();
         if (stack == null || stack.isEmpty()) {
             return clean;
@@ -563,6 +597,7 @@ public final class BindingStoreFTB {
         }
 
         return clean;
+        //?}
     }
 
 

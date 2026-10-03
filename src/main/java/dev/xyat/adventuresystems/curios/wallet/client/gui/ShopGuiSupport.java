@@ -5,6 +5,7 @@ import dev.xyat.adventuresystems.curios.wallet.data.Data;
 import dev.xyat.adventuresystems.curios.wallet.data.StackCodec;
 import dev.xyat.adventuresystems.curios.wallet.shop.Shop;
 import dev.xyat.adventuresystems.ftb.util.BridgeFTB;
+import dev.xyat.adventuresystems.text.AdventureText;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -41,7 +42,7 @@ final class ShopGuiSupport {
 
     static Component stackNameComponent(ItemStack stack) {
         if (stack == null || stack.isEmpty()) return Component.empty();
-        return stack.getHoverName();
+        return AdventureText.component(stack.getHoverName());
     }
 
     static String stackNameWithCount(ItemStack stack) {

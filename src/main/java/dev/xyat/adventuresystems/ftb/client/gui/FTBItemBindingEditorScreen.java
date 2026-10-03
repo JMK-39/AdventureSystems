@@ -13,7 +13,7 @@ import dev.xyat.kineticcore.api.client.gui.ui.KineticUi;
 import dev.xyat.kineticcore.api.client.gui.widget.KineticButton;
 import dev.xyat.kineticcore.api.client.search.KineticSearch;
 import dev.xyat.kineticcore.api.config.client.KTConfigApi;
-import dev.xyat.kineticcore.api.text.KineticI18n;
+import dev.xyat.adventuresystems.text.AdventureText;
 import dev.xyat.adventuresystems.ftb.client.hud.FTBToastUtil;
 import dev.xyat.adventuresystems.ftb.client.FTBConfigGui;
 import dev.xyat.adventuresystems.ftb.data.BindingStoreFTB;
@@ -70,7 +70,7 @@ public class FTBItemBindingEditorScreen extends KineticPage {
     private KineticButton saveButton;
 
     public FTBItemBindingEditorScreen() {
-        super(KineticI18n.translatable("screen.adventuresystems.ftb.editor"));
+        super(AdventureText.translatable("screen.adventuresystems.ftb.editor"));
         useCanvas(640, 360, 6);
         configureStandaloneDraft(this::captureBindingSnapshot, this::restoreBindingSnapshot);
     }
@@ -129,25 +129,25 @@ public class FTBItemBindingEditorScreen extends KineticPage {
         int blacklistX = clearX - GAP - 70;
 
         ui.textField(this.leftX, topY, 220)
-                .label(KineticI18n.translatable("placeholder.adventuresystems.ftb.task.search"))
-                .placeholder(KineticI18n.translatable("placeholder.adventuresystems.ftb.task.search"))
+                .label(AdventureText.translatable("placeholder.adventuresystems.ftb.task.search"))
+                .placeholder(AdventureText.translatable("placeholder.adventuresystems.ftb.task.search"))
                 .value(searchText).maxLength(128)
                 .onChange(value -> {
                     searchText = value;
                     taskScroll.reset();
                     refreshTaskFilter(value);
                 }).firstShownTextAsDefault().build();
-        ui.button(blacklistX, topY, 70).text(KineticI18n.translatable("button.adventuresystems.ftb.blacklist"))
+        ui.button(blacklistX, topY, 70).text(AdventureText.translatable("button.adventuresystems.ftb.blacklist"))
                 .onClick(() -> openChild(new FTBBlacklistScreen())).build();
-        ui.button(clearX, topY, 80).text(KineticI18n.translatable("button.adventuresystems.ftb.clear"))
+        ui.button(clearX, topY, 80).text(AdventureText.translatable("button.adventuresystems.ftb.clear"))
                 .onClick(this::clearSelectedBinding).build();
-        ui.button(closeX, topY, buttonW).text(KineticI18n.translatable("gui.done"))
+        ui.button(closeX, topY, buttonW).text(AdventureText.translatable("gui.done"))
                 .onClick(this::close).build();
 
         refreshLayoutValues();
 
         this.saveButton = ui.button(selectedItemIconX() + ITEM_SLOT + 8, selectedItemIconY() + 1, 52)
-                .text(KineticI18n.translatable("button.adventuresystems.ftb.save"))
+                .text(AdventureText.translatable("button.adventuresystems.ftb.save"))
                 .onClick(this::saveCurrentBinding).build();
 
         updateItemScroll();
@@ -225,7 +225,7 @@ public class FTBItemBindingEditorScreen extends KineticPage {
             if (selection != null && selection.isItem()) {
                 selectStack(selection.stack());
             } else {
-                FTBToastUtil.showQuick("adventuresystems_binding_item_only", KineticI18n.translatable("msg.adventuresystems.ftb.item.only"));
+                FTBToastUtil.showQuick("adventuresystems_binding_item_only", AdventureText.translatable("msg.adventuresystems.ftb.item.only"));
             }
         });
     }
@@ -261,7 +261,7 @@ public class FTBItemBindingEditorScreen extends KineticPage {
     private void addTask(RefFTB ref) {
         if (ref == null) return;
         if (selectedStack.isEmpty()) {
-            FTBToastUtil.showQuick("adventuresystems_binding_select_item_first", KineticI18n.translatable("msg.adventuresystems.ftb.item.first"));
+            FTBToastUtil.showQuick("adventuresystems_binding_select_item_first", AdventureText.translatable("msg.adventuresystems.ftb.item.first"));
             return;
         }
         if (selectedQuestIds.add(ref.id())) {
@@ -298,7 +298,7 @@ public class FTBItemBindingEditorScreen extends KineticPage {
     private void setFavoriteTask(RefFTB ref) {
         if (ref == null) return;
         if (selectedStack.isEmpty()) {
-            FTBToastUtil.showQuick("adventuresystems_binding_select_item_first", KineticI18n.translatable("msg.adventuresystems.ftb.item.first"));
+            FTBToastUtil.showQuick("adventuresystems_binding_select_item_first", AdventureText.translatable("msg.adventuresystems.ftb.item.first"));
             return;
         }
         boolean changed = selectedQuestIds.add(ref.id());
@@ -328,7 +328,7 @@ public class FTBItemBindingEditorScreen extends KineticPage {
 
     private void clearSelectedBinding() {
         if (selectedStack.isEmpty()) {
-            FTBToastUtil.showQuick("adventuresystems_binding_select_item_first", KineticI18n.translatable("msg.adventuresystems.ftb.item.first"));
+            FTBToastUtil.showQuick("adventuresystems_binding_select_item_first", AdventureText.translatable("msg.adventuresystems.ftb.item.first"));
             return;
         }
         if (!selectedQuestIds.isEmpty()) {
@@ -342,7 +342,7 @@ public class FTBItemBindingEditorScreen extends KineticPage {
 
     private void saveCurrentBinding() {
         if (selectedStack.isEmpty()) {
-            FTBToastUtil.showQuick("adventuresystems_binding_select_item_first", KineticI18n.translatable("msg.adventuresystems.ftb.item.first"));
+            FTBToastUtil.showQuick("adventuresystems_binding_select_item_first", AdventureText.translatable("msg.adventuresystems.ftb.item.first"));
             return;
         }
 
@@ -358,7 +358,7 @@ public class FTBItemBindingEditorScreen extends KineticPage {
             KTConfigApi.notifySaved(FTBConfigGui.PAGE_ID);
         } else {
             updateSaveButton();
-            FTBToastUtil.showQuick("adventuresystems_binding_failed", KineticI18n.translatable("msg.adventuresystems.ftb.failed"));
+            FTBToastUtil.showQuick("adventuresystems_binding_failed", AdventureText.translatable("msg.adventuresystems.ftb.failed"));
         }
     }
 
@@ -386,7 +386,7 @@ public class FTBItemBindingEditorScreen extends KineticPage {
     private void renderLeftTasks(KineticGraphics g, int mx, int my) {
         int titleX = leftX + 8;
         int titleY = panelY + 8;
-        g.text(KineticI18n.translatable("label.adventuresystems.ftb.tasks", number(visibleTasks.size()), number(allTasks.size())), titleX, titleY, KineticTheme.current().text(), false);
+        g.text(AdventureText.translatable("label.adventuresystems.ftb.tasks", number(visibleTasks.size()), number(allTasks.size())), titleX, titleY, KineticTheme.current().text(), false);
 
         int listX = leftX + 6;
         int listY = panelY + 26;
@@ -421,22 +421,22 @@ public class FTBItemBindingEditorScreen extends KineticPage {
     private void renderRightPanel(KineticGraphics g, int mx, int my) {
         int headerX = rightX + 8;
         int headerY = panelY + 8;
-        Component selectedLabel = KineticI18n.translatable("label.adventuresystems.ftb.item");
+        Component selectedLabel = AdventureText.translatable("label.adventuresystems.ftb.item");
         g.text(selectedLabel, headerX, headerY, KineticTheme.current().text(), false);
 
         drawItemSlot(g, selectedItemIconX(), selectedItemIconY(), selectedStack, mx, my, false);
         if (selectedStack.isEmpty()) {
-            g.text(KineticI18n.translatable("tip.adventuresystems.ftb.item.choose"), selectedItemIconX() + ITEM_SLOT + 8, selectedItemIconY() + 7, KineticTheme.current().text(), false);
+            g.text(AdventureText.translatable("tip.adventuresystems.ftb.item.choose"), selectedItemIconX() + ITEM_SLOT + 8, selectedItemIconY() + 7, KineticTheme.current().text(), false);
         }
 
-        g.text(KineticI18n.translatable("label.adventuresystems.ftb.custom.items", number(explicitEntries.size())), headerX, panelY + 30, KineticTheme.current().text(), false);
+        g.text(AdventureText.translatable("label.adventuresystems.ftb.custom.items", number(explicitEntries.size())), headerX, panelY + 30, KineticTheme.current().text(), false);
         renderExplicitItemGrid(g, mx, my);
 
-        g.text(KineticI18n.translatable("label.adventuresystems.ftb.bound.tasks", number(boundTasks.size())), headerX, boundY - 18, KineticTheme.current().text(), false);
+        g.text(AdventureText.translatable("label.adventuresystems.ftb.bound.tasks", number(boundTasks.size())), headerX, boundY - 18, KineticTheme.current().text(), false);
         renderBoundTasks(g, mx, my);
 
         if (!selectedStack.isEmpty() && boundTasks.isEmpty() && !dirty) {
-            g.text(KineticI18n.translatable("tip.adventuresystems.ftb.default"), rightX + 8, boundY + boundH + 1, KineticTheme.current().text(), false);
+            g.text(AdventureText.translatable("tip.adventuresystems.ftb.default"), rightX + 8, boundY + boundH + 1, KineticTheme.current().text(), false);
         }
     }
 
@@ -485,7 +485,7 @@ public class FTBItemBindingEditorScreen extends KineticPage {
             boolean hover = mx >= listX && mx < listX + listW && my >= y && my < y + ROW_H;
             KineticTheme.stateSurface(g, listX, y, listW, ROW_H - 1, KineticTheme.Surface.PANEL_ALT, false, hover, false);
             boolean favorite = ref.id() == favoriteQuestId;
-            Component star = KineticI18n.translatable(favorite
+            Component star = AdventureText.translatable(favorite
                     ? "label.adventuresystems.ftb.favorite.marker_on"
                     : "label.adventuresystems.ftb.favorite.marker_off");
             int starW = KineticText.width(star) + 8;
@@ -505,18 +505,18 @@ public class FTBItemBindingEditorScreen extends KineticPage {
 
     private String cleanTaskTitle(RefFTB ref) {
         String title = ref == null ? "" : cleanFtbText(ref.title());
-        return title.isBlank() ? KineticI18n.translatable("label.adventuresystems.ftb.task.unnamed").getString() : title;
+        return title.isBlank() ? AdventureText.translatable("label.adventuresystems.ftb.task.unnamed").getString() : title;
     }
 
     private Component buildTaskChapterLine(RefFTB ref) {
         String chapter = ref == null ? "" : cleanFtbText(ref.chapter());
-        if (chapter.isBlank()) {
-            chapter = KineticI18n.translatable("label.adventuresystems.ftb.chapter.unknown").getString();
-        }
+        Component chapterText = chapter.isBlank()
+                ? AdventureText.translatable("label.adventuresystems.ftb.chapter.unknown")
+                : AdventureText.literal(chapter);
         String code = ref == null ? "" : ref.code();
-        return KineticI18n.translatable(
+        return AdventureText.translatable(
                 "label.adventuresystems.ftb.quest.chapter.id",
-                Component.literal(chapter),
+                chapterText,
                 Component.literal(code)
         );
     }
@@ -531,7 +531,7 @@ public class FTBItemBindingEditorScreen extends KineticPage {
     }
 
     private int selectedItemIconX() {
-        return rightX + 8 + KineticText.width(KineticI18n.translatable("label.adventuresystems.ftb.item")) + 8;
+        return rightX + 8 + KineticText.width(AdventureText.translatable("label.adventuresystems.ftb.item")) + 8;
     }
 
     private int selectedItemIconY() {
@@ -549,21 +549,21 @@ public class FTBItemBindingEditorScreen extends KineticPage {
         RefFTB taskRef = taskAt(mx, my);
         if (taskRef != null) {
             Component tip = selectedQuestIds.contains(taskRef.id())
-                    ? KineticI18n.translatable("tip.adventuresystems.ftb.task.remove")
-                    : KineticI18n.translatable("tip.adventuresystems.ftb.task.add");
+                    ? AdventureText.translatable("tip.adventuresystems.ftb.task.remove")
+                    : AdventureText.translatable("tip.adventuresystems.ftb.task.add");
             showTooltip(List.of(tip));
             return;
         }
         RefFTB boundRef = boundAt(mx, my);
         if (boundRef != null) {
             showTooltip(List.of(
-                    KineticI18n.translatable("tip.adventuresystems.ftb.task.remove"),
-                    KineticI18n.translatable("tip.adventuresystems.ftb.favorite.desc")
+                    AdventureText.translatable("tip.adventuresystems.ftb.task.remove"),
+                    AdventureText.translatable("tip.adventuresystems.ftb.favorite.desc")
             ));
             return;
         }
         if (isInside(mx, my, selectedItemIconX(), selectedItemIconY(), ITEM_SLOT, ITEM_SLOT)) {
-            showTooltip(KineticI18n.translatable("button.adventuresystems.ftb.item.select"));
+            showTooltip(AdventureText.translatable("button.adventuresystems.ftb.item.select"));
         }
     }
 

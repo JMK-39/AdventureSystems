@@ -11,7 +11,7 @@ import dev.xyat.kineticcore.api.client.gui.widget.KineticNumberField;
 import dev.xyat.kineticcore.api.client.gui.widget.list.ItemActionItem;
 import dev.xyat.kineticcore.api.client.gui.widget.list.KineticItemActionList;
 import dev.xyat.kineticcore.api.client.gui.overlay.KineticOverlays;
-import dev.xyat.kineticcore.api.text.KineticI18n;
+import dev.xyat.adventuresystems.text.AdventureText;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 
@@ -27,7 +27,7 @@ final class RewardPoolScreen extends KineticPage {
     private int scrollOffset;
 
     RewardPoolScreen(ShopGuiSupport.EditorDraft draft) {
-        super(KineticI18n.translatable(titleKey(draft)));
+        super(AdventureText.translatable(titleKey(draft)));
         this.draft = draft;
         useCanvas(640, 360, 6);
     }
@@ -35,27 +35,27 @@ final class RewardPoolScreen extends KineticPage {
     @Override
     protected void build(KineticUi ui) {
         if (list != null) scrollOffset = list.scrollOffset();
-        ui.button(14, 42, 104).text(KineticI18n.translatable(addItemButtonKey()))
-                .tooltip(KineticI18n.translatable(addItemTooltipKey()))
+        ui.button(14, 42, 104).text(AdventureText.translatable(addItemButtonKey()))
+                .tooltip(AdventureText.translatable(addItemTooltipKey()))
                 .onClick(this::openItemSelector).build();
         if (!sellMode()) {
             ui.button(124, 42, 112)
-                    .text(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_command_add_reward"))
+                    .text(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_add_reward"))
                     .onClick(this::openCommandRewardPicker).build();
         }
         if (gachaMode()) {
-            ui.button(242, 42, 96).text(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_reward_add_empty"))
+            ui.button(242, 42, 96).text(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_reward_add_empty"))
                     .onClick(this::addEmptyReward).build();
         }
         int clearX = gachaMode() ? 344 : sellMode() ? 124 : 242;
-        ui.button(clearX, 42, 78).text(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_reward_clear"))
-                .tooltip(KineticI18n.translatable(clearTooltipKey()))
+        ui.button(clearX, 42, 78).text(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_reward_clear"))
+                .tooltip(AdventureText.translatable(clearTooltipKey()))
                 .onClick(() -> {
                     draft.rewards.clear();
                     selectedIndex = -1;
                     refreshList();
                 }).build();
-        ui.button(544, 42, 82).text(KineticI18n.translatable("gui.done"))
+        ui.button(544, 42, 82).text(AdventureText.translatable("gui.done"))
                 .onClick(this::finish).build();
         list = ui.itemActionList(14, 82, 612, 208, listItems())
                 .selected(selectedIndex).scrollOffset(scrollOffset).actionWidth(66)
@@ -65,11 +65,11 @@ final class RewardPoolScreen extends KineticPage {
         int selectedWeight = selectedIndex >= 0 && selectedIndex < draft.rewards.size()
                 ? Math.max(1, draft.rewards.get(selectedIndex).weight()) : 1;
         countBox = ui.numberField(96, 314, 70, NumberType.INT)
-                .label(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_reward_column_count"))
+                .label(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_reward_column_count"))
                 .allowNegative(false).range(1, 64).value(selectedCount)
                 .onChange(value -> updateSelectedCount()).firstShownTextAsDefault().build();
         weightBox = ui.numberField(256, 314, 80, NumberType.INT)
-                .label(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_reward_column_weight"))
+                .label(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_reward_column_weight"))
                 .allowNegative(false).range(1, 999999999).value(selectedWeight)
                 .onChange(value -> updateSelectedWeight()).firstShownTextAsDefault().build();
         boolean editable = selectedIndex >= 0 && selectedIndex < draft.rewards.size();
@@ -81,16 +81,16 @@ final class RewardPoolScreen extends KineticPage {
         recalc();
         List<ItemActionItem> items = new ArrayList<>(draft.rewards.size());
         for (ShopGuiSupport.RewardDraft reward : draft.rewards) {
-            Component name = Component.literal(rewardDisplayName(reward));
+            Component name = rewardDisplayName(reward);
             Component secondary = gachaMode()
-                    ? KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_reward_tooltip_chance",
+                    ? AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_reward_tooltip_chance",
                             ShopGuiSupport.percent(reward.chance()))
-                    : KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_reward_tooltip_count",
+                    : AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_reward_tooltip_count",
                             Math.max(1, reward.count()));
             ItemStack icon = reward.empty() ? ItemStack.EMPTY : ShopGuiSupport.stack(reward.itemId());
             items.add(new ItemActionItem(icon, name, secondary, name, true, false,
-                    KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_reward_delete_short"),
-                    KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_reward_tooltip_delete"), true));
+                    AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_reward_delete_short"),
+                    AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_reward_tooltip_delete"), true));
         }
         return items;
     }
@@ -171,7 +171,7 @@ final class RewardPoolScreen extends KineticPage {
     }
 
     private static void toast(String id, String key) {
-        KineticOverlays.toast(id, KineticI18n.translatable(key), KineticOverlays.Position.BOTTOM_CENTER, 2200, 0, -30);
+        KineticOverlays.toast(id, AdventureText.translatable(key), KineticOverlays.Position.BOTTOM_CENTER, 2200, 0, -30);
     }
 
     private void deleteReward(int index) {
@@ -214,13 +214,13 @@ final class RewardPoolScreen extends KineticPage {
         KineticTheme.shadow(graphics, width(), height());
         KineticTheme.panel(graphics, 0, 0, 640, 360);
         graphics.centeredText(title(), 320, 10, KineticTheme.current().text(), false);
-        graphics.text(KineticI18n.translatable(primaryHintKey()), 14, 26, KineticTheme.current().text(), true);
-        graphics.text(KineticI18n.translatable(secondaryHintKey()), 14, 38, KineticTheme.current().text(), true);
-        graphics.text(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_reward_column_count"),
+        graphics.text(AdventureText.translatable(primaryHintKey()), 14, 26, KineticTheme.current().text(), true);
+        graphics.text(AdventureText.translatable(secondaryHintKey()), 14, 38, KineticTheme.current().text(), true);
+        graphics.text(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_reward_column_count"),
                 14, 318, KineticTheme.current().text(), true);
-        if (gachaMode()) graphics.text(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_reward_column_weight"),
+        if (gachaMode()) graphics.text(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_reward_column_weight"),
                 182, 318, KineticTheme.current().text(), true);
-        if (draft.rewards.isEmpty()) graphics.centeredText(KineticI18n.translatable(emptyListKey()),
+        if (draft.rewards.isEmpty()) graphics.centeredText(AdventureText.translatable(emptyListKey()),
                 320, 180, KineticTheme.current().text(), false);
     }
 
@@ -266,10 +266,10 @@ final class RewardPoolScreen extends KineticPage {
         return "gui.adventuresystems.curios.wallet.shop_reward_pool_empty";
     }
 
-    private String rewardDisplayName(ShopGuiSupport.RewardDraft reward) {
-        if (reward.displayName() != null && !reward.displayName().isBlank()) return reward.displayName();
-        if (reward.empty()) return KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_gacha_empty").getString();
-        return ShopGuiSupport.stackName(reward.itemId());
+    private Component rewardDisplayName(ShopGuiSupport.RewardDraft reward) {
+        if (reward.displayName() != null && !reward.displayName().isBlank()) return AdventureText.literal(reward.displayName());
+        if (reward.empty()) return AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_gacha_empty");
+        return ShopGuiSupport.stackNameComponent(reward.itemId());
     }
 
     private boolean gachaMode() { return draft.mode == Shop.Mode.BUY && draft.gacha && !draft.selectable; }

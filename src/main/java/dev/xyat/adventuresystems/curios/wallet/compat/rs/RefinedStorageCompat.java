@@ -1,3 +1,63 @@
+//? if >=1.21 {
+/*package dev.xyat.adventuresystems.curios.wallet.compat.rs;
+import dev.xyat.kineticcore.api.runtime.KineticPlatform;
+import dev.xyat.adventuresystems.curios.wallet.storage.WalletMaterialMatcher;
+import com.refinedmods.refinedstorage.common.api.support.network.AbstractNetworkNodeContainerBlockEntity;
+import com.refinedmods.refinedstorage.api.network.Network;
+import com.refinedmods.refinedstorage.api.network.storage.StorageNetworkComponent;
+import com.refinedmods.refinedstorage.api.network.impl.node.AbstractNetworkNode;
+import com.refinedmods.refinedstorage.common.support.resource.ItemResource;
+import com.refinedmods.refinedstorage.common.api.storage.PlayerActor;
+import com.refinedmods.refinedstorage.api.core.Action;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
+
+public final class RefinedStorageCompat {
+    private RefinedStorageCompat() {}
+    public static boolean isController(ServerLevel level, BlockPos pos) {
+        return KineticPlatform.isModLoaded("refinedstorage") && level != null && pos != null
+                && level.getBlockEntity(pos) instanceof com.refinedmods.refinedstorage.common.controller.ControllerBlockEntity;
+    }
+    public static boolean canBind(ServerLevel level, BlockPos pos) { return isController(level, pos); }
+    public static boolean canBind(ServerPlayer player, ServerLevel level, BlockPos pos) {
+        return isController(level, pos) && ((AbstractNetworkNodeContainerBlockEntity<?>) level.getBlockEntity(pos)).getContainerProvider().canBuild(player);
+    }
+    public static boolean hasNetwork(ServerLevel level, BlockPos pos) { return network(level, pos) != null; }
+    public static long count(ServerPlayer player, ServerLevel level, BlockPos pos, ItemStack target) {
+        return extract(player, level, pos, target, Long.MAX_VALUE, true);
+    }
+    public static long extract(ServerPlayer player, ServerLevel level, BlockPos pos, ItemStack target, long amount, boolean simulate) {
+        if (player == null || target == null || target.isEmpty() || amount <= 0L) return 0L;
+        Network network = network(level, pos);
+        if (network == null) return 0L;
+        return extractFromNetwork(player,network,target,amount,simulate);
+    }
+    private static long extractFromNetwork(ServerPlayer player, Network network, ItemStack target, long amount, boolean simulate) {
+        if (!com.refinedmods.refinedstorage.common.api.security.SecurityHelper.isAllowed(player, com.refinedmods.refinedstorage.common.security.BuiltinPermission.EXTRACT, network)) return 0L;
+        StorageNetworkComponent storage = network.getComponent(StorageNetworkComponent.class);
+        if (storage == null) return 0L;
+        long remaining = amount;
+        for (ItemStack variant : WalletMaterialMatcher.exactVariants(target)) {
+            long got = storage.extract(ItemResource.ofItemStack(variant), remaining,
+                    simulate ? Action.SIMULATE : Action.EXECUTE, new PlayerActor(player));
+            remaining -= Math.max(0L, Math.min(got, remaining));
+            if (remaining == 0L) break;
+        }
+        return amount - remaining;
+    }
+    private static Network network(ServerLevel level, BlockPos pos) {
+        if (!isController(level, pos)) return null;
+        var blockEntity = (AbstractNetworkNodeContainerBlockEntity<?>) level.getBlockEntity(pos);
+        for (var container : blockEntity.getContainerProvider().getContainers()) {
+            var node = container.getNode();
+            if (node instanceof AbstractNetworkNode active && active.isActive() && node.getNetwork() != null) return node.getNetwork();
+        }
+        return null;
+    }
+}
+*///?} else {
 package dev.xyat.adventuresystems.curios.wallet.compat.rs;
 
 import dev.xyat.kineticcore.api.runtime.KineticPlatform;
@@ -90,3 +150,4 @@ public class RefinedStorageCompat {
     }
 }
 
+//?}

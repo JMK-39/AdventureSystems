@@ -12,7 +12,7 @@ import dev.xyat.kineticcore.api.client.gui.ui.KineticUi;
 import dev.xyat.kineticcore.api.client.gui.widget.list.KineticSelectionList;
 import dev.xyat.kineticcore.api.client.gui.widget.list.SelectionItem;
 import dev.xyat.kineticcore.api.runtime.KineticClientRuntime;
-import dev.xyat.kineticcore.api.text.KineticI18n;
+import dev.xyat.adventuresystems.text.AdventureText;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -39,7 +39,7 @@ public class TipSelectors {
         private int lastListSize;
 
         public RegistrySelectorScreen(String type, Consumer<String> onSelect) {
-            super(KineticI18n.translatable("gui.adventuresystems.tips.tips.setstitle", type), PageLayout.NATIVE);
+            super(AdventureText.translatable("gui.adventuresystems.tips.tips.setstitle", type), PageLayout.NATIVE);
             this.type = type;
             this.onSelect = onSelect;
         }
@@ -55,7 +55,7 @@ public class TipSelectors {
             updateSearch(searchText);
             ui.textField(20, 10, width() - 100)
                     .label(Component.empty())
-                    .placeholder(KineticI18n.translatable("gui.adventuresystems.tips.tips.search"))
+                    .placeholder(AdventureText.translatable("gui.adventuresystems.tips.tips.search"))
                     .value(searchText)
                     .onChange(value -> {
                         searchText = value;
@@ -63,7 +63,7 @@ public class TipSelectors {
                     }).firstShownTextAsDefault().build();
 
             ui.button(width() - 70, 10, 60)
-                    .text(KineticI18n.translatable("gui.adventuresystems.tips.tips.cancel"))
+                    .text(AdventureText.translatable("gui.adventuresystems.tips.tips.cancel"))
                     .onClick(this::closeToParent).build();
 
             this.listWidget = ui.selectionList(20, 40, width() - 40, height() - 50,
@@ -112,6 +112,16 @@ public class TipSelectors {
                         }
                     }
                     case "advancements" -> KineticClientAdvancements.all().forEach(advancement -> {
+                        //? if >=1.21 {
+                        /*var display = advancement.value().display();
+                        if (display.isEmpty()) return;
+                        ResourceLocation id = advancement.id();
+                        allEntries.add(new RegistryEntry(
+                                id.toString(),
+                                display.get().getTitle().getString(),
+                                TipsUtils.getModName(id.getNamespace())
+                        ));
+                        *///?} else {
                         if (advancement.getDisplay() == null) return;
                         ResourceLocation id = advancement.getId();
                         allEntries.add(new RegistryEntry(
@@ -119,6 +129,7 @@ public class TipSelectors {
                                 advancement.getDisplay().getTitle().getString(),
                                 TipsUtils.getModName(id.getNamespace())
                         ));
+                        //?}
                     });
                     case "dimensions" -> {
                         for (var levelKey : KineticClientRuntime.knownLevels()) {
@@ -152,8 +163,8 @@ public class TipSelectors {
         private List<SelectionItem> selectionItems() {
             return displayEntries.stream()
                     .map(entry -> new SelectionItem(
-                            KineticI18n.translatable("gui.adventuresystems.tips.tips.selector.name", entry.name),
-                            KineticI18n.translatable("gui.adventuresystems.tips.tips.selector.meta", entry.source, entry.id),
+                            AdventureText.translatable("gui.adventuresystems.tips.tips.selector.name", entry.name),
+                            AdventureText.translatable("gui.adventuresystems.tips.tips.selector.meta", entry.source, entry.id),
                             null, true, false))
                     .toList();
         }

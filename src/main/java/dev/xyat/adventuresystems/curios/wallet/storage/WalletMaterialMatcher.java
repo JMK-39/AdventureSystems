@@ -20,7 +20,11 @@ public final class WalletMaterialMatcher {
         if (target == null || target.isEmpty()) return List.of();
         ItemStack clean = normalized(target);
         ItemStack picked = clean.copy();
+//? if >=1.21 {
+        /*dev.xyat.adventuresystems.data.AdventureItemData.updateCustomData(picked, tag -> tag.putBoolean(PICKED_UP_TAG, true));
+        *///?} else {
         picked.getOrCreateTag().putBoolean(PICKED_UP_TAG, true);
+        //?}
         List<ItemStack> result = new ArrayList<>(2);
         result.add(clean);
         if (!ItemStack.isSameItemSameTags(clean, picked)) result.add(picked);
@@ -29,10 +33,15 @@ public final class WalletMaterialMatcher {
 
     private static ItemStack normalized(ItemStack source) {
         ItemStack copy = source.copy();
+//? if >=1.21 {
+        /*if (!dev.xyat.adventuresystems.data.AdventureItemData.customData(copy).contains(PICKED_UP_TAG)) return copy;
+        dev.xyat.adventuresystems.data.AdventureItemData.updateCustomData(copy, tag -> tag.remove(PICKED_UP_TAG));
+        *///?} else {
         CompoundTag tag = copy.getTag();
         if (tag == null || !tag.contains(PICKED_UP_TAG)) return copy;
         tag.remove(PICKED_UP_TAG);
         if (tag.isEmpty()) copy.setTag(null);
+        //?}
         return copy;
     }
 }

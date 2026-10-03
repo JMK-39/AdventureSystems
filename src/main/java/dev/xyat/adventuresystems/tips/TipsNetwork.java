@@ -19,7 +19,7 @@ import dev.xyat.kineticcore.api.network.ServerPacketContext;
 import dev.xyat.kineticcore.api.resource.KineticResourceIds;
 import dev.xyat.kineticcore.api.runtime.KineticClientRuntime;
 import dev.xyat.kineticcore.api.runtime.KineticPlatform;
-import dev.xyat.kineticcore.api.text.KineticI18n;
+import dev.xyat.adventuresystems.text.AdventureText;
 import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
@@ -333,14 +333,14 @@ public final class TipsNetwork {
         public static void handleOpenEditor(String languageCode, String json) {
             List<HelpTip.JsonModel.Entry> entries = ConfigLoader.fromJson(json);
             if (entries == null) {
-                KineticOverlays.toast(KineticI18n.translatable("msg.adventuresystems.tips.tips.save_failed"));
+                KineticOverlays.toast(AdventureText.translatable("msg.adventuresystems.tips.tips.save_failed"));
                 return;
             }
             KineticGui.openChild(new TipEditorScreen(languageCode, entries));
         }
 
         public static void handleEditorDenied() {
-            KineticOverlays.toast(KineticI18n.translatable("msg.adventuresystems.tips.tips.permission_denied"));
+            KineticOverlays.toast(AdventureText.translatable("msg.adventuresystems.tips.tips.permission_denied"));
         }
 
         public static void handleEditorSaveResult(boolean success) {
@@ -352,7 +352,7 @@ public final class TipsNetwork {
             if (success) {
                 KTConfigApi.notifySaved(TipsConfigGui.EDITOR_PAGE_ID);
             } else {
-                KineticOverlays.toast(KineticI18n.translatable("msg.adventuresystems.tips.tips.save_failed"));
+                KineticOverlays.toast(AdventureText.translatable("msg.adventuresystems.tips.tips.save_failed"));
             }
         }
 

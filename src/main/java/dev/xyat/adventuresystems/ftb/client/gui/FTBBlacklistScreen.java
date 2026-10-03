@@ -14,7 +14,7 @@ import dev.xyat.kineticcore.api.client.gui.widget.list.ItemGridItem;
 import dev.xyat.kineticcore.api.client.gui.widget.list.ItemGridOutline;
 import dev.xyat.kineticcore.api.client.gui.widget.list.KineticItemGrid;
 import dev.xyat.kineticcore.api.registry.KineticRegistries;
-import dev.xyat.kineticcore.api.text.KineticI18n;
+import dev.xyat.adventuresystems.text.AdventureText;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
@@ -30,7 +30,7 @@ public class FTBBlacklistScreen extends KineticPage {
     private int gridScroll;
 
     public FTBBlacklistScreen() {
-        super(KineticI18n.translatable("screen.adventuresystems.ftb.blacklist"));
+        super(AdventureText.translatable("screen.adventuresystems.ftb.blacklist"));
         useCanvas(500, 320, 6);
         configureStandaloneDraft(BlacklistStoreFTB::getAll, BlacklistStoreFTB::replaceAll);
     }
@@ -40,9 +40,9 @@ public class FTBBlacklistScreen extends KineticPage {
         if (itemGrid != null) gridScroll = itemGrid.scrollOffset();
         itemGrid = null;
         reloadEntries();
-        ui.button(14, 10, 100).text(KineticI18n.translatable("button.adventuresystems.ftb.blacklist.add"))
+        ui.button(14, 10, 100).text(AdventureText.translatable("button.adventuresystems.ftb.blacklist.add"))
                 .onClick(this::openSelector).build();
-        ui.button(width() - 74, 10, 60).text(KineticI18n.translatable("button.adventuresystems.ftb.save"))
+        ui.button(width() - 74, 10, 60).text(AdventureText.translatable("button.adventuresystems.ftb.save"))
                 .onClick(this::save).build();
         itemGrid = ui.itemGrid(14, 36, width() - 28, height() - 50, ItemGridDensity.STANDARD, gridItems())
                 .scrollOffset(gridScroll).onClick(ignored -> { }).build();
@@ -77,7 +77,11 @@ public class FTBBlacklistScreen extends KineticPage {
             else if (selection.isItem()) {
                 ItemStack stack = selection.stack();
                 target = BindingStoreFTB.itemKey(stack);
+                //? if >=1.21 {
+                /*if (!stack.getComponentsPatch().isEmpty()) {
+                *///?} else {
                 if (stack.getTag() != null && stack.hasTag() && !stack.getTag().isEmpty()) {
+                //?}
                     String nbt = BindingStoreFTB.stackNbtString(stack);
                     if (!nbt.isEmpty()) target += "|nbt:" + nbt;
                 }
@@ -85,7 +89,7 @@ public class FTBBlacklistScreen extends KineticPage {
             if (target.isEmpty()) return;
             BlacklistStoreFTB.add(target);
             reloadEntries();
-            FTBToastUtil.show("adventuresystems_blacklist_added", KineticI18n.translatable("msg.adventuresystems.ftb.blacklist.added"));
+            FTBToastUtil.show("adventuresystems_blacklist_added", AdventureText.translatable("msg.adventuresystems.ftb.blacklist.added"));
         });
     }
 
@@ -94,7 +98,7 @@ public class FTBBlacklistScreen extends KineticPage {
         KineticTheme.shadow(graphics, width(), height());
         KineticTheme.canvasBackground(graphics, width(), height());
         graphics.text(
-                KineticI18n.translatable(
+                AdventureText.translatable(
                         "label.adventuresystems.ftb.blacklist.count",
                         Component.literal(String.valueOf(allEntries.size()))
                 ),
@@ -113,11 +117,11 @@ public class FTBBlacklistScreen extends KineticPage {
         String entry = allEntries.get(index);
         ItemStack icon = getIconForRule(entry);
         List<Component> tips = new ArrayList<>();
-        if (entry.startsWith("@")) tips.add(KineticI18n.translatable("label.adventuresystems.ftb.type.mod"));
-        else if (entry.startsWith("#")) tips.add(KineticI18n.translatable("label.adventuresystems.ftb.type.tag"));
+        if (entry.startsWith("@")) tips.add(AdventureText.translatable("label.adventuresystems.ftb.type.mod"));
+        else if (entry.startsWith("#")) tips.add(AdventureText.translatable("label.adventuresystems.ftb.type.tag"));
         else tips.add(icon.getHoverName());
-        tips.add(KineticI18n.translatable("tip.adventuresystems.ftb.blacklist.rule_value", entry));
-        tips.add(KineticI18n.translatable("tip.adventuresystems.ftb.blacklist.remove"));
+        tips.add(AdventureText.translatable("tip.adventuresystems.ftb.blacklist.rule_value", entry));
+        tips.add(AdventureText.translatable("tip.adventuresystems.ftb.blacklist.remove"));
         showTooltip(tips);
     }
 
@@ -128,7 +132,7 @@ public class FTBBlacklistScreen extends KineticPage {
             if (index >= 0 && index < allEntries.size()) {
                 BlacklistStoreFTB.remove(allEntries.get(index));
                 reloadEntries();
-                FTBToastUtil.show("adventuresystems_blacklist_removed", KineticI18n.translatable("msg.adventuresystems.ftb.blacklist.removed"));
+                FTBToastUtil.show("adventuresystems_blacklist_removed", AdventureText.translatable("msg.adventuresystems.ftb.blacklist.removed"));
                 return true;
             }
         }

@@ -8,7 +8,7 @@ import dev.xyat.kineticcore.api.client.gui.render.KineticGraphics;
 import dev.xyat.kineticcore.api.client.gui.selector.KineticHudEditorPage;
 import dev.xyat.kineticcore.api.config.client.KTConfigApi;
 import dev.xyat.kineticcore.api.resource.KineticResourceIds;
-import dev.xyat.kineticcore.api.text.KineticI18n;
+import dev.xyat.adventuresystems.text.AdventureText;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -25,7 +25,7 @@ public final class WalletHudEditorScreen extends KineticHudEditorPage {
     private final CompoundTag previewBalances = new CompoundTag();
 
     public WalletHudEditorScreen() {
-        super(KineticI18n.translatable("screen.adventuresystems.wallet_hud.editor.title"));
+        super(AdventureText.translatable("screen.adventuresystems.wallet_hud.editor.title"));
         reserveStandaloneDraft();
         configureStandaloneDraft(
                 () -> new HudSettings(CuriosConfig.walletHudOffsetX, CuriosConfig.walletHudOffsetY, CuriosConfig.walletHudScale),
@@ -69,7 +69,7 @@ public final class WalletHudEditorScreen extends KineticHudEditorPage {
 
     @Override
     protected Component positionText(HudLayout layout) {
-        return KineticI18n.translatable("screen.kineticcore.hud_editor.position_scale",
+        return AdventureText.translatable("screen.kineticcore.hud_editor.position_scale",
                 Component.literal(String.valueOf(Math.max(0, layout.x()))),
                 Component.literal(String.valueOf(Math.max(0, height() - scaledElementHeight() - layout.y()))),
                 Component.literal(String.valueOf(Math.round(layout.scale() * 100.0D))));

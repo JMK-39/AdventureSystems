@@ -7,7 +7,7 @@ import dev.xyat.kineticcore.api.client.gui.theme.KineticTheme;
 import dev.xyat.kineticcore.api.client.gui.ui.KineticUi;
 import dev.xyat.kineticcore.api.client.gui.ui.NumberType;
 import dev.xyat.kineticcore.api.client.gui.widget.KineticNumberField;
-import dev.xyat.kineticcore.api.text.KineticI18n;
+import dev.xyat.adventuresystems.text.AdventureText;
 
 import java.util.function.Consumer;
 
@@ -17,7 +17,7 @@ public class TimeEditScreen extends KineticPage {
     private String inputValue;
 
     public TimeEditScreen(int currentTimeMs, Consumer<Integer> onSave) {
-        super(KineticI18n.translatable("gui.adventuresystems.tips.tips.time"), PageLayout.NATIVE);
+        super(AdventureText.translatable("gui.adventuresystems.tips.tips.time"), PageLayout.NATIVE);
         this.onSave = onSave;
         this.inputValue = NumberType.DECIMAL.format(currentTimeMs / 1000.0D);
     }
@@ -28,17 +28,17 @@ public class TimeEditScreen extends KineticPage {
         int centerY = height() / 2;
 
         this.input = ui.numberField(centerX - 100, centerY - 10, 200, NumberType.DECIMAL)
-                .label(KineticI18n.translatable("gui.adventuresystems.tips.tips.label"))
+                .label(AdventureText.translatable("gui.adventuresystems.tips.tips.label"))
                 .allowNegative(false).range(0.25D, 3600.0D)
                 .validator(value -> true)
                 .onChange(value -> inputValue = value).firstShownTextAsDefault().build();
         this.input.setTextValue(inputValue);
 
         ui.button(centerX - 105, centerY + 20, 100)
-                .text(KineticI18n.translatable("gui.adventuresystems.tips.tips.save"))
+                .text(AdventureText.translatable("gui.adventuresystems.tips.tips.save"))
                 .onClick(this::save).build();
         ui.button(centerX + 5, centerY + 20, 100)
-                .text(KineticI18n.translatable("gui.adventuresystems.tips.tips.cancel"))
+                .text(AdventureText.translatable("gui.adventuresystems.tips.tips.cancel"))
                 .onClick(this::closeToParent).build();
     }
 
@@ -62,7 +62,7 @@ public class TimeEditScreen extends KineticPage {
 
         graphics.centeredText(title(), width() / 2, py + 15, KineticTheme.current().text(), true);
         graphics.centeredText(
-                KineticI18n.translatable("gui.adventuresystems.tips.tips.hint"),
+                AdventureText.translatable("gui.adventuresystems.tips.tips.hint"),
                 width() / 2,
                 py + 30,
                 KineticTheme.current().text(),

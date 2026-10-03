@@ -10,7 +10,7 @@ import dev.xyat.kineticcore.api.client.gui.theme.KineticTheme;
 import dev.xyat.kineticcore.api.client.gui.ui.KineticUi;
 import dev.xyat.kineticcore.api.client.gui.widget.KineticButton;
 import dev.xyat.kineticcore.api.client.gui.widget.list.KineticRowList;
-import dev.xyat.kineticcore.api.text.KineticI18n;
+import dev.xyat.adventuresystems.text.AdventureText;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 
@@ -32,7 +32,7 @@ public class MainScreen extends KineticPage {
     private int scrollOffset;
 
     public MainScreen(CompoundTag balances, boolean hudCurrencyVisible) {
-        super(KineticI18n.translatable("gui.adventuresystems.curios.wallet.title"));
+        super(AdventureText.translatable("gui.adventuresystems.curios.wallet.title"));
         useCanvas(450, 300, 6);
         setPausesGame(false);
         this.balances = balances == null ? new CompoundTag() : balances.copy();
@@ -50,14 +50,14 @@ public class MainScreen extends KineticPage {
     @Override
     protected void build(KineticUi ui) {
         if (list != null) scrollOffset = list.scrollOffset();
-        ui.button(22, 37, 60).text(KineticI18n.translatable("gui.adventuresystems.curios.wallet.deposit_short"))
+        ui.button(22, 37, 60).text(AdventureText.translatable("gui.adventuresystems.curios.wallet.deposit_short"))
                 .onClick(Network::sendDepositAll).build();
-        ui.button(88, 37, 60).text(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop"))
+        ui.button(88, 37, 60).text(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop"))
                 .onClick(Network::sendOpenShop).build();
         hudButton = ui.button(302, 37, 60).text(hudText())
-                .tooltip(KineticI18n.translatable("gui.adventuresystems.curios.wallet.hud_button_tip"))
+                .tooltip(AdventureText.translatable("gui.adventuresystems.curios.wallet.hud_button_tip"))
                 .onClick(Network::sendToggleHudCurrency).build();
-        ui.button(368, 37, 60).text(KineticI18n.translatable("gui.adventuresystems.curios.wallet.close"))
+        ui.button(368, 37, 60).text(AdventureText.translatable("gui.adventuresystems.curios.wallet.close"))
                 .onClick(this::close).build();
         list = ui.add(new WalletRows());
         list.setItems(rows);
@@ -84,7 +84,7 @@ public class MainScreen extends KineticPage {
     }
 
     private Component hudText() {
-        return KineticI18n.translatable(hudCurrencyVisible
+        return AdventureText.translatable(hudCurrencyVisible
                 ? "gui.adventuresystems.curios.wallet.hud_visible"
                 : "gui.adventuresystems.curios.wallet.hud_hidden");
     }
@@ -128,12 +128,12 @@ public class MainScreen extends KineticPage {
     }
 
     private Component expandLabel(Row row) {
-        return KineticI18n.translatable(expandedCurrencies.contains(row.from())
+        return AdventureText.translatable(expandedCurrencies.contains(row.from())
                 ? "gui.adventuresystems.curios.wallet.collapse" : "gui.adventuresystems.curios.wallet.expand");
     }
 
     private Component actionLabel(Row row) {
-        return KineticI18n.translatable(switch (row.action()) {
+        return AdventureText.translatable(switch (row.action()) {
             case WITHDRAW -> "gui.adventuresystems.curios.wallet.withdraw_64";
             case CONVERT_ONE -> "gui.adventuresystems.curios.wallet.exchange_one";
             case CONVERT_ALL -> "gui.adventuresystems.curios.wallet.exchange_all";
@@ -141,7 +141,7 @@ public class MainScreen extends KineticPage {
     }
 
     private Component actionTooltip(Row row) {
-        return KineticI18n.translatable(switch (row.action()) {
+        return AdventureText.translatable(switch (row.action()) {
             case WITHDRAW -> "gui.adventuresystems.curios.wallet.tooltip_withdraw";
             case CONVERT_ONE -> "gui.adventuresystems.curios.wallet.tooltip_convert_one";
             case CONVERT_ALL -> "gui.adventuresystems.curios.wallet.tooltip_convert_all";
@@ -157,18 +157,18 @@ public class MainScreen extends KineticPage {
         Component fromName = ShopGuiSupport.stackNameComponent(from);
         Component toName = ShopGuiSupport.stackNameComponent(to);
         if (sourceValue == targetValue) {
-            return KineticI18n.translatable("gui.adventuresystems.curios.wallet.exchange_ratio",
+            return AdventureText.translatable("gui.adventuresystems.curios.wallet.exchange_ratio",
                     "1", fromName, "1", toName);
         }
         if (targetValue > sourceValue && sourceValue > 0 && targetValue % sourceValue == 0) {
-            return KineticI18n.translatable("gui.adventuresystems.curios.wallet.exchange_ratio",
+            return AdventureText.translatable("gui.adventuresystems.curios.wallet.exchange_ratio",
                     Long.toString(targetValue / sourceValue), fromName, "1", toName);
         }
         if (sourceValue > targetValue && targetValue > 0 && sourceValue % targetValue == 0) {
-            return KineticI18n.translatable("gui.adventuresystems.curios.wallet.exchange_ratio",
+            return AdventureText.translatable("gui.adventuresystems.curios.wallet.exchange_ratio",
                     "1", fromName, Long.toString(sourceValue / targetValue), toName);
         }
-        return KineticI18n.translatable("gui.adventuresystems.curios.wallet.exchange_ratio_invalid");
+        return AdventureText.translatable("gui.adventuresystems.curios.wallet.exchange_ratio_invalid");
     }
 
     private String formatCompact(long value) {
@@ -211,12 +211,12 @@ public class MainScreen extends KineticPage {
             boolean currency = row.action() == Action.WITHDRAW;
             int textRight = currency ? expandX : actionX;
             Component name = currency ? ShopGuiSupport.stackNameComponent(row.from())
-                    : KineticI18n.translatable("gui.adventuresystems.curios.wallet.exchange_to",
+                    : AdventureText.translatable("gui.adventuresystems.curios.wallet.exchange_to",
                             ShopGuiSupport.stackNameComponent(row.to()));
             graphics.scrollingText(name, x + 28, y + 3, textRight - x - 34,
                     KineticTheme.current().text(), false);
             Component detail = currency
-                    ? KineticI18n.translatable("gui.adventuresystems.curios.wallet.amount_value",
+                    ? AdventureText.translatable("gui.adventuresystems.curios.wallet.amount_value",
                             formatCompact(Data.readAmount(balances, row.from())))
                     : exchangeRatio(row.from(), row.to());
             graphics.scrollingText(detail, x + 28, y + 15, textRight - x - 34,
@@ -251,10 +251,10 @@ public class MainScreen extends KineticPage {
             int buttonX = row.action() == Action.WITHDRAW ? actionX - EXPAND_WIDTH - BUTTON_GAP : actionX;
             if (mouseX() >= buttonX) return null;
             if (row.action() == Action.WITHDRAW) {
-                return KineticI18n.translatable("gui.adventuresystems.curios.wallet.tooltip_exact",
+                return AdventureText.translatable("gui.adventuresystems.curios.wallet.tooltip_exact",
                         ShopGuiSupport.formatExact(Data.readAmount(balances, row.from())));
             }
-            return KineticI18n.translatable(row.action() == Action.CONVERT_ONE
+            return AdventureText.translatable(row.action() == Action.CONVERT_ONE
                     ? "gui.adventuresystems.curios.wallet.tooltip_convert_one"
                     : "gui.adventuresystems.curios.wallet.tooltip_convert_all");
         }

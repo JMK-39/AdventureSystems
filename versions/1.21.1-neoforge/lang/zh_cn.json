@@ -1,0 +1,8 @@
+{
+  "gui.adventuresystems.tips.tips.nbt_hint": "数据组件 数据 (可选)",
+  "gui.adventuresystems.tips.tips.nbt_mode.none": "数据组件: 忽略",
+  "gui.adventuresystems.tips.tips.nbt_mode.strong": "数据组件: 强匹配 (相等)",
+  "gui.adventuresystems.tips.tips.nbt_mode.weak": "数据组件: 弱匹配 (包含)",
+  "cfg.adventuresystems.tips.tips.editor.tooltip": "§a编辑提示文本、显示阶段、持续时间、群系/结构/维度/进度条件以及物品/饰品 数据组件 条件。§6联机服务器中打开编辑器需要等级 2 管理权限。",
+  "msg.adventuresystems.tips.tips.save_failed": "§c提示配置未保存：请检查文本、时间、条件 ID、物品/数据组件 或磁盘写入。"
+}

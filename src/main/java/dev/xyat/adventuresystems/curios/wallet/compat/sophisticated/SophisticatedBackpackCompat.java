@@ -7,7 +7,11 @@ import java.util.List;
 import java.util.Optional;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
+//? if >=1.21 {
+        /*import net.p3pp3rf1y.sophisticatedbackpacks.backpack.wrapper.BackpackWrapper;
+        *///?} else {
 import net.p3pp3rf1y.sophisticatedbackpacks.api.CapabilityBackpackWrapper;
+        //?}
 import net.p3pp3rf1y.sophisticatedbackpacks.backpack.wrapper.IBackpackWrapper;
 import net.p3pp3rf1y.sophisticatedcore.inventory.InventoryHandler;
 import top.theillusivec4.curios.api.CuriosApi;
@@ -72,7 +76,11 @@ public final class SophisticatedBackpackCompat {
             if (isBackpack(stack)) result.add(stack);
         }
         try {
+//? if >=1.21 {
+        /*for (top.theillusivec4.curios.api.SlotResult slotResult : CuriosApi.getCuriosInventory(player).map(handler -> handler.findCurios(SophisticatedBackpackCompat::isBackpack)).orElseGet(List::of)) {
+        *///?} else {
             for (top.theillusivec4.curios.api.SlotResult slotResult : CuriosApi.getCuriosHelper().findCurios(player, SophisticatedBackpackCompat::isBackpack)) {
+        //?}
                 if (slotResult != null && isBackpack(slotResult.stack())) result.add(slotResult.stack());
             }
         } catch (Throwable ignored) {
@@ -87,7 +95,11 @@ public final class SophisticatedBackpackCompat {
     private static Optional<IBackpackWrapper> wrapper(ItemStack stack) {
         if (unavailable() || stack == null || stack.isEmpty()) return Optional.empty();
         try {
+//? if >=1.21 {
+        /*return stack.getItem() instanceof net.p3pp3rf1y.sophisticatedbackpacks.backpack.BackpackItem ? Optional.of(BackpackWrapper.fromStack(stack)) : Optional.empty();
+        *///?} else {
             return stack.getCapability(CapabilityBackpackWrapper.getCapabilityInstance()).resolve();
+        //?}
         } catch (Throwable ignored) {
             return Optional.empty();
         }

@@ -1,5 +1,7 @@
 package dev.xyat.adventuresystems.curios.wallet.client.gui;
 
+import net.minecraft.network.chat.Component;
+
 import dev.xyat.kineticcore.api.client.gui.page.KineticPage;
 import dev.xyat.kineticcore.api.client.gui.render.KineticGraphics;
 import dev.xyat.kineticcore.api.client.gui.theme.KineticTheme;
@@ -8,7 +10,7 @@ import dev.xyat.kineticcore.api.client.gui.widget.list.ItemGridDensity;
 import dev.xyat.kineticcore.api.client.gui.widget.list.ItemGridItem;
 import dev.xyat.kineticcore.api.client.gui.widget.list.ItemGridOutline;
 import dev.xyat.kineticcore.api.client.gui.widget.list.KineticItemGrid;
-import dev.xyat.kineticcore.api.text.KineticI18n;
+import dev.xyat.adventuresystems.text.AdventureText;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,7 +22,7 @@ final class CommandRewardPickerScreen extends KineticPage {
     private int scrollOffset;
 
     CommandRewardPickerScreen(ShopGuiSupport.EditorDraft draft, boolean gacha) {
-        super(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_command_pick_title"));
+        super(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_pick_title"));
         this.draft = draft;
         this.gacha = gacha;
         useCanvas(560, 300, 6);
@@ -30,7 +32,7 @@ final class CommandRewardPickerScreen extends KineticPage {
     protected void build(KineticUi ui) {
         if (grid != null) scrollOffset = grid.scrollOffset();
         ui.button(444, 24, 76)
-                .text(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_cancel"))
+                .text(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_cancel"))
                 .onClick(this::navigateBack).build();
         List<ItemGridItem> items = new ArrayList<>(draft.commands.size());
         for (ShopGuiSupport.CommandDraft command : draft.commands) {
@@ -52,10 +54,10 @@ final class CommandRewardPickerScreen extends KineticPage {
         KineticTheme.shadow(graphics, width(), height());
         KineticTheme.panel(graphics, 20, 10, 520, 280);
         graphics.centeredText(title(), 280, 18, KineticTheme.current().text(), false);
-        graphics.text(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_command_pick_hint"),
+        graphics.text(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_pick_hint"),
                 34, 44, KineticTheme.current().text(), true);
         if (draft.commands.isEmpty()) {
-            graphics.centeredText(KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_command_empty"),
+            graphics.centeredText(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_empty"),
                     280, 160, KineticTheme.current().text(), false);
         }
     }
@@ -66,14 +68,14 @@ final class CommandRewardPickerScreen extends KineticPage {
         int index = grid.itemAt(mouseX, mouseY);
         if (index < 0 || index >= draft.commands.size()) return;
         ShopGuiSupport.CommandDraft command = draft.commands.get(index);
-        String name = command.displayName() == null || command.displayName().isBlank()
-                ? KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_command_empty_name").getString()
-                : command.displayName();
+        Component name = command.displayName() == null || command.displayName().isBlank()
+                ? AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_empty_name")
+                : AdventureText.literal(command.displayName());
         showTooltip(List.of(
-                KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_tooltip_name", name),
-                KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_command_text_tooltip",
+                AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_tooltip_name", name),
+                AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_text_tooltip",
                         command.command() == null ? "" : command.command()),
-                KineticI18n.translatable("gui.adventuresystems.curios.wallet.shop_command_pick_tooltip_hint")
+                AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_pick_tooltip_hint")
         ), 280);
     }
 }

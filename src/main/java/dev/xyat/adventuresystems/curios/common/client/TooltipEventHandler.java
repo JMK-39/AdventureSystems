@@ -1,6 +1,6 @@
 package dev.xyat.adventuresystems.curios.common.client;
 
-import dev.xyat.kineticcore.api.text.KineticI18n;
+import dev.xyat.adventuresystems.text.AdventureText;
 import dev.xyat.adventuresystems.curios.common.client.tooltip.TooltipHelper;
 import dev.xyat.adventuresystems.curios.config.CuriosConfig;
 import dev.xyat.adventuresystems.curios.heartofsteel.client.tooltip.HeartOfSteelTooltip;
@@ -45,7 +45,7 @@ public final class TooltipEventHandler {
     }
 
     private static void addConflictHintOrTitle(List<Component> tooltip) {
-        tooltip.add(KineticI18n.translatable(KineticClientRuntime.altModifierDown()
+        tooltip.add(AdventureText.translatable(KineticClientRuntime.altModifierDown()
                 ? "tip.adventuresystems.curios.global.conflicts_title"
                 : "tip.adventuresystems.curios.global.hold_alt"));
     }

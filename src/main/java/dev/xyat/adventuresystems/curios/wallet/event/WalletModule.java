@@ -127,7 +127,11 @@ public final class WalletModule {
         if (!KineticPlatform.isModLoaded("refinedstorage")) return;
         if (!RefinedStorageCompat.isController(level, pos)) return;
         event.cancel();
+//? if >=1.21 {
+        /*if (!RefinedStorageCompat.canBind(player, level, pos)) {
+        *///?} else {
         if (!RefinedStorageCompat.canBind(level, pos)) {
+        //?}
             Network.toast(player, "msg.adventuresystems.curios.wallet.rs_bind_fail");
             return;
         }

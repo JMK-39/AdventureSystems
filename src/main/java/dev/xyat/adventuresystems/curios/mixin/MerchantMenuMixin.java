@@ -16,12 +16,19 @@ public abstract class MerchantMenuMixin {
         MerchantRefill.refill((MerchantMenu) (Object) this, selectionHint);
     }
 
+//? if >=1.21 {
+        /*    @Inject(method = "tryMoveItems", at = @At("TAIL"))
+    private void adventuresystems_curios$refillWalletCurrencyAfterMove(int selectionHint, CallbackInfo ci) {
+        MerchantRefill.refill((MerchantMenu) (Object) this, selectionHint);
+    }
+        *///?} else {
     @Inject(method = "clickMenuButton", at = @At("RETURN"))
     private void adventuresystems_curios$refillWalletCurrencyOnButton(Player player, int id, CallbackInfoReturnable<Boolean> cir) {
         if (!cir.getReturnValue()) return;
         MerchantRefill.refill((MerchantMenu) (Object) this, id);
     }
 
+        //?}
     @Inject(method = "removed", at = @At("HEAD"))
     private void adventuresystems_curios$storeWalletCurrencyBeforeReturn(Player player, CallbackInfo ci) {
         MerchantRefill.storePaymentSlotsToWallet((MerchantMenu) (Object) this, player);

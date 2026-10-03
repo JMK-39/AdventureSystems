@@ -5,15 +5,14 @@ import dev.xyat.kineticcore.api.client.event.KineticClientEvents;
 import dev.xyat.kineticcore.api.client.gui.render.KineticGraphics;
 import dev.xyat.kineticcore.api.client.gui.text.KineticText;
 import dev.xyat.kineticcore.api.client.gui.theme.KineticTheme;
-import dev.xyat.kineticcore.api.text.KineticI18n;
+import dev.xyat.adventuresystems.text.AdventureText;
 import net.minecraft.client.gui.screens.LevelLoadingScreen;
 import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.client.gui.screens.Screen;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import net.minecraft.util.FormattedCharSequence;
 
 public final class TipRenderer {
     private static HelpTip currentTip;
@@ -22,7 +21,7 @@ public final class TipRenderer {
 
     public static final Pattern COLOR_PATTERN = Pattern.compile("(?i)§[0-9A-FK-OR]");
 
-    private record TipCache(List<String> lines, int totalW, int totalBoxH) {
+    private record TipCache(List<FormattedCharSequence> lines, int totalW, int totalBoxH) {
     }
 
     private TipRenderer() {
@@ -35,16 +34,15 @@ public final class TipRenderer {
     public static void refresh(Screen screen) {
         currentTip = dev.xyat.adventuresystems.tips.client.TipCache.TIP_MANAGER.getValidTip(screen);
         lastSwitchTime = System.currentTimeMillis();
-        if (currentTip != null) precomputeLayout();
+        if (currentTip != null) precomputeLayout(screen);
         else currentCache = null;
     }
 
-    private static void precomputeLayout() {
-        String rawText = currentTip.getText().getString();
-        List<String> lines = splitTextKeepFormat(rawText);
+    private static void precomputeLayout(Screen screen) {
+        List<FormattedCharSequence> lines = KineticText.wrap(currentTip.getText(), Math.max(1, Math.min(360, screen.width - 26)));
 
-        int maxW = KineticText.width(KineticI18n.translatable("gui.adventuresystems.tips.tips.title"));
-        for (String line : lines) {
+        int maxW = KineticText.width(AdventureText.translatable("gui.adventuresystems.tips.tips.title"));
+        for (FormattedCharSequence line : lines) {
             maxW = Math.max(maxW, KineticText.width(line));
         }
 
@@ -69,7 +67,7 @@ public final class TipRenderer {
 
         int curY = boxY + padding;
         graphics.text(
-                KineticI18n.translatable("gui.adventuresystems.tips.tips.title"),
+                AdventureText.translatable("gui.adventuresystems.tips.tips.title"),
                 margin + padding,
                 curY,
                 KineticTheme.current().text(),
@@ -77,39 +75,10 @@ public final class TipRenderer {
         );
         curY += 13;
 
-        for (String line : currentCache.lines) {
+        for (FormattedCharSequence line : currentCache.lines) {
             graphics.text(line, margin + padding, curY, KineticTheme.current().text(), true);
             curY += 11;
         }
     }
 
-    private static List<String> splitTextKeepFormat(String text) {
-        List<String> lines = new ArrayList<>();
-        StringBuilder currentLine = new StringBuilder();
-        String lastFormat = "";
-        int visibleLen = 0;
-
-        String[] segments = text.split("(?<=\\s)");
-
-        for (String seg : segments) {
-            String cleanSeg = COLOR_PATTERN.matcher(seg).replaceAll("");
-
-            if (visibleLen + cleanSeg.length() > 60) {
-                lines.add(currentLine.toString());
-                currentLine = new StringBuilder();
-                if (!lastFormat.isEmpty()) currentLine.append(lastFormat);
-                visibleLen = 0;
-            }
-
-            currentLine.append(seg);
-            visibleLen += cleanSeg.length();
-
-            Matcher matcher = COLOR_PATTERN.matcher(seg);
-            while (matcher.find()) {
-                lastFormat = matcher.group();
-            }
-        }
-        if (!currentLine.isEmpty()) lines.add(currentLine.toString());
-        return lines;
-    }
 }
