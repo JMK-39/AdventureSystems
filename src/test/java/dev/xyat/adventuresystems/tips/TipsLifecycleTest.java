@@ -11,12 +11,15 @@ public class TipsLifecycleTest {
  @org.junit.jupiter.api.Test void freshDefaultsIncludeTipsForPauseMenuWithoutConditions() {
   for (String language : java.util.List.of("en_us","zh_cn")) {
    var entries=dev.xyat.adventuresystems.tips.config.ConfigLoader.getRawEntriesForLanguage(language);
-   org.junit.jupiter.api.Assertions.assertTrue(
-       dev.xyat.adventuresystems.tips.config.ConfigLoader.toRuntimeTips(entries).stream().anyMatch(tip ->
+   var generalTips=dev.xyat.adventuresystems.tips.config.ConfigLoader.toRuntimeTips(entries).stream().filter(tip ->
            tip.stage != 1 && tip.requiredDimension.isEmpty() && tip.requiredBiome.isEmpty()
                && tip.requiredStructure.isEmpty() && tip.requiredAdvancement.isEmpty()
-               && tip.requiredItems.isEmpty() && tip.requiredCurios.isEmpty()),
-       language + ": a fresh installation must offer a pause-menu tip without world/item requirements");
+               && tip.requiredItems.isEmpty() && tip.requiredCurios.isEmpty()).toList();
+   org.junit.jupiter.api.Assertions.assertTrue(generalTips.stream().map(tip->tip.getText().getString()).distinct().count() >= 2,
+       language + ": pause tips must have multiple distinct entries available to rotate without matching conditions");
+   org.junit.jupiter.api.Assertions.assertTrue(generalTips.stream().noneMatch(tip->tip.getText().getString().matches("(?is).*\\besc\\b.*")),
+       language + ": tips should offer useful content, not instruct the user to open the pause screen");
+
   }
  }
 }

@@ -4,7 +4,7 @@
 
 ### English
 
-- Added a general tip to default English/Chinese configurations so the pause menu has content without a matching condition; verified the actual paused client screen. Existing custom files remain intact.
+- Added six useful general tips to the English/Chinese default configurations for timed rotation even without matching conditions. Removed the redundant instruction to press Esc. Existing custom files remain intact.
 - Migrated build architecture to Java 21, Gradle 9.8.0, Stonecutter and ModDevGradle; enabled Forge 1.20.1 and NeoForge 1.21.1. The 26.1.2 node remains reserved and disabled.
 - Release names include loader and Minecraft version: adventuresystems-<loader>-<minecraft>-<version>.jar.
 - Forge retains its original NBT workflow; NeoForge uses native data components for items, component-aware wallet/shop records, quest matches and tip conditions. No old item-NBT converter is provided.
@@ -15,7 +15,7 @@
 
 ### 简体中文
 
-- 中英文默认配置增加通用提示，避免暂停菜单因没有匹配条件而空白；已实测真正暂停后的客户端画面，保留已有自定义文件。
+- 中英文默认配置增加六条实用通用提示，无条件匹配时也可定时轮换；删除多余的“按 Esc”操作提示，保留已有自定义文件。
 - 构建迁移到 Java 21、Gradle 9.8.0、Stonecutter 与 ModDevGradle，启用 Forge 1.20.1 和 NeoForge 1.21.1。26.1.2 节点仍仅预留、未启用。
 - 发布文件名包含加载器与 Minecraft 版本：adventuresystems-<加载器>-<Minecraft版本>-<模组版本>.jar。
 - Forge 保留原有 NBT 流程；NeoForge 的物品、钱包和商店记录、任务匹配及提示条件使用原生数据组件，不提供旧物品 NBT 转换器。

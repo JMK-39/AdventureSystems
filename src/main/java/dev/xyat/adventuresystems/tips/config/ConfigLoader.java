@@ -261,8 +261,33 @@ public class ConfigLoader {
           "tips":[
             {
               "stage": "any",
-              "text": "§e[操作提示] §f按 §bEsc §f暂停游戏；可通过 §ekt §f查看快捷功能。",
-              "time": 5000
+              "text": "§e[快捷功能] §f输入 §bkt §f可以查看核心提供的快捷功能。",
+              "time": 6000
+            },
+            {
+              "stage": "any",
+              "text": "§a[饰品] §f将饰品放入对应的 §bCurios 槽位§f，才能发挥装备效果。",
+              "time": 6000
+            },
+            {
+              "stage": "any",
+              "text": "§6[钱包] §f零钱可以集中存进钱包，减少背包中货币占用的格子。",
+              "time": 6000
+            },
+            {
+              "stage": "any",
+              "text": "§d[任务] §f商店兑换可能设有任务门槛，先查看所需任务与材料。",
+              "time": 6000
+            },
+            {
+              "stage": "any",
+              "text": "§b[探索] §f出发前记下基地坐标，并准备食物和照明用品。",
+              "time": 6000
+            },
+            {
+              "stage": "any",
+              "text": "§c[安全] §f夜晚和洞穴中更容易遭遇怪物，保持照明并留意退路。",
+              "time": 6000
             },
             {
               "stage": "loading",
@@ -320,8 +345,33 @@ public class ConfigLoader {
           "tips":[
             {
               "stage": "any",
-              "text": "§e[操作提示] §f按 §bEsc §f暂停游戏；可通过 §ekt §f查看快捷功能。",
-              "time": 5000
+              "text": "§e[快捷功能] §f输入 §bkt §f可以查看核心提供的快捷功能。",
+              "time": 6000
+            },
+            {
+              "stage": "any",
+              "text": "§a[饰品] §f将饰品放入对应的 §bCurios 槽位§f，才能发挥装备效果。",
+              "time": 6000
+            },
+            {
+              "stage": "any",
+              "text": "§6[钱包] §f零钱可以集中存进钱包，减少背包中货币占用的格子。",
+              "time": 6000
+            },
+            {
+              "stage": "any",
+              "text": "§d[任务] §f商店兑换可能设有任务门槛，先查看所需任务与材料。",
+              "time": 6000
+            },
+            {
+              "stage": "any",
+              "text": "§b[探索] §f出发前记下基地坐标，并准备食物和照明用品。",
+              "time": 6000
+            },
+            {
+              "stage": "any",
+              "text": "§c[安全] §f夜晚和洞穴中更容易遭遇怪物，保持照明并留意退路。",
+              "time": 6000
             },
             {
               "stage": "loading",
@@ -380,8 +430,33 @@ public class ConfigLoader {
           "tips":[
             {
               "stage": "any",
-              "text": "§e[Controls] §fPress §bEsc §fto pause. Use §ekt §fto view quick actions.",
-              "time": 5000
+              "text": "§e[Quick actions] §fEnter §bkt §fto view the quick actions provided by the core.",
+              "time": 6000
+            },
+            {
+              "stage": "any",
+              "text": "§a[Accessories] §fEquip accessories in the appropriate §bCurios slots§f to activate their effects.",
+              "time": 6000
+            },
+            {
+              "stage": "any",
+              "text": "§6[Wallet] §fStore your coins in a wallet to free up inventory slots.",
+              "time": 6000
+            },
+            {
+              "stage": "any",
+              "text": "§d[Quests] §fShop exchanges may require quests. Check the required tasks and materials first.",
+              "time": 6000
+            },
+            {
+              "stage": "any",
+              "text": "§b[Exploration] §fNote your base coordinates before leaving, and bring food and light sources.",
+              "time": 6000
+            },
+            {
+              "stage": "any",
+              "text": "§c[Safety] §fWatch for monsters at night and in caves. Keep areas lit and leave yourself an escape route.",
+              "time": 6000
             },
             {
               "stage": "loading",

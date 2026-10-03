@@ -9,6 +9,7 @@ public final class RuntimeValidation {
     private static int clientTicks;
     private static long pauseOpenedAt;
     private static int pauseFrames;
+    private static final java.util.Set<String> observedPauseTips=new java.util.HashSet<>();
     private static boolean pauseVerified;
     private static long lastDiagnostic;
     public RuntimeValidation(){net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(this::login);
@@ -17,7 +18,7 @@ public final class RuntimeValidation {
                 var level=dev.xyat.kineticcore.api.runtime.KineticClientRuntime.currentLevel();
                 if(level==null)return;
                 if(clientTested) {
-                    if(pauseVerified || pauseFrames<60 || System.currentTimeMillis()-pauseOpenedAt<6000)return;
+                    if(pauseVerified || pauseFrames<60 || System.currentTimeMillis()-pauseOpenedAt<20000)return;
                     pauseVerified=true;
                     run("actual-pause-menu-tip-visible",()-> {
                         var minecraft=net.minecraft.client.Minecraft.getInstance();
@@ -29,6 +30,8 @@ public final class RuntimeValidation {
                         require(tip!=null && tip.stage!=1,"actual screen render selected a game/any tip");
                         var cache=dev.xyat.adventuresystems.tips.client.TipRenderer.class.getDeclaredField("currentCache");
                         cache.setAccessible(true);require(cache.get(null)!=null,"actual screen render prepared visible tip layout");
+                        require(observedPauseTips.size()>=2,"real paused frames must rotate through multiple different configured tips");
+                        LOG.info("ADVENTURE_PAUSE_ROTATION distinctTips={} tips={}",observedPauseTips.size(),observedPauseTips);
                         try(var image=net.minecraft.client.Screenshot.takeScreenshot(minecraft.getMainRenderTarget())) {
                             image.writeToFile(java.nio.file.Path.of("D:/IDEAWork/AdventureSystems/.gradle/migration/pause-menu-final.png"));
                         }
@@ -79,6 +82,11 @@ public final class RuntimeValidation {
             dev.xyat.kineticcore.api.client.event.KineticClientEvents.onScreenRenderAfter((screen,graphics,x,y,tick)-> {
                 if(!(screen instanceof net.minecraft.client.gui.screens.PauseScreen))return;
                 pauseFrames++;
+                try {
+                    var selectedField=dev.xyat.adventuresystems.tips.client.TipRenderer.class.getDeclaredField("currentTip");selectedField.setAccessible(true);
+                    var selected=(dev.xyat.adventuresystems.tips.api.HelpTip)selectedField.get(null);
+                    if(selected!=null)observedPauseTips.add(selected.getText().getString());
+                } catch(ReflectiveOperationException error){throw new RuntimeException(error);}
                 if(System.currentTimeMillis()-lastDiagnostic<5000)return;
                 lastDiagnostic=System.currentTimeMillis();
                 var tip=dev.xyat.adventuresystems.tips.client.TipCache.TIP_MANAGER.getValidTip(screen);

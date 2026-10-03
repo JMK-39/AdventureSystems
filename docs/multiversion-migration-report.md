@@ -14,7 +14,7 @@ AdventureSystems 使用 Java 21、Gradle 9.8.0、Stonecutter 0.9.8、ModDevGradl
 
 | Check / 检查 | Result / 结果 |
 | --- | --- |
-| Offline buildAll / 双节点离线构建 | PASS; pause fix full build 20 seconds |
+| Offline buildAll / 双节点离线构建 | PASS; tip rotation full build 19 seconds |
 | Authored, overlay and processed language keys / 源码、覆盖与处理后的语言键 | PASS; English/Chinese each 755 complete keys; no generated formatting keys |
 | Text regression / 文本回归 | PASS on both nodes; 933 colored entries across both languages, styles, nested/repeated arguments, clipping, serialization and language switching |
 | NeoForge JUnit | 11 tests; zero failures/errors |
@@ -41,8 +41,8 @@ Output directory / 输出目录: D:/NEWMODS.
 
 | JAR | SHA-256 |
 | --- | --- |
-| adventuresystems-forge-1.20.1-26.10.4.jar | B8898665F70616B1E8DD62C171A3C751B1F676E320FD790D8E7B6BBB95E0384D |
-| adventuresystems-neoforge-1.21.1-26.10.4.jar | 134D2815FCA629618C5177EFC2398182B48848E73155B376562C1907251E4F31 |
+| adventuresystems-forge-1.20.1-26.10.4.jar | BBE1814E8F2703A409110AE6FB1807A330E2B64027ED7DF02C0E9235D220C648 |
+| adventuresystems-neoforge-1.21.1-26.10.4.jar | 61C6BC94087260E20733D35874A85DBF9A8E56C75C49AA12B1D43B401DAEDE37 |
 
 Forge contains the refmap, JAVA_17 Mixin compatibility and MixinConfigs manifest. Its KineticCore dependency range remains [26.10.3,).
 
@@ -60,13 +60,13 @@ The two profiles used different tip configurations. Forge had many unconditional
 
 两个实例的提示配置不同：Forge 整合包有许多无条件 any/game 条目，NeoForge 只有一条加载提示和六条带条件的游戏提示，测试位置无匹配条目，因此暂停菜单没有内容。
 
-Both default language templates now contain an unconditional any-stage tip. Existing customized files are not rewritten by the mod. The user's existing NeoForge English/Chinese files were backed up under codex-migration-backup/pause-tips-20261004 and each received one general entry; original entries were retained. Forge pack configuration was not changed.
+Both default language templates now contain six useful unconditional any-stage tips at six seconds per entry; the redundant Esc instruction was removed. The existing timed/random selection algorithm is unchanged. Existing customized files are not rewritten by the mod. The user's existing NeoForge English/Chinese files were backed up under codex-migration-backup/pause-tips-20261004 and pause-tip-rotation-20261004. Only our single Esc entry was removed and replaced by six general entries; original configured entries were retained. Forge pack configuration was not changed.
 
-中英文默认模板已加入无条件 any 阶段提示；模组不会覆盖已有自定义文件。用户现有 NeoForge 中英文配置已备份到 codex-migration-backup/pause-tips-20261004，各增加一条通用提示，原条目保留。Forge 整合包配置未改。
+中英文默认模板已加入六条实用的无条件 any 阶段提示，每条六秒，删除多余的 Esc 操作提示；原有计时与随机选择算法保持不变。模组不会覆盖已有自定义文件。用户现有 NeoForge 中英文配置已备份到 codex-migration-backup/pause-tips-20261004 与 pause-tip-rotation-20261004；仅将我们此前补充的单条 Esc 提示替换为六条通用提示，原条目保留。Forge 整合包配置未改。
 
-A test first reproduced missing unconditional default pause tips, then passed after the fix. Runtime validation opened the actual PauseScreen through the game API without keyboard or mouse input, confirmed the integrated server was paused, received 720 real screen-render callbacks, and captured the framebuffer. Visual inspection confirmed the colored tip panel in the lower-left corner. The client passed 17 checks and saved/exited normally. Evidence: .gradle/migration/pause-menu-final.png and pause-final-client.log.
+A test first reproduced missing unconditional default pause tips; a follow-up regression reproduced the single-entry pool and now verifies multiple distinct defaults and absence of Esc instructions. Runtime validation opened the actual PauseScreen through the game API without keyboard or mouse input, confirmed the integrated server was paused, received 2388 real screen-render callbacks over 20 seconds, observed three different selected tips, and captured the framebuffer. Visual inspection confirmed the colored tip panel in the lower-left corner. The client passed 17 checks and saved/exited normally. Evidence: .gradle/migration/pause-tip-rotation.png and tip-rotation-final-client.log.
 
-回归测试先复现默认暂停提示缺失，再验证修复通过。运行验证通过游戏 API 打开实际 PauseScreen，不发送键鼠输入；确认单人游戏已经暂停，收到 720 次真实界面绘制回调并保存画面。截图确认左下角彩色提示面板显示。客户端共 17 项检查通过，正常保存并退出。证据位于 .gradle/migration/pause-menu-final.png 与 pause-final-client.log。
+回归测试先复现默认暂停提示缺失，再补充验证提示池包含多条不同内容且不含多余 Esc 指令。运行验证通过游戏 API 打开实际 PauseScreen，不发送键鼠输入；确认单人游戏已经暂停，持续 20 秒，收到 2388 次真实界面绘制回调，观察到 3 条不同提示并保存画面。截图确认左下角彩色提示面板显示。客户端共 17 项检查通过，正常保存并退出。证据位于 .gradle/migration/pause-tip-rotation.png 与 tip-rotation-final-client.log。
 
 The original Forge baseline comparison above was recorded at migration commit bc72eb0 before this follow-up. This fix intentionally adds default configuration entries; current release hashes are listed above.
 
