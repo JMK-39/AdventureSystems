@@ -7,12 +7,38 @@ public final class RuntimeValidation {
     private boolean tested;
     private static boolean clientTested;
     private static int clientTicks;
+    private static long pauseOpenedAt;
+    private static int pauseFrames;
+    private static boolean pauseVerified;
     private static long lastDiagnostic;
     public RuntimeValidation(){net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(this::login);
         dev.xyat.kineticcore.api.runtime.KineticPlatform.runOnClient(() -> () -> {
             dev.xyat.kineticcore.api.client.event.KineticClientEvents.onTick(dev.xyat.kineticcore.api.client.event.KineticClientEvents.TickPhase.END, () -> {
                 var level=dev.xyat.kineticcore.api.runtime.KineticClientRuntime.currentLevel();
-                if(level==null || clientTested || ++clientTicks<100)return;clientTested=true;
+                if(level==null)return;
+                if(clientTested) {
+                    if(pauseVerified || pauseFrames<60 || System.currentTimeMillis()-pauseOpenedAt<6000)return;
+                    pauseVerified=true;
+                    run("actual-pause-menu-tip-visible",()-> {
+                        var minecraft=net.minecraft.client.Minecraft.getInstance();
+                        require(minecraft.screen instanceof net.minecraft.client.gui.screens.PauseScreen,"actual pause screen opened");
+                        require(minecraft.isPaused(),"integrated server actually paused");
+                        var field=dev.xyat.adventuresystems.tips.client.TipRenderer.class.getDeclaredField("currentTip");
+                        field.setAccessible(true);
+                        var tip=(dev.xyat.adventuresystems.tips.api.HelpTip)field.get(null);
+                        require(tip!=null && tip.stage!=1,"actual screen render selected a game/any tip");
+                        var cache=dev.xyat.adventuresystems.tips.client.TipRenderer.class.getDeclaredField("currentCache");
+                        cache.setAccessible(true);require(cache.get(null)!=null,"actual screen render prepared visible tip layout");
+                        try(var image=net.minecraft.client.Screenshot.takeScreenshot(minecraft.getMainRenderTarget())) {
+                            image.writeToFile(java.nio.file.Path.of("D:/IDEAWork/AdventureSystems/.gradle/migration/pause-menu-final.png"));
+                        }
+                        LOG.info("ADVENTURE_PAUSE_MENU frames={} structure={} tip={}",pauseFrames,dev.xyat.adventuresystems.tips.client.TipCache.currentStructure,tip.getText().getString());
+                    });
+                    LOG.info("ADVENTURE_CLIENT_VALIDATION_{} checks={} failures={}",failures==0?"PASS":"FAIL",checks,failures);
+                    dev.xyat.kineticcore.api.runtime.KineticClientRuntime.execute(dev.xyat.kineticcore.api.runtime.KineticClientRuntime::stopClient);
+                    return;
+                }
+                if(++clientTicks<100)return;clientTested=true;
                 run("ftb-client-enchantment-registry",()-> {
                     var enchantment=level.registryAccess().registryOrThrow(net.minecraft.core.registries.Registries.ENCHANTMENT).getHolderOrThrow(net.minecraft.world.item.enchantment.Enchantments.SHARPNESS);
                     var enchantments=new net.minecraft.world.item.enchantment.ItemEnchantments.Mutable(net.minecraft.world.item.enchantment.ItemEnchantments.EMPTY);
@@ -47,11 +73,13 @@ public final class RuntimeValidation {
                         require(textCalls.contains("PAUSE_TIP_RENDER_PROBE"),"eligible game tip produced visible lower-left text");
                     } finally {manager.replaceServerEntries(original);dev.xyat.adventuresystems.tips.client.TipRenderer.refresh(screen);}
                 });
-                LOG.info("ADVENTURE_CLIENT_VALIDATION_{} checks={} failures={}",failures==0?"PASS":"FAIL",checks,failures);
-                dev.xyat.kineticcore.api.runtime.KineticClientRuntime.execute(dev.xyat.kineticcore.api.runtime.KineticClientRuntime::stopClient);
+                pauseOpenedAt=System.currentTimeMillis();
+                net.minecraft.client.Minecraft.getInstance().setScreen(new net.minecraft.client.gui.screens.PauseScreen(true));
             });
             dev.xyat.kineticcore.api.client.event.KineticClientEvents.onScreenRenderAfter((screen,graphics,x,y,tick)-> {
-                if(!(screen instanceof net.minecraft.client.gui.screens.PauseScreen) || System.currentTimeMillis()-lastDiagnostic<5000)return;
+                if(!(screen instanceof net.minecraft.client.gui.screens.PauseScreen))return;
+                pauseFrames++;
+                if(System.currentTimeMillis()-lastDiagnostic<5000)return;
                 lastDiagnostic=System.currentTimeMillis();
                 var tip=dev.xyat.adventuresystems.tips.client.TipCache.TIP_MANAGER.getValidTip(screen);
                 LOG.info("ADVENTURE_TIPS_DIAGNOSTIC enabled={} structure={} eligible={}",dev.xyat.adventuresystems.tips.config.GeneralConfig.isEnabled(),dev.xyat.adventuresystems.tips.client.TipCache.currentStructure,tip==null?"none":tip.getText().getString());

@@ -260,6 +260,11 @@ public class ConfigLoader {
         {
           "tips":[
             {
+              "stage": "any",
+              "text": "§e[操作提示] §f按 §bEsc §f暂停游戏；可通过 §ekt §f查看快捷功能。",
+              "time": 5000
+            },
+            {
               "stage": "loading",
               "text": "§e[阶段演示] §f这是一条仅在 §b游戏加载阶段 §f显示的提示。适合放背景故事或性能说明。",
               "time": 4000
@@ -313,6 +318,11 @@ public class ConfigLoader {
     private static final String DEFAULT_JSON_CN = """
         {
           "tips":[
+            {
+              "stage": "any",
+              "text": "§e[操作提示] §f按 §bEsc §f暂停游戏；可通过 §ekt §f查看快捷功能。",
+              "time": 5000
+            },
             {
               "stage": "loading",
               "text": "§e[阶段演示] §f这是一条仅在 §b游戏加载阶段 §f显示的提示。适合放背景故事或性能说明。",
@@ -368,6 +378,11 @@ public class ConfigLoader {
     private static final String DEFAULT_JSON_EN = """
         {
           "tips":[
+            {
+              "stage": "any",
+              "text": "§e[Controls] §fPress §bEsc §fto pause. Use §ekt §fto view quick actions.",
+              "time": 5000
+            },
             {
               "stage": "loading",
               "text": "§e[Loading] §fThis tip is only visible while §bLoading the world§f. Useful for performance tips.",

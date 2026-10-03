@@ -8,6 +8,17 @@ public class TipsLifecycleTest {
  var tips=dev.xyat.adventuresystems.tips.config.ConfigLoader.toRuntimeTips(entries);org.junit.jupiter.api.Assertions.assertEquals(2,tips.size());org.junit.jupiter.api.Assertions.assertEquals(1,tips.get(1).requiredItems.size(),"Unresolved condition must not become unconditional");
  org.junit.jupiter.api.Assertions.assertFalse(TipsUtils.matchNbt(tips.get(1).requiredItems.get(0),new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.DIAMOND_SWORD)),"Unresolved enchantments must not match ordinary items");
  }
+ @org.junit.jupiter.api.Test void freshDefaultsIncludeTipsForPauseMenuWithoutConditions() {
+  for (String language : java.util.List.of("en_us","zh_cn")) {
+   var entries=dev.xyat.adventuresystems.tips.config.ConfigLoader.getRawEntriesForLanguage(language);
+   org.junit.jupiter.api.Assertions.assertTrue(
+       dev.xyat.adventuresystems.tips.config.ConfigLoader.toRuntimeTips(entries).stream().anyMatch(tip ->
+           tip.stage != 1 && tip.requiredDimension.isEmpty() && tip.requiredBiome.isEmpty()
+               && tip.requiredStructure.isEmpty() && tip.requiredAdvancement.isEmpty()
+               && tip.requiredItems.isEmpty() && tip.requiredCurios.isEmpty()),
+       language + ": a fresh installation must offer a pause-menu tip without world/item requirements");
+  }
+ }
 }
 
 *///?}
