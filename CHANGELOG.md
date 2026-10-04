@@ -9,6 +9,7 @@
 - Migrated build architecture to Java 21, Gradle 9.8.0, Stonecutter and ModDevGradle; enabled Forge 1.20.1, NeoForge 1.21.1 and NeoForge 26.1.2 (Java 25).
 - 26.1.2 builds against Curios 15, FTB Library / Quests / Teams 26.1.2, JEI 29.43, Sophisticated Backpacks 3.26, Refined Storage 3.2 and Architectury 20.1: wallet, shop, Heart of Steel, Paradise Lost, Levitation Backpack, FTB quest submission limits and tips start on a 26.1.2 server and client. Slot conflict checks follow Curios 15's item-change event; items carry their registry id and 26.1 item model definitions; saved data, tooltips, cooldowns, notify sounds and backpack extraction use the 26.1 APIs.
 - Fixed on 1.21.1: the Levitation Backpack recipe and the Curios slot item tags were packaged in 1.20.1 folders (recipes/, tags/items/) that 1.21 no longer reads; each version now ships its own data folder and recipe format.
+- Renamed four item textures to lowercase (invicon_iron_*.png); resource paths must be lowercase, so the game skipped them on every version with an "Invalid path" warning.
 - The JUnit/regression suite runs on 1.20.1 and 1.21.1; it boots Minecraft through a stand-in mod list that FancyModLoader 11 (26.1) does not support, so 26.1.2 was checked in a running server and client.
 - Release names include loader and Minecraft version: adventuresystems-<loader>-<minecraft>-<version>.jar.
 - Forge retains its original NBT workflow; NeoForge uses native data components for items, component-aware wallet/shop records, quest matches and tip conditions. No old item-NBT converter is provided.
@@ -24,6 +25,7 @@
 - 构建迁移到 Java 21、Gradle 9.8.0、Stonecutter 与 ModDevGradle，启用 Forge 1.20.1、NeoForge 1.21.1 与 NeoForge 26.1.2（Java 25）。
 - 26.1.2 基于 Curios 15、FTB Library / Quests / Teams 26.1.2、JEI 29.43、精妙背包 3.26、Refined Storage 3.2 与 Architectury 20.1 构建：钱包、商店、钢铁之心、失乐园、悬浮背包、FTB 任务提交限制与提示均可在 26.1.2 服务端和客户端启动。饰品冲突检查跟随 Curios 15 的物品变更事件；物品带有注册 ID 与 26.1 物品模型定义；存档数据、提示、冷却、提示音与背包提取使用 26.1 的接口。
 - 修复 1.21.1：悬浮背包配方与 Curios 槽位物品标签此前打包在 1.20.1 的目录（recipes/、tags/items/），1.21 不再读取；现在各版本使用各自的数据目录与配方格式。
+- 将四张物品贴图改为小写文件名（invicon_iron_*.png）；资源路径必须小写，此前各版本都会以“Invalid path”警告跳过它们。
 - JUnit/回归测试在 1.20.1 与 1.21.1 上运行；它们通过替身模组列表启动 Minecraft，FancyModLoader 11（26.1）不支持这种方式，因此 26.1.2 在实际运行的服务端与客户端中检查。
 - 发布文件名包含加载器与 Minecraft 版本：adventuresystems-<加载器>-<Minecraft版本>-<模组版本>.jar。
 - Forge 保留原有 NBT 流程；NeoForge 的物品、钱包和商店记录、任务匹配及提示条件使用原生数据组件，不提供旧物品 NBT 转换器。
