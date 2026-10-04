@@ -19,7 +19,7 @@ public class HeartOfSteelTooltip {
 
     public static void addBasicStatus(ItemStack stack, List<Component> tooltip) {
         CompoundTag nbt = dev.xyat.adventuresystems.data.AdventureItemData.customData(stack);
-        if (nbt == null || !nbt.hasUUID(OWNER_KEY)) return;
+        if (nbt == null || !dev.xyat.adventuresystems.data.Nbt.hasUuid(nbt, OWNER_KEY)) return;
 
         Player player = KineticClientRuntime.localPlayer();
         if (player == null) return;
@@ -133,7 +133,7 @@ public class HeartOfSteelTooltip {
 
     public static void addBasicStatus(ItemStack stack, List<Component> tooltip) {
         CompoundTag nbt = stack.getTag();
-        if (nbt == null || !nbt.hasUUID(OWNER_KEY)) return;
+        if (nbt == null || !dev.xyat.adventuresystems.data.Nbt.hasUuid(nbt, OWNER_KEY)) return;
 
         Player player = KineticClientRuntime.localPlayer();
         if (player == null) return;

@@ -219,9 +219,9 @@ public class ShopScreen extends KineticPage {
         this.balances = balances == null ? new CompoundTag() : balances.copy();
         this.shopTag = shopTag == null ? new CompoundTag() : shopTag.copy();
         this.editorMode = editorMode;
-        this.canEdit = this.shopTag.getBoolean("CanEdit");
-        this.useBackpackSource = this.shopTag.getBoolean("UseBackpack");
-        this.useRsSource = this.shopTag.getBoolean("UseRs");
+        this.canEdit = dev.xyat.adventuresystems.data.Nbt.bool(this.shopTag, "CanEdit");
+        this.useBackpackSource = dev.xyat.adventuresystems.data.Nbt.bool(this.shopTag, "UseBackpack");
+        this.useRsSource = dev.xyat.adventuresystems.data.Nbt.bool(this.shopTag, "UseRs");
         this.shopReceivedAt = System.currentTimeMillis();
         applySessionMemory();
     }
@@ -259,7 +259,7 @@ public class ShopScreen extends KineticPage {
 
     public void updateShop(CompoundTag balances, CompoundTag shopTag, boolean editorMode) {
         CompoundTag nextShopTag = shopTag == null ? new CompoundTag() : shopTag.copy();
-        boolean nextCanEdit = nextShopTag.getBoolean("CanEdit");
+        boolean nextCanEdit = dev.xyat.adventuresystems.data.Nbt.bool(nextShopTag, "CanEdit");
         boolean changed = this.editorMode != editorMode || this.canEdit != nextCanEdit;
         Shop.Entry selected = selectedEntry();
         String selectedKey = selected == null ? "" : selected.key();
@@ -267,8 +267,8 @@ public class ShopScreen extends KineticPage {
         this.shopTag = nextShopTag;
         this.editorMode = editorMode;
         this.canEdit = nextCanEdit;
-        this.useBackpackSource = this.shopTag.getBoolean("UseBackpack");
-        this.useRsSource = this.shopTag.getBoolean("UseRs");
+        this.useBackpackSource = dev.xyat.adventuresystems.data.Nbt.bool(this.shopTag, "UseBackpack");
+        this.useRsSource = dev.xyat.adventuresystems.data.Nbt.bool(this.shopTag, "UseRs");
         this.shopReceivedAt = System.currentTimeMillis();
         this.searchTextCache.clear();
         closeShopContextMenu();
@@ -2591,7 +2591,7 @@ public class ShopScreen extends KineticPage {
         int maxIndex = -1;
         for (int i = 0; i < list.size(); i++) {
             CompoundTag candidate = list.getCompound(i);
-            int index = candidate.getInt("Index");
+            int index = dev.xyat.adventuresystems.data.Nbt.intValue(candidate, "Index");
             maxIndex = Math.max(maxIndex, index);
             if (draft.index >= 0 && index == draft.index) tag = candidate;
         }
@@ -2606,7 +2606,7 @@ public class ShopScreen extends KineticPage {
         if (!stack.isEmpty()) {
             stack.setCount(Math.max(1, Math.min(64, draft.count)));
 //? if >=1.21 {
-        /*tag.put("Item", stack.saveOptional(dev.xyat.adventuresystems.data.AdventureItemData.registryAccess()));
+        /*tag.put("Item", dev.xyat.adventuresystems.data.ItemStacks.save(stack));
         *///?} else {
             tag.put("Item", stack.save(new CompoundTag()));
         //?}
@@ -2630,7 +2630,7 @@ public class ShopScreen extends KineticPage {
         ItemStack icon = draft.iconId == null || draft.iconId.isBlank() ? ItemStack.EMPTY : ShopGuiSupport.stack(draft.iconId);
         if (icon.isEmpty()) tag.remove("Icon");
 //? if >=1.21 {
-        /*else tag.put("Icon", icon.saveOptional(dev.xyat.adventuresystems.data.AdventureItemData.registryAccess()));
+        /*else tag.put("Icon", dev.xyat.adventuresystems.data.ItemStacks.save(icon));
         *///?} else {
         else tag.put("Icon", icon.save(new CompoundTag()));
         //?}

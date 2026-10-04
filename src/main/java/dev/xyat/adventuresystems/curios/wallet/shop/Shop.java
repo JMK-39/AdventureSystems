@@ -361,7 +361,7 @@ public final class Shop {
         tag.putInt("Index", entry.index());
         tag.putString("Key", entry.key());
 //? if >=1.21 {
-        /*tag.put("Item", entry.stack().saveOptional(dev.xyat.adventuresystems.data.AdventureItemData.registryAccess()));
+        /*tag.put("Item", dev.xyat.adventuresystems.data.ItemStacks.save(entry.stack()));
         *///?} else {
         tag.put("Item", entry.stack().save(new CompoundTag()));
         //?}
@@ -397,7 +397,7 @@ public final class Shop {
         tag.putBoolean("Gacha", entry.gacha());
         tag.putBoolean("Selectable", entry.selectable());
 //? if >=1.21 {
-        /*if (entry.icon() != null && !entry.icon().isEmpty()) tag.put("Icon", entry.icon().saveOptional(dev.xyat.adventuresystems.data.AdventureItemData.registryAccess()));
+        /*if (entry.icon() != null && !entry.icon().isEmpty()) tag.put("Icon", dev.xyat.adventuresystems.data.ItemStacks.save(entry.icon()));
         *///?} else {
         if (entry.icon() != null && !entry.icon().isEmpty()) tag.put("Icon", entry.icon().save(new CompoundTag()));
         //?}
@@ -407,7 +407,7 @@ public final class Shop {
 
     private static Entry entryFromTag(Mode mode, CompoundTag tag) {
 //? if >=1.21 {
-        /*ItemStack stack = ItemStack.parseOptional(dev.xyat.adventuresystems.data.AdventureItemData.registryAccess(), tag.getCompound("Item"));
+        /*ItemStack stack = dev.xyat.adventuresystems.data.ItemStacks.parse(tag.getCompound("Item"));
         *///?} else {
         ItemStack stack = ItemStack.of(tag.getCompound("Item"));
         //?}
@@ -416,7 +416,7 @@ public final class Shop {
         int index = tag.getInt("Index");
         if (stack.isEmpty() || currency.isEmpty() || price <= 0L) return null;
         String key = tag.getString("Key");
-        int dailyLimit = tag.contains("TimedLimitSeconds", Tag.TAG_INT) ? tag.getInt("TimedLimitSeconds") : tag.getInt("DailyLimit");
+        int dailyLimit = dev.xyat.adventuresystems.data.Nbt.hasInt(tag, "TimedLimitSeconds") ? dev.xyat.adventuresystems.data.Nbt.intValue(tag, "TimedLimitSeconds") : dev.xyat.adventuresystems.data.Nbt.intValue(tag, "DailyLimit");
         int totalLimit = tag.getInt("TotalLimit");
         int dailyBought = tag.getInt("DailyBought");
         int totalBought = tag.getInt("TotalBought");
@@ -430,7 +430,7 @@ public final class Shop {
         boolean rsLoaded = tag.getBoolean("RsLoaded");
         String rsState = tag.getString("RsState");
 //? if >=1.21 {
-        /*ItemStack icon = tag.contains("Icon", Tag.TAG_COMPOUND) ? ItemStack.parseOptional(dev.xyat.adventuresystems.data.AdventureItemData.registryAccess(), tag.getCompound("Icon")) : ItemStack.EMPTY;
+        /*ItemStack icon = tag.contains("Icon", Tag.TAG_COMPOUND) ? dev.xyat.adventuresystems.data.ItemStacks.parse(tag.getCompound("Icon")) : ItemStack.EMPTY;
         *///?} else {
         ItemStack icon = tag.contains("Icon", Tag.TAG_COMPOUND) ? ItemStack.of(tag.getCompound("Icon")) : ItemStack.EMPTY;
         //?}
@@ -861,7 +861,7 @@ public final class Shop {
         List<Long> ids = new ArrayList<>();
         for (Tag tag : list) {
             if (!(tag instanceof net.minecraft.nbt.NumericTag numericTag)) continue;
-            long id = numericTag.getAsLong();
+            long id = dev.xyat.adventuresystems.data.Nbt.asLong(numericTag);
             if (id != 0L && !ids.contains(id)) ids.add(id);
         }
         return ids;
@@ -981,7 +981,7 @@ public final class Shop {
             CompoundTag tag = new CompoundTag();
             tag.putBoolean("Empty", reward.empty());
 //? if >=1.21 {
-        /*if (!reward.empty()) tag.put("Item", reward.stack().saveOptional(dev.xyat.adventuresystems.data.AdventureItemData.registryAccess()));
+        /*if (!reward.empty()) tag.put("Item", dev.xyat.adventuresystems.data.ItemStacks.save(reward.stack()));
         *///?} else {
             if (!reward.empty()) tag.put("Item", reward.stack().save(new CompoundTag()));
         //?}
@@ -1007,7 +1007,7 @@ public final class Shop {
         for (int i = 0; i < list.size(); i++) {
             CompoundTag tag = list.getCompound(i);
 //? if >=1.21 {
-        /*ItemStack stack = tag.getBoolean("Empty") ? ItemStack.EMPTY : ItemStack.parseOptional(dev.xyat.adventuresystems.data.AdventureItemData.registryAccess(), tag.getCompound("Item"));
+        /*ItemStack stack = tag.getBoolean("Empty") ? ItemStack.EMPTY : dev.xyat.adventuresystems.data.ItemStacks.parse(tag.getCompound("Item"));
         *///?} else {
             ItemStack stack = tag.getBoolean("Empty") ? ItemStack.EMPTY : ItemStack.of(tag.getCompound("Item"));
         //?}
@@ -1073,29 +1073,29 @@ public final class Shop {
         CompoundTag root = usageRoot(player);
         if (entry.dailyLimit() > 0) {
             CompoundTag timedRoot = root.getCompound(TIMED_KEY);
-            CompoundTag timed = timedRoot.getCompound(entry.key());
+            CompoundTag timed = dev.xyat.adventuresystems.data.Nbt.compound(timedRoot, entry.key());
             timed.putLong("NextReadySecond", playSecond(player) + entry.dailyLimit());
             timedRoot.put(entry.key(), timed);
             root.put(TIMED_KEY, timedRoot);
         }
         CompoundTag totalRoot = root.getCompound(TOTAL_KEY);
-        totalRoot.putInt(entry.key(), Math.max(0, totalRoot.getInt(entry.key())) + amount);
+        totalRoot.putInt(entry.key(), Math.max(0, dev.xyat.adventuresystems.data.Nbt.intValue(totalRoot, entry.key())) + amount);
         root.put(TOTAL_KEY, totalRoot);
         player.getPersistentData().put(USAGE_KEY, root);
     }
 
     private static long timedRemainingSeconds(ServerPlayer player, String key, int timedLimitSeconds) {
         if (player == null || key == null || key.isBlank() || timedLimitSeconds <= 0) return 0L;
-        CompoundTag timedRoot = usageRoot(player).getCompound(TIMED_KEY);
-        CompoundTag timed = timedRoot.getCompound(key);
-        long nextReady = timed.getLong("NextReadySecond");
+        CompoundTag timedRoot = dev.xyat.adventuresystems.data.Nbt.compound(usageRoot(player), TIMED_KEY);
+        CompoundTag timed = dev.xyat.adventuresystems.data.Nbt.compound(timedRoot, key);
+        long nextReady = dev.xyat.adventuresystems.data.Nbt.longValue(timed, "NextReadySecond");
         if (nextReady <= 0L) return 0L;
         return Math.max(0L, nextReady - playSecond(player));
     }
 
     private static int totalBought(ServerPlayer player, String key) {
         if (player == null || key == null || key.isBlank()) return 0;
-        return Math.max(0, usageRoot(player).getCompound(TOTAL_KEY).getInt(key));
+        return Math.max(0, dev.xyat.adventuresystems.data.Nbt.intValue(dev.xyat.adventuresystems.data.Nbt.compound(usageRoot(player), TOTAL_KEY), key));
     }
 
     private static CompoundTag usageRoot(ServerPlayer player) {
@@ -1133,7 +1133,7 @@ public final class Shop {
 
     private static long sellProgress(ServerPlayer player, String key) {
         if (player == null || key == null || key.isBlank()) return 0L;
-        return Math.max(0L, player.getPersistentData().getCompound(SELL_PROGRESS_KEY).getLong(key));
+        return Math.max(0L, dev.xyat.adventuresystems.data.Nbt.longValue(dev.xyat.adventuresystems.data.Nbt.compound(player.getPersistentData(), SELL_PROGRESS_KEY), key));
     }
 
     private static void setSellProgress(ServerPlayer player, String key, long value) {
@@ -1189,7 +1189,7 @@ public final class Shop {
         if (player == null || command == null || command.isBlank()) return;
         String normalized = command.replace("%player%", player.getScoreboardName()).replace("{player}", player.getScoreboardName()).replace("%amount%", String.valueOf(amount)).replace("{amount}", String.valueOf(amount));
         if (normalized.startsWith("/")) normalized = normalized.substring(1);
-        player.server.getCommands().performPrefixedCommand(player.createCommandSourceStack().withPermission(4).withSuppressedOutput(), normalized);
+        player.getServer().getCommands().performPrefixedCommand(player.createCommandSourceStack().withPermission(4).withSuppressedOutput(), normalized);
     }
 
     private static void giveStack(ServerPlayer player, ItemStack stack) {

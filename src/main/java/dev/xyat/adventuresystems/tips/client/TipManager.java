@@ -8,6 +8,7 @@ import dev.xyat.adventuresystems.tips.config.ConfigLoader;
 import dev.xyat.adventuresystems.tips.config.GeneralConfig;
 import dev.xyat.kineticcore.api.registry.KineticRegistries;
 import dev.xyat.kineticcore.api.runtime.KineticClientRuntime;
+//? if <26.1
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.client.gui.screens.Screen;
@@ -29,6 +30,7 @@ import java.util.Random;
  * 负责根据当前环境筛选出合适的提示
  */
 @ParametersAreNonnullByDefault
+//? if <26.1
 @MethodsReturnNonnullByDefault
 public class TipManager extends SimplePreparableReloadListener<Void> {
     private final List<HelpTip> allTips = new ArrayList<>();

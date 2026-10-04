@@ -71,7 +71,7 @@ public final class Data {
 //? if >=1.21 {
         /*var slotResult = CuriosApi.getCuriosInventory(player).flatMap(handler -> handler.findFirstCurio(Items.CURRENCY_WALLET.get()));
         *///?} else {
-        var slotResult = CuriosApi.getCuriosHelper().findFirstCurio(player, Items.CURRENCY_WALLET.get());
+        var slotResult = dev.xyat.adventuresystems.curios.common.util.CuriosAccess.findFirst(player, Items.CURRENCY_WALLET.get());
         //?}
         if (slotResult.isEmpty()) return Optional.empty();
         ItemStack stack = slotResult.get().stack();
@@ -86,12 +86,12 @@ public final class Data {
         if (!isWalletStack(walletStack)) return;
 //? if >=1.21 {
         /*dev.xyat.adventuresystems.data.AdventureItemData.updateCustomData(walletStack, tag -> {
-            if (!tag.hasUUID(WALLET_ID_KEY)) tag.putUUID(WALLET_ID_KEY, UUID.randomUUID());
+            if (!dev.xyat.adventuresystems.data.Nbt.hasUuid(tag, WALLET_ID_KEY)) dev.xyat.adventuresystems.data.Nbt.putUuid(tag, WALLET_ID_KEY, UUID.randomUUID());
         });
         *///?} else {
         CompoundTag tag = walletStack.getOrCreateTag();
-        if (!tag.hasUUID(WALLET_ID_KEY)) {
-            tag.putUUID(WALLET_ID_KEY, UUID.randomUUID());
+        if (!dev.xyat.adventuresystems.data.Nbt.hasUuid(tag, WALLET_ID_KEY)) {
+            dev.xyat.adventuresystems.data.Nbt.putUuid(tag, WALLET_ID_KEY, UUID.randomUUID());
         }
         //?}
     }
@@ -484,9 +484,9 @@ public final class Data {
         Tag tag = balances.get(id);
         if (tag == null) return 0L;
         if (tag instanceof NumericTag numericTag) {
-            return clampAmount(numericTag.getAsLong());
+            return clampAmount(dev.xyat.adventuresystems.data.Nbt.asLong(numericTag));
         }
-        return parseAmountText(tag.getAsString());
+        return parseAmountText(dev.xyat.adventuresystems.data.Nbt.asString(tag));
     }
 
     private static long parseAmountText(String text) {
@@ -512,7 +512,7 @@ public final class Data {
     }
 
     public static boolean isHudVisible(Player player) {
-        return !root(player).getBoolean(HUD_HIDDEN_KEY);
+        return !dev.xyat.adventuresystems.data.Nbt.bool(root(player), HUD_HIDDEN_KEY);
     }
 
     public static boolean toggleHudHidden(ServerPlayer player) {
@@ -548,9 +548,9 @@ public final class Data {
         //?}
         if (tag == null || !tag.contains(RS_BINDING_KEY, Tag.TAG_COMPOUND)) return RsBinding.none();
         CompoundTag binding = tag.getCompound(RS_BINDING_KEY);
-        String dimension = binding.getString(RS_BOUND_DIM_KEY);
+        String dimension = dev.xyat.adventuresystems.data.Nbt.string(binding, RS_BOUND_DIM_KEY);
         if (dimension.isBlank()) return RsBinding.none();
-        return new RsBinding(true, dimension, new BlockPos(binding.getInt(RS_BOUND_X_KEY), binding.getInt(RS_BOUND_Y_KEY), binding.getInt(RS_BOUND_Z_KEY)));
+        return new RsBinding(true, dimension, new BlockPos(dev.xyat.adventuresystems.data.Nbt.intValue(binding, RS_BOUND_X_KEY), dev.xyat.adventuresystems.data.Nbt.intValue(binding, RS_BOUND_Y_KEY), dev.xyat.adventuresystems.data.Nbt.intValue(binding, RS_BOUND_Z_KEY)));
     }
 
     public static boolean isMagnetDisabled(ItemStack walletStack) {
@@ -568,7 +568,7 @@ public final class Data {
         if (!isWalletStack(walletStack)) return false;
         ensureWalletIdentity(walletStack);
 //? if >=1.21 {
-        /*boolean disabled = !dev.xyat.adventuresystems.data.AdventureItemData.customData(walletStack).getBoolean(MAGNET_DISABLED_KEY);
+        /*boolean disabled = !dev.xyat.adventuresystems.data.Nbt.bool(dev.xyat.adventuresystems.data.AdventureItemData.customData(walletStack), MAGNET_DISABLED_KEY);
         dev.xyat.adventuresystems.data.AdventureItemData.updateCustomData(walletStack, tag -> tag.putBoolean(MAGNET_DISABLED_KEY, disabled));
         *///?} else {
         CompoundTag tag = walletStack.getOrCreateTag();
@@ -580,8 +580,8 @@ public final class Data {
 
     public static void copy(Player oldPlayer, Player newPlayer) {
         CompoundTag oldRoot = oldPlayer.getPersistentData().getCompound(ROOT_KEY);
-        if (oldRoot.contains(HUD_HIDDEN_KEY, Tag.TAG_BYTE)) {
-            root(newPlayer).putBoolean(HUD_HIDDEN_KEY, oldRoot.getBoolean(HUD_HIDDEN_KEY));
+        if (dev.xyat.adventuresystems.data.Nbt.hasByte(oldRoot, HUD_HIDDEN_KEY)) {
+            root(newPlayer).putBoolean(HUD_HIDDEN_KEY, dev.xyat.adventuresystems.data.Nbt.bool(oldRoot, HUD_HIDDEN_KEY));
         }
     }
 
@@ -633,7 +633,7 @@ public final class Data {
         if (!persistent.contains(ROOT_KEY, Tag.TAG_COMPOUND)) {
             persistent.put(ROOT_KEY, new CompoundTag());
         }
-        return persistent.getCompound(ROOT_KEY);
+        return dev.xyat.adventuresystems.data.Nbt.compound(persistent, ROOT_KEY);
     }
 
 

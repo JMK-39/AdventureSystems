@@ -228,7 +228,7 @@ public final class TipsNetwork {
             success = entries != null && ConfigLoader.saveRawEntriesForLanguage(packet.languageCode(), entries);
             if (success) {
                 CLIENT_LANGUAGES.put(player.getUUID(), packet.languageCode());
-                broadcastRuntimeSnapshot(player.server, packet.languageCode());
+                broadcastRuntimeSnapshot(player.getServer(), packet.languageCode());
             }
         }
         sendToPlayer(new EditorSaveResult(success), player);

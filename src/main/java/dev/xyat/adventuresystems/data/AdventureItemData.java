@@ -8,7 +8,7 @@ public final class AdventureItemData {
     public static void updateCustomData(ItemStack stack, java.util.function.Consumer<CompoundTag> action) { net.minecraft.world.item.component.CustomData.update(net.minecraft.core.component.DataComponents.CUSTOM_DATA, stack, action); }
     public static String toItemText(ItemStack stack) { return dev.xyat.kineticcore.api.inventory.KineticItemText.format(stack); }
     public static ItemStack parseItemText(String text) { return dev.xyat.kineticcore.api.inventory.KineticItemText.parse(text); }
-    public static boolean hasWorldRegistries() { return registryAccess().lookup(net.minecraft.core.registries.Registries.ENCHANTMENT).isPresent(); }
+    public static boolean hasWorldRegistries() { net.minecraft.core.HolderLookup.Provider registries = registryAccess(); return registries.lookup(net.minecraft.core.registries.Registries.ENCHANTMENT).isPresent(); }
     public static net.minecraft.core.HolderLookup.Provider registryAccess() {
         var server = dev.xyat.kineticcore.api.runtime.KineticServerRuntime.currentServer();
         if (server != null && server.isSameThread()) return server.registryAccess();

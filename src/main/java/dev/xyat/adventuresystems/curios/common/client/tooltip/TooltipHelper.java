@@ -30,12 +30,12 @@ public class TooltipHelper {
     /^** 添加灵魂绑定状态 *^/
     public static void addBindingTooltip(ItemStack stack, List<Component> tooltip) {
         CompoundTag nbt = dev.xyat.adventuresystems.data.AdventureItemData.customData(stack);
-        if (nbt == null || !nbt.hasUUID("adventuresystems_owner_id")) {
+        if (nbt == null || !dev.xyat.adventuresystems.data.Nbt.hasUuid(nbt, "adventuresystems_owner_id")) {
             tooltip.add(AdventureText.translatable("tip.adventuresystems.curios.global.unbound"));
             return;
         }
 
-        UUID ownerId = nbt.getUUID("adventuresystems_owner_id");
+        UUID ownerId = dev.xyat.adventuresystems.data.Nbt.uuid(nbt, "adventuresystems_owner_id");
         String ownerName = nbt.getString("owner_name");
         if (ownerName.isEmpty()) ownerName = "Unknown";
 
@@ -112,12 +112,12 @@ public class TooltipHelper {
     /** 添加灵魂绑定状态 */
     public static void addBindingTooltip(ItemStack stack, List<Component> tooltip) {
         CompoundTag nbt = stack.getTag();
-        if (nbt == null || !nbt.hasUUID("adventuresystems_owner_id")) {
+        if (nbt == null || !dev.xyat.adventuresystems.data.Nbt.hasUuid(nbt, "adventuresystems_owner_id")) {
             tooltip.add(AdventureText.translatable("tip.adventuresystems.curios.global.unbound"));
             return;
         }
 
-        UUID ownerId = nbt.getUUID("adventuresystems_owner_id");
+        UUID ownerId = dev.xyat.adventuresystems.data.Nbt.uuid(nbt, "adventuresystems_owner_id");
         String ownerName = nbt.getString("owner_name");
         if (ownerName.isEmpty()) ownerName = "Unknown";
 

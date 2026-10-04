@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.UUID;
 public class ParadiseLostItem extends Item implements ICurioItem {
     public ParadiseLostItem() {
-        super(new Properties().stacksTo(1).rarity(Rarity.EPIC).fireResistant());
+        super(dev.xyat.adventuresystems.curios.init.ItemProperties.of("paradise_lost").stacksTo(1).rarity(Rarity.EPIC).fireResistant());
     }
 
     @Override
@@ -32,8 +32,8 @@ public class ParadiseLostItem extends Item implements ICurioItem {
         for (String conflictId : conflicts) {
             Item conflictItem = KineticRegistries.items().get(KineticResourceIds.parse(conflictId));
             if (conflictItem != null && conflictItem != net.minecraft.world.item.Items.AIR) {
-                if (CuriosApi.getCuriosHelper().findFirstCurio(entity, conflictItem).isPresent()) {
-                    if (entity instanceof Player player && player.level().isClientSide) {
+                if (dev.xyat.adventuresystems.curios.common.util.CuriosAccess.findFirst(entity, conflictItem).isPresent()) {
+                    if (entity instanceof Player player && player.level().isClientSide()) {
                         KineticOverlays.toast(AdventureText.translatable("msg.adventuresystems.curios.equip_conflict",
                                 AdventureText.translatable(conflictItem.getDescriptionId())));
                     }
@@ -48,11 +48,11 @@ public class ParadiseLostItem extends Item implements ICurioItem {
     public void onEquip(SlotContext slotContext, ItemStack prevStack, ItemStack stack) {
         if (slotContext.entity() instanceof Player player) {
             CompoundTag nbt = dev.xyat.adventuresystems.data.AdventureItemData.customData(stack);
-            boolean isClient = player.level().isClientSide;
+            boolean isClient = player.level().isClientSide();
 
-            if (!nbt.hasUUID("adventuresystems_owner_id")) {
+            if (!dev.xyat.adventuresystems.data.Nbt.hasUuid(nbt, "adventuresystems_owner_id")) {
                 if (!isClient) {
-                    nbt.putUUID("adventuresystems_owner_id", player.getUUID());
+                    dev.xyat.adventuresystems.data.Nbt.putUuid(nbt, "adventuresystems_owner_id", player.getUUID());
                     nbt.putString("owner_name", player.getScoreboardName());
                     dev.xyat.adventuresystems.data.AdventureItemData.updateCustomData(stack, data -> data.merge(nbt));
                     player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
@@ -61,7 +61,7 @@ public class ParadiseLostItem extends Item implements ICurioItem {
                     KineticOverlays.toast(AdventureText.translatable("msg.adventuresystems.curios.soul_bound"));
                 }
             } else {
-                UUID ownerId = nbt.getUUID("adventuresystems_owner_id");
+                UUID ownerId = dev.xyat.adventuresystems.data.Nbt.uuid(nbt, "adventuresystems_owner_id");
                 if (!player.getUUID().equals(ownerId)) {
                     if (!isClient) {
                         player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
@@ -100,7 +100,7 @@ import java.util.List;
 import java.util.UUID;
 public class ParadiseLostItem extends Item implements ICurioItem {
     public ParadiseLostItem() {
-        super(new Properties().stacksTo(1).rarity(Rarity.EPIC).fireResistant());
+        super(dev.xyat.adventuresystems.curios.init.ItemProperties.of("paradise_lost").stacksTo(1).rarity(Rarity.EPIC).fireResistant());
     }
 
     @Override
@@ -110,8 +110,8 @@ public class ParadiseLostItem extends Item implements ICurioItem {
         for (String conflictId : conflicts) {
             Item conflictItem = KineticRegistries.items().get(KineticResourceIds.parse(conflictId));
             if (conflictItem != null && conflictItem != net.minecraft.world.item.Items.AIR) {
-                if (CuriosApi.getCuriosHelper().findFirstCurio(entity, conflictItem).isPresent()) {
-                    if (entity instanceof Player player && player.level().isClientSide) {
+                if (dev.xyat.adventuresystems.curios.common.util.CuriosAccess.findFirst(entity, conflictItem).isPresent()) {
+                    if (entity instanceof Player player && player.level().isClientSide()) {
                         KineticOverlays.toast(AdventureText.translatable("msg.adventuresystems.curios.equip_conflict",
                                 AdventureText.translatable(conflictItem.getDescriptionId())));
                     }
@@ -126,11 +126,11 @@ public class ParadiseLostItem extends Item implements ICurioItem {
     public void onEquip(SlotContext slotContext, ItemStack prevStack, ItemStack stack) {
         if (slotContext.entity() instanceof Player player) {
             CompoundTag nbt = stack.getOrCreateTag();
-            boolean isClient = player.level().isClientSide;
+            boolean isClient = player.level().isClientSide();
 
-            if (!nbt.hasUUID("adventuresystems_owner_id")) {
+            if (!dev.xyat.adventuresystems.data.Nbt.hasUuid(nbt, "adventuresystems_owner_id")) {
                 if (!isClient) {
-                    nbt.putUUID("adventuresystems_owner_id", player.getUUID());
+                    dev.xyat.adventuresystems.data.Nbt.putUuid(nbt, "adventuresystems_owner_id", player.getUUID());
                     nbt.putString("owner_name", player.getScoreboardName());
                     player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
                             SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.5f, 1.2f);
@@ -138,7 +138,7 @@ public class ParadiseLostItem extends Item implements ICurioItem {
                     KineticOverlays.toast(AdventureText.translatable("msg.adventuresystems.curios.soul_bound"));
                 }
             } else {
-                UUID ownerId = nbt.getUUID("adventuresystems_owner_id");
+                UUID ownerId = dev.xyat.adventuresystems.data.Nbt.uuid(nbt, "adventuresystems_owner_id");
                 if (!player.getUUID().equals(ownerId)) {
                     if (!isClient) {
                         player.level().playSound(null, player.getX(), player.getY(), player.getZ(),

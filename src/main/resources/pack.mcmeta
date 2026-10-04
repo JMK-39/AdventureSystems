@@ -1,6 +1,6 @@
 {
   "pack": {
     "description": "Adventure Systems resources",
-    "pack_format": ${pack_format}
+    ${pack_version_fields}
   }
 }

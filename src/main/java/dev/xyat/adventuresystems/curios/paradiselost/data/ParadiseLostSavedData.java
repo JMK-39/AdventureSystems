@@ -15,6 +15,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.*;
 
 public class ParadiseLostSavedData extends SavedData {
+    private static final String DATA_NAME = "adventuresystems_paradise_lost_data";
     // 内存缓存：PlayerUUID -> PlayerData(score, eatenFoods)
     private final Map<UUID, PlayerData> playerDataMap = new HashMap<>();
 
@@ -54,9 +55,7 @@ public class ParadiseLostSavedData extends SavedData {
             throw new RuntimeException("Client side access to SavedData!");
         }
         return serverLevel.getServer().overworld().getDataStorage().computeIfAbsent(
-                new SavedData.Factory<>(ParadiseLostSavedData::new, (tag, lookup) -> load(tag)),
-                "adventuresystems_paradise_lost_data"
-        );
+                new SavedData.Factory<>(ParadiseLostSavedData::new, (tag, lookup) -> load(tag)), DATA_NAME);
     }
 
     private PlayerData getPlayerData(UUID playerId) {
@@ -91,9 +90,9 @@ public class ParadiseLostSavedData extends SavedData {
     public static ParadiseLostSavedData load(CompoundTag nbt) {
         ParadiseLostSavedData data = new ParadiseLostSavedData();
         CompoundTag maps = nbt.getCompound("PlayerData");
-        for (String key : maps.getAllKeys()) {
+        for (String key : dev.xyat.adventuresystems.data.Nbt.keys(maps)) {
             UUID playerId = UUID.fromString(key);
-            CompoundTag playerDataTag = maps.getCompound(key);
+            CompoundTag playerDataTag = dev.xyat.adventuresystems.data.Nbt.compound(maps, key);
             data.playerDataMap.put(playerId, PlayerData.load(playerDataTag));
         }
         return data;
@@ -102,7 +101,6 @@ public class ParadiseLostSavedData extends SavedData {
     /^**
      * 保存数据到 NBT
      *^/
-    @Override
     public @NotNull CompoundTag save(@Nonnull CompoundTag nbt, net.minecraft.core.HolderLookup.Provider lookup) {
         CompoundTag maps = new CompoundTag();
         playerDataMap.forEach((uuid, playerData) -> maps.put(uuid.toString(), playerData.save()));
@@ -205,9 +203,9 @@ public class ParadiseLostSavedData extends SavedData {
     public static ParadiseLostSavedData load(CompoundTag nbt) {
         ParadiseLostSavedData data = new ParadiseLostSavedData();
         CompoundTag maps = nbt.getCompound("PlayerData");
-        for (String key : maps.getAllKeys()) {
+        for (String key : dev.xyat.adventuresystems.data.Nbt.keys(maps)) {
             UUID playerId = UUID.fromString(key);
-            CompoundTag playerDataTag = maps.getCompound(key);
+            CompoundTag playerDataTag = dev.xyat.adventuresystems.data.Nbt.compound(maps, key);
             data.playerDataMap.put(playerId, PlayerData.load(playerDataTag));
         }
         return data;

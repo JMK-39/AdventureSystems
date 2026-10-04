@@ -41,6 +41,134 @@ stonecutter.parameters {
         spec.replace 'AttributeModifier.Operation.MULTIPLY_BASE', 'AttributeModifier.Operation.ADD_MULTIPLIED_BASE'
         spec.replace 'AttributeModifier.Operation.MULTIPLY_TOTAL', 'AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL'
     }
+
+    // Classes and methods that Minecraft or NeoForge only renamed or moved between 1.21.2 and 26.1, the same
+    // rules KineticCore uses. Whole words or exact calls only, because they also run backwards on older nodes.
+    // Classes whose API changed as well are handled in code with `//? if >=26.1 {` blocks.
+    replacements.regex(loader == 'neoforge' && eval(current.version, '>=26.1')) { spec ->
+        def rename = { String from, String to ->
+            spec.replace "\\b${from.replace('.', '\\.')}\\b", to, "\\b${to.replace('.', '\\.')}\\b", from
+        }
+        rename 'ResourceLocation', 'Identifier'
+        rename 'GuiGraphics', 'GuiGraphicsExtractor'
+        rename 'MobSpawnType', 'EntitySpawnReason'
+        rename 'DimensionTransition', 'TeleportTransition'
+        rename 'net.minecraft.Util', 'net.minecraft.util.Util'
+        rename 'net.minecraft.client.GuiMessage', 'net.minecraft.client.multiplayer.chat.GuiMessage'
+        rename 'net.minecraft.client.GuiMessageTag', 'net.minecraft.client.multiplayer.chat.GuiMessageTag'
+        rename 'net.minecraft.client.renderer.RenderType', 'net.minecraft.client.renderer.rendertype.RenderType'
+        rename 'net.minecraft.world.level.GameRules', 'net.minecraft.world.level.gamerules.GameRules'
+        rename 'net.neoforged.neoforge.common.util.TriState', 'net.minecraft.util.TriState'
+        rename 'ClickType', 'ContainerInput'
+        rename 'RegisterClientReloadListenersEvent', 'AddClientReloadListenersEvent'
+        rename 'AddReloadListenerEvent', 'AddServerReloadListenersEvent'
+
+        def call = { String from, String to ->
+            spec.replace java.util.regex.Pattern.quote(from), to, java.util.regex.Pattern.quote(to), from
+        }
+        // Registry keys: location() became identifier(); TagKey keeps location().
+        call 'dimension().location()', 'dimension().identifier()'
+        call 'getKey().location()', 'getKey().identifier()'
+        call 'key.location()', 'key.identifier()'
+        call 'OVERWORLD.location()', 'OVERWORLD.identifier()'
+        call 'ResourceKey::location', 'ResourceKey::identifier'
+        call '.getMinBuildHeight()', '.getMinY()'
+        call 'level.getMaxBuildHeight()', '(level.getMaxY() + 1)'
+        call '.registryOrThrow(', '.lookupOrThrow('
+        call 'registryAccess().registry(', 'registryAccess().lookup('
+        call 'TagParser.parseTag(', 'TagParser.parseCompoundFully('
+        call 'writeResourceLocation(', 'writeIdentifier('
+        call 'readResourceLocation(', 'readIdentifier('
+        call 'FMLEnvironment.dist', 'FMLEnvironment.getDist()'
+        call 'PacketDistributor.sendToServer(', 'net.neoforged.neoforge.client.network.ClientPacketDistributor.sendToServer('
+        // Click and hover events are one record per action on 26.1.
+        call 'new ClickEvent(ClickEvent.Action.RUN_COMMAND, ', 'new ClickEvent.RunCommand('
+        call 'new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, ', 'new ClickEvent.SuggestCommand('
+        call 'new ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, ', 'new ClickEvent.CopyToClipboard('
+        call 'new HoverEvent(HoverEvent.Action.SHOW_TEXT, ', 'new HoverEvent.ShowText('
+        // Widget methods.
+        rename 'renderWidget', 'extractWidgetRenderState'
+        rename 'getScrollbarPosition', 'scrollBarX'
+        rename 'getScrollAmount', 'scrollAmount'
+        rename 'getMaxScroll', 'maxScrollAmount'
+
+        // CompoundTag and ListTag getters return Optional since 1.21.5; the ...Or forms keep the old defaults.
+        def nbt = '\\b(tag|entityTag|stackTag|forgeData|persistentData|root|nbt|compound|data|list|getPersistentData\\(\\))'
+        def getter = { String from, String to, String defaultArgument ->
+            spec.replace "${nbt}\\.${from}\\(([^()]*)\\)", "\$1.${to}(\$2${defaultArgument})",
+                    "${nbt}\\.${to}\\(([^()]*?)${java.util.regex.Pattern.quote(defaultArgument)}\\)", "\$1.${from}(\$2)"
+        }
+        getter 'getInt', 'getIntOr', ', 0'
+        getter 'getLong', 'getLongOr', ', 0L'
+        getter 'getBoolean', 'getBooleanOr', ', false'
+        getter 'getString', 'getStringOr', ', ""'
+        getter 'getDouble', 'getDoubleOr', ', 0D'
+        getter 'getFloat', 'getFloatOr', ', 0F'
+        getter 'getCompound', 'getCompoundOrEmpty', ''
+        ['COMPOUND': 'CompoundTag', 'STRING': 'StringTag', 'LIST': 'ListTag'].each { type, tagClass ->
+            spec.replace "\\b([A-Za-z_]\\w*(?:\\(\\))?)\\.contains\\(([^(),]*), Tag\\.TAG_${type}\\)",
+                    "(\$1.get(\$2) instanceof net.minecraft.nbt.${tagClass})",
+                    "\\(([A-Za-z_]\\w*(?:\\(\\))?)\\.get\\(([^(),]*)\\) instanceof net\\.minecraft\\.nbt\\.${tagClass}\\)",
+                    "\$1.contains(\$2, Tag.TAG_${type})"
+        }
+        spec.replace '\\.getList\\(([^(),]*), Tag\\.(TAG_[A-Z]+)\\)', '.getListOrEmpty($1)/*$2*/',
+                '\\.getListOrEmpty\\(([^(),]*)\\)/\\*(TAG_[A-Z]+)\\*/', '.getList($1, Tag.$2)'
+        // Inventory slots, GameProfile records and permission sets.
+        call 'getInventory().items', 'getInventory().getNonEquipmentItems()'
+        call 'getGameProfile().getName()', 'getGameProfile().name()'
+        call 'profile.getName()', 'profile.name()'
+        call 'profile.getId()', 'profile.id()'
+        call 'getProfile().getName()', 'getProfile().name()'
+        call 'getProfile().getId()', 'getProfile().id()'
+        // Entity.getServer() is gone; the level knows its server.
+        call 'player.getServer()', 'player.level().getServer()'
+        call '.withPermission(2)', '.withPermission(net.minecraft.server.permissions.LevelBasedPermissionSet.GAMEMASTER)'
+        call '.withPermission(4)', '.withPermission(net.minecraft.server.permissions.LevelBasedPermissionSet.OWNER)'
+        call '.hasPermission(2)', '.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER)'
+        call '.hasPermissions(2)', '.permissions().hasPermission(new net.minecraft.server.permissions.Permission.HasCommandLevel(net.minecraft.server.permissions.PermissionLevel.GAMEMASTERS))'
+        call '.hasPermission(3)', '.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_ADMIN)'
+        // AdventureSystems: FTB Library moved its widgets, FTB Quests hides its file instances behind getters, and the
+        // remaining vanilla moves this addon touches.
+        rename 'dev.ftb.mods.ftblibrary.ui.input.MouseButton', 'dev.ftb.mods.ftblibrary.client.gui.input.MouseButton'
+        rename 'dev.ftb.mods.ftblibrary.ui.SimpleTextButton', 'dev.ftb.mods.ftblibrary.client.gui.widget.SimpleTextButton'
+        rename 'dev.ftb.mods.ftblibrary.ui.Button', 'dev.ftb.mods.ftblibrary.client.gui.widget.Button'
+        rename 'dev.ftb.mods.ftblibrary.ui.Panel', 'dev.ftb.mods.ftblibrary.client.gui.widget.Panel'
+        rename 'dev.ftb.mods.ftblibrary.ui.BaseScreen', 'dev.ftb.mods.ftblibrary.client.gui.widget.BaseScreen'
+        rename 'dev.ftb.mods.ftblibrary.ui.Widget', 'dev.ftb.mods.ftblibrary.client.gui.widget.Widget'
+        call 'ClientQuestFile.INSTANCE', 'ClientQuestFile.getInstance()'
+        spec.replace '\\b(stack|temp)\\.getTags\\(\\)', '$1.typeHolder().tags()', '\\b(stack|temp)\\.typeHolder\\(\\)\\.tags\\(\\)', '$1.getTags()'
+        call 'levelKey.location()', 'levelKey.identifier()'
+        call 'NetworkBuffer::writeResourceLocation', 'NetworkBuffer::writeIdentifier'
+        call 'NetworkBuffer::readResourceLocation', 'NetworkBuffer::readIdentifier'
+        call 'source.getServer()', 'source.level().getServer()'
+        call 'player.serverLevel()', '((net.minecraft.server.level.ServerLevel) player.level())'
+        call 'new ChunkPos(pos)', 'ChunkPos.containing(pos)'
+        call 'stack.getDescriptionId()', 'stack.getItem().getDescriptionId()'
+        // Key binding categories are ids on 26.1; their labels are key.category.adventuresystems.<path>.
+        call '.category("key.categories.adventuresystems")', '.category(net.minecraft.resources.Identifier.fromNamespaceAndPath("adventuresystems", "main"))'
+        call '.category("key.adventuresystems.category")', '.category(net.minecraft.resources.Identifier.fromNamespaceAndPath("adventuresystems", "ftb"))'
+        // Items: use() returns an InteractionResult, and tooltips are fed to a consumer next to the tooltip display.
+        call 'public @NotNull InteractionResultHolder<ItemStack> use(', 'public @NotNull net.minecraft.world.InteractionResult use('
+        call 'InteractionResultHolder.pass(stack)', 'net.minecraft.world.InteractionResult.PASS'
+        call 'InteractionResultHolder.sidedSuccess(stack, level.isClientSide())', 'net.minecraft.world.InteractionResult.SUCCESS'
+        call '@Nonnull List<Component> tooltip, @NotNull TooltipFlag flag) {', 'net.minecraft.world.item.component.TooltipDisplay display, java.util.function.Consumer<Component> tooltip, @NotNull TooltipFlag flag) {'
+        call '@Nonnull List<Component> tooltipComponents, @NotNull TooltipFlag isAdvanced) {', 'net.minecraft.world.item.component.TooltipDisplay display, java.util.function.Consumer<Component> tooltipComponents, @NotNull TooltipFlag isAdvanced) {'
+        call 'tooltipComponents.add(', 'tooltipComponents.accept('
+        call 'tooltip.add(AdventureText.translatable("tip.adventuresystems.curios.global.disabled"))', 'tooltip.accept(AdventureText.translatable("tip.adventuresystems.curios.global.disabled"))'
+        // Saved data is typed by id and codec; the stored compound keeps its layout.
+        call 'new SavedData.Factory<>(ParadiseLostSavedData::new, (tag, lookup) -> load(tag)), DATA_NAME)', 'new net.minecraft.world.level.saveddata.SavedDataType<>(net.minecraft.resources.Identifier.fromNamespaceAndPath("adventuresystems", DATA_NAME), ParadiseLostSavedData::new, CompoundTag.CODEC.xmap(ParadiseLostSavedData::load, data -> data.save(new CompoundTag()))))'
+        call 'public @NotNull CompoundTag save(@Nonnull CompoundTag nbt, net.minecraft.core.HolderLookup.Provider lookup) {', 'public @NotNull CompoundTag save(@Nonnull CompoundTag nbt) {'
+        // Cooldowns are kept per item stack group, food is a data component, and FTB Quests returns its server file directly.
+        call 'getCooldowns().addCooldown(Items.HEART_OF_STEEL.get(), ', 'getCooldowns().addCooldown(new net.minecraft.world.item.ItemStack(Items.HEART_OF_STEEL.get()), '
+        call 'foodStack.getItem().getFoodProperties(foodStack, player)', 'foodStack.get(net.minecraft.core.component.DataComponents.FOOD)'
+        call 'ServerQuestFile.getInstance().ifPresent(file -> ', 'java.util.Optional.ofNullable(ServerQuestFile.getInstance()).ifPresent(file -> '
+        // FTB Library replaced Architectury's packet context with its own.
+        call 'NetworkManager.PacketContext context', 'dev.ftb.mods.ftblibrary.platform.network.PacketContext context'
+        call 'context.getPlayer() instanceof ServerPlayer player', 'context.player() instanceof ServerPlayer player'
+        call 'context.queue(() -> ', 'context.enqueue(() -> '
+        // Curios 15 splits curio changes into item and state events; slot conflicts follow item changes.
+        call 'KineticExternalEvents.subscribe(CurioChangeEvent.class, ', 'KineticExternalEvents.subscribe(CurioChangeEvent.Item.class, '
+    }
 }
 
 tasks.register('buildAll') {

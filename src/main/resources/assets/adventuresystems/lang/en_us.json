@@ -179,6 +179,8 @@
   "tip.adventuresystems.curios.levitation_backpack.desc2": "  §a✦ Absolute Stability: Enables Creative flight",
   "msg.adventuresystems.curios.wallet.merchant_manual_exchange_required": "§6This trade needs manual currency exchange first. Press §6§l%s§r§6 to open the wallet.",
   "key.categories.adventuresystems": "Adventure Systems",
+  "key.category.adventuresystems.main": "Adventure Systems",
+  "key.category.adventuresystems.ftb": "Adventure Systems FTB",
   "key.adventuresystems.open_currency_wallet": "Open Currency Wallet",
   "tip.adventuresystems.curios.wallet.title": "§6Currency Bank Belt Accessory",
   "tip.adventuresystems.curios.wallet.desc1": "§aPress §f§6§l%s§r§f §ato open the wallet panel for depositing, withdrawing, and exchanging currency.",

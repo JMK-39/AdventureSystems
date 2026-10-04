@@ -27,7 +27,7 @@ public final class CurioConflictHandler {
     private static void onCurioChange(CurioChangeEvent event) {
         if (!(event.getEntity() instanceof Player player)) return;
 
-        boolean isClient = player.level().isClientSide;
+        boolean isClient = player.level().isClientSide();
 
         if (CuriosConfig.enableHeartOfSteel) {
             checkAndUnequip(player, Items.HEART_OF_STEEL.get(), CuriosConfig.hosConflicts, isClient);
@@ -38,11 +38,11 @@ public final class CurioConflictHandler {
     }
 
     private static void checkAndUnequip(Player player, Item targetItem, List<String> conflicts, boolean isClient) {
-        CuriosApi.getCuriosHelper().findFirstCurio(player, targetItem).ifPresent(slotResult -> {
+        dev.xyat.adventuresystems.curios.common.util.CuriosAccess.findFirst(player, targetItem).ifPresent(slotResult -> {
             for (String conflictId : conflicts) {
                 Item conflictItem = KineticRegistries.items().get(KineticResourceIds.parse(conflictId));
                 if (conflictItem != null && conflictItem != net.minecraft.world.item.Items.AIR
-                        && CuriosApi.getCuriosHelper().findFirstCurio(player, conflictItem).isPresent()) {
+                        && dev.xyat.adventuresystems.curios.common.util.CuriosAccess.findFirst(player, conflictItem).isPresent()) {
                     if (isClient) {
                         KineticOverlays.toast(AdventureText.translatable(
                                 "msg.adventuresystems.curios.force_unequip",
@@ -52,7 +52,7 @@ public final class CurioConflictHandler {
                     } else {
                         SlotContext context = slotResult.slotContext();
                         ItemStack targetStack = slotResult.stack();
-                        CuriosApi.getCuriosHelper().getCuriosHandler(player).ifPresent(handler ->
+                        dev.xyat.adventuresystems.curios.common.util.CuriosAccess.inventory(player).ifPresent(handler ->
                                 handler.getStacksHandler(context.identifier()).ifPresent(stacks -> {
                                     stacks.getStacks().setStackInSlot(context.index(), ItemStack.EMPTY);
                                     if (!player.getInventory().add(targetStack)) {

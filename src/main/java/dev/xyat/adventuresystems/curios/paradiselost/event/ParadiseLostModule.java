@@ -55,7 +55,7 @@ public final class ParadiseLostModule {
         double oldBonusPercent = 0;
         double newBonusPercent = 0;
 
-        if (!player.level().isClientSide) {
+        if (!player.level().isClientSide()) {
             String foodId = Objects.requireNonNull(KineticRegistries.items().id(foodStack.getItem())).toString();
             ParadiseLostSavedData data = ParadiseLostSavedData.get(player.level());
             isNewFood = !data.hasEaten(player.getUUID(), foodId);
@@ -75,23 +75,23 @@ public final class ParadiseLostModule {
         final double finalOldBonusPercent = oldBonusPercent;
         final double finalNewBonusPercent = newBonusPercent;
 
-        CuriosApi.getCuriosHelper().findFirstCurio(player, Items.PARADISE_LOST.get()).ifPresent(slot -> {
+        dev.xyat.adventuresystems.curios.common.util.CuriosAccess.findFirst(player, Items.PARADISE_LOST.get()).ifPresent(slot -> {
             ItemStack ring = slot.stack();
             CompoundTag nbt = dev.xyat.adventuresystems.data.AdventureItemData.customData(ring);
 
-            if (!nbt.hasUUID(NBT_OWNER) && !player.level().isClientSide) {
-                nbt.putUUID(NBT_OWNER, player.getUUID());
+            if (!dev.xyat.adventuresystems.data.Nbt.hasUuid(nbt, NBT_OWNER) && !player.level().isClientSide()) {
+                dev.xyat.adventuresystems.data.Nbt.putUuid(nbt, NBT_OWNER, player.getUUID());
                 dev.xyat.adventuresystems.data.AdventureItemData.updateCustomData(ring, tag -> tag.merge(nbt));
             }
 
-            if (!player.getUUID().equals(nbt.getUUID(NBT_OWNER))) {
-                if (player.level().isClientSide) {
+            if (!player.getUUID().equals(dev.xyat.adventuresystems.data.Nbt.uuid(nbt, NBT_OWNER))) {
+                if (player.level().isClientSide()) {
                     KineticOverlays.toast(AdventureText.translatable("msg.adventuresystems.curios.not_owner"));
                 }
                 return;
             }
 
-            if (!player.level().isClientSide && finalIsNewFood) {
+            if (!player.level().isClientSide() && finalIsNewFood) {
                 nbt.putInt(NBT_SCORE, finalNewScore);
                 dev.xyat.adventuresystems.data.AdventureItemData.updateCustomData(ring, tag -> tag.merge(nbt));
                 if (player instanceof ServerPlayer serverPlayer) {
@@ -114,9 +114,9 @@ public final class ParadiseLostModule {
         if (!CuriosConfig.enableParadiseLost) return;
         if (!(event.source().getEntity() instanceof Player player)) return;
 
-        CuriosApi.getCuriosHelper().findFirstCurio(player, Items.PARADISE_LOST.get()).ifPresent(slot -> {
+        dev.xyat.adventuresystems.curios.common.util.CuriosAccess.findFirst(player, Items.PARADISE_LOST.get()).ifPresent(slot -> {
             CompoundTag nbt = dev.xyat.adventuresystems.data.AdventureItemData.customData(slot.stack());
-            if (nbt != null && nbt.hasUUID(NBT_OWNER) && player.getUUID().equals(nbt.getUUID(NBT_OWNER))) {
+            if (nbt != null && dev.xyat.adventuresystems.data.Nbt.hasUuid(nbt, NBT_OWNER) && player.getUUID().equals(dev.xyat.adventuresystems.data.Nbt.uuid(nbt, NBT_OWNER))) {
                 int score = nbt.getInt(NBT_SCORE);
                 float multiplier = (float) (1.0 + ParadiseLostCurve.bonus(score));
                 if (multiplier > 0) {
@@ -128,15 +128,15 @@ public final class ParadiseLostModule {
 
     private static void onPlayerTick(ServerPlayer player) {
         if (player.tickCount % 20 != 0) return;
-        CuriosApi.getCuriosHelper().findFirstCurio(player, Items.PARADISE_LOST.get()).ifPresent(slot -> {
+        dev.xyat.adventuresystems.curios.common.util.CuriosAccess.findFirst(player, Items.PARADISE_LOST.get()).ifPresent(slot -> {
             ItemStack ring = slot.stack();
             CompoundTag nbt = dev.xyat.adventuresystems.data.AdventureItemData.customData(ring);
 
-            if (!nbt.hasUUID(NBT_OWNER)) {
-                nbt.putUUID(NBT_OWNER, player.getUUID());
+            if (!dev.xyat.adventuresystems.data.Nbt.hasUuid(nbt, NBT_OWNER)) {
+                dev.xyat.adventuresystems.data.Nbt.putUuid(nbt, NBT_OWNER, player.getUUID());
             }
 
-            if (player.getUUID().equals(nbt.getUUID(NBT_OWNER))) {
+            if (player.getUUID().equals(dev.xyat.adventuresystems.data.Nbt.uuid(nbt, NBT_OWNER))) {
                 ParadiseLostSavedData data = ParadiseLostSavedData.get(player.level());
                 int savedScore = data.getScore(player.getUUID());
                 if (nbt.getInt(NBT_SCORE) != savedScore) {
@@ -205,7 +205,7 @@ public final class ParadiseLostModule {
         double oldBonusPercent = 0;
         double newBonusPercent = 0;
 
-        if (!player.level().isClientSide) {
+        if (!player.level().isClientSide()) {
             String foodId = Objects.requireNonNull(KineticRegistries.items().id(foodStack.getItem())).toString();
             ParadiseLostSavedData data = ParadiseLostSavedData.get(player.level());
             isNewFood = !data.hasEaten(player.getUUID(), foodId);
@@ -225,22 +225,22 @@ public final class ParadiseLostModule {
         final double finalOldBonusPercent = oldBonusPercent;
         final double finalNewBonusPercent = newBonusPercent;
 
-        CuriosApi.getCuriosHelper().findFirstCurio(player, Items.PARADISE_LOST.get()).ifPresent(slot -> {
+        dev.xyat.adventuresystems.curios.common.util.CuriosAccess.findFirst(player, Items.PARADISE_LOST.get()).ifPresent(slot -> {
             ItemStack ring = slot.stack();
             CompoundTag nbt = ring.getOrCreateTag();
 
-            if (!nbt.hasUUID(NBT_OWNER) && !player.level().isClientSide) {
-                nbt.putUUID(NBT_OWNER, player.getUUID());
+            if (!dev.xyat.adventuresystems.data.Nbt.hasUuid(nbt, NBT_OWNER) && !player.level().isClientSide()) {
+                dev.xyat.adventuresystems.data.Nbt.putUuid(nbt, NBT_OWNER, player.getUUID());
             }
 
-            if (!player.getUUID().equals(nbt.getUUID(NBT_OWNER))) {
-                if (player.level().isClientSide) {
+            if (!player.getUUID().equals(dev.xyat.adventuresystems.data.Nbt.uuid(nbt, NBT_OWNER))) {
+                if (player.level().isClientSide()) {
                     KineticOverlays.toast(AdventureText.translatable("msg.adventuresystems.curios.not_owner"));
                 }
                 return;
             }
 
-            if (!player.level().isClientSide && finalIsNewFood) {
+            if (!player.level().isClientSide() && finalIsNewFood) {
                 nbt.putInt(NBT_SCORE, finalNewScore);
                 if (player instanceof ServerPlayer serverPlayer) {
                     KineticPlayerMessages.display(
@@ -262,9 +262,9 @@ public final class ParadiseLostModule {
         if (!CuriosConfig.enableParadiseLost) return;
         if (!(event.source().getEntity() instanceof Player player)) return;
 
-        CuriosApi.getCuriosHelper().findFirstCurio(player, Items.PARADISE_LOST.get()).ifPresent(slot -> {
+        dev.xyat.adventuresystems.curios.common.util.CuriosAccess.findFirst(player, Items.PARADISE_LOST.get()).ifPresent(slot -> {
             CompoundTag nbt = slot.stack().getTag();
-            if (nbt != null && nbt.hasUUID(NBT_OWNER) && player.getUUID().equals(nbt.getUUID(NBT_OWNER))) {
+            if (nbt != null && dev.xyat.adventuresystems.data.Nbt.hasUuid(nbt, NBT_OWNER) && player.getUUID().equals(dev.xyat.adventuresystems.data.Nbt.uuid(nbt, NBT_OWNER))) {
                 int score = nbt.getInt(NBT_SCORE);
                 float multiplier = (float) (1.0 + ParadiseLostCurve.bonus(score));
                 if (multiplier > 0) {
@@ -276,15 +276,15 @@ public final class ParadiseLostModule {
 
     private static void onPlayerTick(ServerPlayer player) {
         if (player.tickCount % 20 != 0) return;
-        CuriosApi.getCuriosHelper().findFirstCurio(player, Items.PARADISE_LOST.get()).ifPresent(slot -> {
+        dev.xyat.adventuresystems.curios.common.util.CuriosAccess.findFirst(player, Items.PARADISE_LOST.get()).ifPresent(slot -> {
             ItemStack ring = slot.stack();
             CompoundTag nbt = ring.getOrCreateTag();
 
-            if (!nbt.hasUUID(NBT_OWNER)) {
-                nbt.putUUID(NBT_OWNER, player.getUUID());
+            if (!dev.xyat.adventuresystems.data.Nbt.hasUuid(nbt, NBT_OWNER)) {
+                dev.xyat.adventuresystems.data.Nbt.putUuid(nbt, NBT_OWNER, player.getUUID());
             }
 
-            if (player.getUUID().equals(nbt.getUUID(NBT_OWNER))) {
+            if (player.getUUID().equals(dev.xyat.adventuresystems.data.Nbt.uuid(nbt, NBT_OWNER))) {
                 ParadiseLostSavedData data = ParadiseLostSavedData.get(player.level());
                 int savedScore = data.getScore(player.getUUID());
                 if (nbt.getInt(NBT_SCORE) != savedScore) {

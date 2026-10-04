@@ -179,6 +179,8 @@
   "tip.adventuresystems.curios.levitation_backpack.desc2": "  §a✦ 绝对稳定:开启创造模式飞行",
   "msg.adventuresystems.curios.wallet.merchant_manual_exchange_required": "§6当前交易需要先在钱包界面手动兑换货币，可按 §6§l%s§r§6 打开钱包。",
   "key.categories.adventuresystems": "Adventure Systems",
+  "key.category.adventuresystems.main": "Adventure Systems",
+  "key.category.adventuresystems.ftb": "Adventure Systems FTB",
   "key.adventuresystems.open_currency_wallet": "打开钱包袋子",
   "tip.adventuresystems.curios.wallet.title": "§6货币银行腰带饰品",
   "tip.adventuresystems.curios.wallet.desc1": "§a按下 §f§6§l%s§r§f §a打开钱包面板，存入、取出和兑换货币。",

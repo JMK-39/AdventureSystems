@@ -47,11 +47,11 @@ public final class HeartOfSteelModule {
 
         maxHealthAttr.removeModifier(HOS_HEALTH_UUID);
 
-        CuriosApi.getCuriosHelper().findFirstCurio(player, Items.HEART_OF_STEEL.get()).ifPresent(slot -> {
+        dev.xyat.adventuresystems.curios.common.util.CuriosAccess.findFirst(player, Items.HEART_OF_STEEL.get()).ifPresent(slot -> {
             ItemStack stack = slot.stack();
             CompoundTag nbt = dev.xyat.adventuresystems.data.AdventureItemData.customData(stack);
 
-            if (nbt == null || !nbt.hasUUID(OWNER_KEY) || !player.getUUID().equals(nbt.getUUID(OWNER_KEY))) return;
+            if (nbt == null || !dev.xyat.adventuresystems.data.Nbt.hasUuid(nbt, OWNER_KEY) || !player.getUUID().equals(dev.xyat.adventuresystems.data.Nbt.uuid(nbt, OWNER_KEY))) return;
 
             int stacks = nbt.getInt(STACKS_KEY);
             double bonusFromStacks = Math.min((double) stacks / CuriosConfig.hosStacksPerHp, CuriosConfig.hosMaxHealthCap);
@@ -66,12 +66,12 @@ public final class HeartOfSteelModule {
     private static void onDamage(KineticLivingEvents.DamageContext event) {
         if (!CuriosConfig.enableHeartOfSteel) return;
         if (!(event.source().getEntity() instanceof Player player)) return;
-        if (player.level().isClientSide) return;
+        if (player.level().isClientSide()) return;
 
-        CuriosApi.getCuriosHelper().findFirstCurio(player, Items.HEART_OF_STEEL.get()).ifPresent(slot -> {
+        dev.xyat.adventuresystems.curios.common.util.CuriosAccess.findFirst(player, Items.HEART_OF_STEEL.get()).ifPresent(slot -> {
             ItemStack hosStack = slot.stack();
             CompoundTag nbt = dev.xyat.adventuresystems.data.AdventureItemData.customData(hosStack);
-            if (!nbt.hasUUID(OWNER_KEY) || !player.getUUID().equals(nbt.getUUID(OWNER_KEY))) return;
+            if (!dev.xyat.adventuresystems.data.Nbt.hasUuid(nbt, OWNER_KEY) || !player.getUUID().equals(dev.xyat.adventuresystems.data.Nbt.uuid(nbt, OWNER_KEY))) return;
 
             long currentTime = player.level().getGameTime();
             long nextChargeTime = nbt.getLong(NEXT_CHARGE_KEY);
@@ -94,10 +94,10 @@ public final class HeartOfSteelModule {
 
                 player.getCooldowns().addCooldown(Items.HEART_OF_STEEL.get(), cooldownTicks);
                 updatePlayerHealthAttribute(player);
-                player.playNotifySound(SoundEvents.HEART_OF_STEEL.get(), SoundSource.PLAYERS, 1.0f, 1.0f);
+                dev.xyat.adventuresystems.data.PlayerSounds.notify(player, SoundEvents.HEART_OF_STEEL.get(), SoundSource.PLAYERS, 1.0f, 1.0f);
             }
 
-            if (currentTime <= pData.getLong(BURST_END_KEY) && finalBonus > 0) {
+            if (currentTime <= dev.xyat.adventuresystems.data.Nbt.longValue(pData, BURST_END_KEY) && finalBonus > 0) {
                 event.amount((float) (event.amount() * (1.0 + finalBonus)));
             }
         });
@@ -107,9 +107,9 @@ public final class HeartOfSteelModule {
         if (!CuriosConfig.enableHeartOfSteel) return;
         if (!(event.entity() instanceof Player player)) return;
 
-        CuriosApi.getCuriosHelper().findFirstCurio(player, Items.HEART_OF_STEEL.get()).ifPresent(slot -> {
+        dev.xyat.adventuresystems.curios.common.util.CuriosAccess.findFirst(player, Items.HEART_OF_STEEL.get()).ifPresent(slot -> {
             CompoundTag nbt = dev.xyat.adventuresystems.data.AdventureItemData.customData(slot.stack());
-            if (nbt == null || !nbt.hasUUID(OWNER_KEY) || !player.getUUID().equals(nbt.getUUID(OWNER_KEY))) return;
+            if (nbt == null || !dev.xyat.adventuresystems.data.Nbt.hasUuid(nbt, OWNER_KEY) || !player.getUUID().equals(dev.xyat.adventuresystems.data.Nbt.uuid(nbt, OWNER_KEY))) return;
 
             float missingPercent = Math.max(0, (player.getMaxHealth() - player.getHealth()) / player.getMaxHealth());
             float bonusMultiplier = missingPercent * (float) CuriosConfig.hosHealMultiplier;
@@ -169,11 +169,11 @@ public final class HeartOfSteelModule {
 
         maxHealthAttr.removeModifier(HOS_HEALTH_UUID);
 
-        CuriosApi.getCuriosHelper().findFirstCurio(player, Items.HEART_OF_STEEL.get()).ifPresent(slot -> {
+        dev.xyat.adventuresystems.curios.common.util.CuriosAccess.findFirst(player, Items.HEART_OF_STEEL.get()).ifPresent(slot -> {
             ItemStack stack = slot.stack();
             CompoundTag nbt = stack.getTag();
 
-            if (nbt == null || !nbt.hasUUID(OWNER_KEY) || !player.getUUID().equals(nbt.getUUID(OWNER_KEY))) return;
+            if (nbt == null || !dev.xyat.adventuresystems.data.Nbt.hasUuid(nbt, OWNER_KEY) || !player.getUUID().equals(dev.xyat.adventuresystems.data.Nbt.uuid(nbt, OWNER_KEY))) return;
 
             int stacks = nbt.getInt(STACKS_KEY);
             double bonusFromStacks = Math.min((double) stacks / CuriosConfig.hosStacksPerHp, CuriosConfig.hosMaxHealthCap);
@@ -188,12 +188,12 @@ public final class HeartOfSteelModule {
     private static void onDamage(KineticLivingEvents.DamageContext event) {
         if (!CuriosConfig.enableHeartOfSteel) return;
         if (!(event.source().getEntity() instanceof Player player)) return;
-        if (player.level().isClientSide) return;
+        if (player.level().isClientSide()) return;
 
-        CuriosApi.getCuriosHelper().findFirstCurio(player, Items.HEART_OF_STEEL.get()).ifPresent(slot -> {
+        dev.xyat.adventuresystems.curios.common.util.CuriosAccess.findFirst(player, Items.HEART_OF_STEEL.get()).ifPresent(slot -> {
             ItemStack hosStack = slot.stack();
             CompoundTag nbt = hosStack.getOrCreateTag();
-            if (!nbt.hasUUID(OWNER_KEY) || !player.getUUID().equals(nbt.getUUID(OWNER_KEY))) return;
+            if (!dev.xyat.adventuresystems.data.Nbt.hasUuid(nbt, OWNER_KEY) || !player.getUUID().equals(dev.xyat.adventuresystems.data.Nbt.uuid(nbt, OWNER_KEY))) return;
 
             long currentTime = player.level().getGameTime();
             long nextChargeTime = nbt.getLong(NEXT_CHARGE_KEY);
@@ -215,10 +215,10 @@ public final class HeartOfSteelModule {
 
                 player.getCooldowns().addCooldown(Items.HEART_OF_STEEL.get(), cooldownTicks);
                 updatePlayerHealthAttribute(player);
-                player.playNotifySound(SoundEvents.HEART_OF_STEEL.get(), SoundSource.PLAYERS, 1.0f, 1.0f);
+                dev.xyat.adventuresystems.data.PlayerSounds.notify(player, SoundEvents.HEART_OF_STEEL.get(), SoundSource.PLAYERS, 1.0f, 1.0f);
             }
 
-            if (currentTime <= pData.getLong(BURST_END_KEY) && finalBonus > 0) {
+            if (currentTime <= dev.xyat.adventuresystems.data.Nbt.longValue(pData, BURST_END_KEY) && finalBonus > 0) {
                 event.amount((float) (event.amount() * (1.0 + finalBonus)));
             }
         });
@@ -228,9 +228,9 @@ public final class HeartOfSteelModule {
         if (!CuriosConfig.enableHeartOfSteel) return;
         if (!(event.entity() instanceof Player player)) return;
 
-        CuriosApi.getCuriosHelper().findFirstCurio(player, Items.HEART_OF_STEEL.get()).ifPresent(slot -> {
+        dev.xyat.adventuresystems.curios.common.util.CuriosAccess.findFirst(player, Items.HEART_OF_STEEL.get()).ifPresent(slot -> {
             CompoundTag nbt = slot.stack().getTag();
-            if (nbt == null || !nbt.hasUUID(OWNER_KEY) || !player.getUUID().equals(nbt.getUUID(OWNER_KEY))) return;
+            if (nbt == null || !dev.xyat.adventuresystems.data.Nbt.hasUuid(nbt, OWNER_KEY) || !player.getUUID().equals(dev.xyat.adventuresystems.data.Nbt.uuid(nbt, OWNER_KEY))) return;
 
             float missingPercent = Math.max(0, (player.getMaxHealth() - player.getHealth()) / player.getMaxHealth());
             float bonusMultiplier = missingPercent * (float) CuriosConfig.hosHealMultiplier;

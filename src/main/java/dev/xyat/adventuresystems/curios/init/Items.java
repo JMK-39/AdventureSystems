@@ -15,22 +15,22 @@ import net.minecraft.world.item.Item;
 public final class Items {
     public static final KineticRegistryHandle<Item> HEART_OF_STEEL = KineticItems.register(
             KineticResourceIds.of(CuriosModule.MODID, "heart_of_steel"),
-            () -> CuriosConfig.enableHeartOfSteel ? new HeartOfSteelItem() : new DisabledCurioItem(new Item.Properties())
+            () -> CuriosConfig.enableHeartOfSteel ? new HeartOfSteelItem() : new DisabledCurioItem(ItemProperties.of("heart_of_steel"))
     );
 
     public static final KineticRegistryHandle<Item> PARADISE_LOST = KineticItems.register(
             KineticResourceIds.of(CuriosModule.MODID, "paradise_lost"),
-            () -> CuriosConfig.enableParadiseLost ? new ParadiseLostItem() : new DisabledCurioItem(new Item.Properties())
+            () -> CuriosConfig.enableParadiseLost ? new ParadiseLostItem() : new DisabledCurioItem(ItemProperties.of("paradise_lost"))
     );
 
     public static final KineticRegistryHandle<Item> LEVITATION_BACKPACK = KineticItems.register(
             KineticResourceIds.of(CuriosModule.MODID, "levitation_backpack"),
-            () -> CuriosConfig.enableLevitationBackpack ? new LevitationBackpackItem() : new DisabledCurioItem(new Item.Properties())
+            () -> CuriosConfig.enableLevitationBackpack ? new LevitationBackpackItem() : new DisabledCurioItem(ItemProperties.of("levitation_backpack"))
     );
 
     public static final KineticRegistryHandle<Item> CURRENCY_WALLET = KineticItems.register(
             KineticResourceIds.of(CuriosModule.MODID, "currency_wallet"),
-            () -> CuriosConfig.enableCurrencyWallet ? new WalletItem() : new DisabledCurioItem(new Item.Properties())
+            () -> CuriosConfig.enableCurrencyWallet ? new WalletItem() : new DisabledCurioItem(ItemProperties.of("currency_wallet"))
     );
 
     private Items() {

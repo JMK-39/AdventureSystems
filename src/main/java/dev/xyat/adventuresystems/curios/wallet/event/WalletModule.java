@@ -105,7 +105,7 @@ public final class WalletModule {
             }
         }
         if (changed) {
-            serverPlayer.playNotifySound(SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.2f, 1.6f);
+            dev.xyat.adventuresystems.data.PlayerSounds.notify(serverPlayer, SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.2f, 1.6f);
             Network.sync(serverPlayer);
         }
     }
@@ -168,7 +168,7 @@ public final class WalletModule {
         if (Data.depositStack(serverPlayer, walletStack, itemEntity.getItem())) {
             event.cancel();
             itemEntity.discard();
-            serverPlayer.playNotifySound(SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.2f, 1.6f);
+            dev.xyat.adventuresystems.data.PlayerSounds.notify(serverPlayer, SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.2f, 1.6f);
             Network.sync(serverPlayer);
         }
     }

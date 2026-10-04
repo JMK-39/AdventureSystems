@@ -161,7 +161,7 @@ public final class Network {
 
     public static void broadcastShopRefresh(ServerPlayer source) {
         if (source == null) return;
-        for (ServerPlayer player : source.server.getPlayerList().getPlayers()) {
+        for (ServerPlayer player : source.getServer().getPlayerList().getPlayers()) {
             refreshShop(player);
         }
     }

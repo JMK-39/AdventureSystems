@@ -11,6 +11,7 @@ import dev.xyat.kineticcore.api.runtime.KineticPlatform;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
+//? if <26.1
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -33,7 +34,7 @@ public class WalletItem extends Item implements ICurioItem {
     private static final String ITEM_NAME_KEY = "item.adventuresystems.currency_wallet";
 
     public WalletItem() {
-        super(new Properties().stacksTo(1).rarity(Rarity.RARE).fireResistant());
+        super(dev.xyat.adventuresystems.curios.init.ItemProperties.of("currency_wallet").stacksTo(1).rarity(Rarity.RARE).fireResistant());
     }
 
     @Override
@@ -70,7 +71,7 @@ public class WalletItem extends Item implements ICurioItem {
         Data.ensureWalletIdentity(stack);
         boolean disabled = Data.toggleMagnetDisabled(stack);
 
-        if (!level.isClientSide && player instanceof ServerPlayer serverPlayer) {
+        if (!level.isClientSide() && player instanceof ServerPlayer serverPlayer) {
             Network.toast(serverPlayer, disabled ? "msg.adventuresystems.curios.wallet.magnet_disabled" : "msg.adventuresystems.curios.wallet.magnet_enabled");
             Network.sync(serverPlayer);
         }
@@ -79,7 +80,14 @@ public class WalletItem extends Item implements ICurioItem {
     }
 
     @Override
-//? if >=1.21 {
+    // 26.1 feeds tooltip lines to a consumer; the lines are collected first and handed over at the end.
+    //? if >=26.1 {
+    /*public void appendHoverText(@NotNull ItemStack stack, @NotNull Item.TooltipContext context,
+                                @NotNull net.minecraft.world.item.component.TooltipDisplay display,
+                                @NotNull java.util.function.Consumer<Component> lines, @NotNull TooltipFlag flag) {
+        Level level = KineticPlatform.callOnClient(() -> dev.xyat.kineticcore.api.runtime.KineticClientRuntime::currentLevel, null);
+        List<Component> tooltip = new java.util.ArrayList<>();
+    *///?} else if >=1.21 {
         /*public void appendHoverText(@NotNull ItemStack stack, @NotNull Item.TooltipContext context, @NotNull List<Component> tooltip, @NotNull TooltipFlag flag) {
         Level level = KineticPlatform.callOnClient(() -> dev.xyat.kineticcore.api.runtime.KineticClientRuntime::currentLevel, null);
         *///?} else {
@@ -90,17 +98,19 @@ public class WalletItem extends Item implements ICurioItem {
         tooltip.add(AdventureText.translatable("tip.adventuresystems.curios.wallet.desc2"));
         tooltip.add(AdventureText.translatable("tip.adventuresystems.curios.wallet.desc3", Long.toString(Math.round(CuriosConfig.walletMagnetRange))));
         appendClientAmounts(stack, level, tooltip);
+        //? if >=26.1
+        /*tooltip.forEach(lines);*/
     }
 
     private String openKeyName(@Nullable Level level) {
-        if (level == null || !level.isClientSide) return "U";
+        if (level == null || !level.isClientSide()) return "U";
         String name = KineticPlatform.callOnClient(() -> Client::openKeyName, "U");
         if (name == null || name.isEmpty()) return "U";
         return name;
     }
 
     private void appendClientAmounts(@NotNull ItemStack stack, @Nullable Level level, @NotNull List<Component> tooltip) {
-        if (level == null || !level.isClientSide) return;
+        if (level == null || !level.isClientSide()) return;
         KineticPlatform.runOnClient(() -> () -> Client.appendWalletTooltip(stack, tooltip));
     }
 }

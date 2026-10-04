@@ -35,7 +35,7 @@ public final class SophisticatedBackpackCompat {
             Optional<IBackpackWrapper> wrapper = wrapper(backpack);
             if (wrapper.isEmpty()) continue;
             InventoryHandler handler = wrapper.get().getInventoryHandler();
-            for (int slot = 0; slot < handler.getSlots(); slot++) {
+            for (int slot = 0; slot < slotCount(handler); slot++) {
                 ItemStack current = handler.getStackInSlot(slot);
                 if (WalletMaterialMatcher.matches(current, target)) {
                     total = safeAdd(total, current.getCount());
@@ -54,12 +54,11 @@ public final class SophisticatedBackpackCompat {
             Optional<IBackpackWrapper> wrapper = wrapper(backpack);
             if (wrapper.isEmpty()) continue;
             InventoryHandler handler = wrapper.get().getInventoryHandler();
-            for (int slot = 0; slot < handler.getSlots() && remaining > 0L; slot++) {
+            for (int slot = 0; slot < slotCount(handler) && remaining > 0L; slot++) {
                 ItemStack current = handler.getStackInSlot(slot);
                 if (!WalletMaterialMatcher.matches(current, target)) continue;
                 int step = (int) Math.min(current.getCount(), Math.min(Integer.MAX_VALUE, remaining));
-                ItemStack extracted = handler.extractItem(slot, step, simulate);
-                int got = extracted.isEmpty() ? 0 : extracted.getCount();
+                int got = extractFrom(handler, slot, current, step, simulate);
                 if (got == 0) continue;
                 removed += got;
                 remaining -= got;
@@ -67,6 +66,31 @@ public final class SophisticatedBackpackCompat {
         }
         return removed;
     }
+
+    // 26.1 backpack inventories use NeoForge's transfer API: resources moved inside transactions, which a
+    // simulation simply never commits.
+    //? if >=26.1 {
+    /*private static int slotCount(InventoryHandler handler) {
+        return handler.size();
+    }
+
+    private static int extractFrom(InventoryHandler handler, int slot, ItemStack current, int amount, boolean simulate) {
+        try (var transaction = net.neoforged.neoforge.transfer.transaction.Transaction.openRoot()) {
+            int extracted = handler.extract(slot, net.neoforged.neoforge.transfer.item.ItemResource.of(current), amount, transaction);
+            if (!simulate) transaction.commit();
+            return extracted;
+        }
+    }
+    *///?} else {
+    private static int slotCount(InventoryHandler handler) {
+        return handler.getSlots();
+    }
+
+    private static int extractFrom(InventoryHandler handler, int slot, ItemStack current, int amount, boolean simulate) {
+        ItemStack extracted = handler.extractItem(slot, amount, simulate);
+        return extracted.isEmpty() ? 0 : extracted.getCount();
+    }
+    //?}
 
     private static List<ItemStack> backpacks(ServerPlayer player) {
         List<ItemStack> result = new ArrayList<>();

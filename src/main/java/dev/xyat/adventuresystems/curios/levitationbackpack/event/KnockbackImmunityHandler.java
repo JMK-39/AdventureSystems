@@ -23,8 +23,7 @@ public final class KnockbackImmunityHandler {
     }
 
     private static boolean hasLevitationBackpack(Player player) {
-        return CuriosApi.getCuriosHelper()
-                .findFirstCurio(player, stack -> stack.is(Items.LEVITATION_BACKPACK.get()))
+        return dev.xyat.adventuresystems.curios.common.util.CuriosAccess.findFirst(player, stack -> stack.is(Items.LEVITATION_BACKPACK.get()))
                 .isPresent();
     }
 }

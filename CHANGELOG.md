@@ -6,7 +6,10 @@
 
 - Verified native item-component and village tip conditions in the real 1.21.1 client: standalone sword, village without items, both matching tips rotating, damage mismatch and leaving the structure; 19 checks passed, with test inventory/position restored.
 - Added six useful general tips to the English/Chinese default configurations for timed rotation even without matching conditions. Removed the redundant instruction to press Esc. Existing custom files remain intact.
-- Migrated build architecture to Java 21, Gradle 9.8.0, Stonecutter and ModDevGradle; enabled Forge 1.20.1 and NeoForge 1.21.1. The 26.1.2 node remains reserved and disabled.
+- Migrated build architecture to Java 21, Gradle 9.8.0, Stonecutter and ModDevGradle; enabled Forge 1.20.1, NeoForge 1.21.1 and NeoForge 26.1.2 (Java 25).
+- 26.1.2 builds against Curios 15, FTB Library / Quests / Teams 26.1.2, JEI 29.43, Sophisticated Backpacks 3.26, Refined Storage 3.2 and Architectury 20.1: wallet, shop, Heart of Steel, Paradise Lost, Levitation Backpack, FTB quest submission limits and tips start on a 26.1.2 server and client. Slot conflict checks follow Curios 15's item-change event; items carry their registry id and 26.1 item model definitions; saved data, tooltips, cooldowns, notify sounds and backpack extraction use the 26.1 APIs.
+- Fixed on 1.21.1: the Levitation Backpack recipe and the Curios slot item tags were packaged in 1.20.1 folders (recipes/, tags/items/) that 1.21 no longer reads; each version now ships its own data folder and recipe format.
+- The JUnit/regression suite runs on 1.20.1 and 1.21.1; it boots Minecraft through a stand-in mod list that FancyModLoader 11 (26.1) does not support, so 26.1.2 was checked in a running server and client.
 - Release names include loader and Minecraft version: adventuresystems-<loader>-<minecraft>-<version>.jar.
 - Forge retains its original NBT workflow; NeoForge uses native data components for items, component-aware wallet/shop records, quest matches and tip conditions. No old item-NBT converter is provided.
 - Kept only authored language keys in release JSON: English and Chinese now contain the same 755 public keys. Runtime formatting preserves colors, arguments, resource-pack overrides and language switching without generated `.formatted*` entries.
@@ -18,7 +21,10 @@
 
 - 在真实 1.21.1 客户端验证物品组件与村庄提示：单独持剑、村庄内空手、两种匹配提示轮换、耐久不符与离开结构均通过；共 19 项检查，测试背包和位置已恢复。
 - 中英文默认配置增加六条实用通用提示，无条件匹配时也可定时轮换；删除多余的“按 Esc”操作提示，保留已有自定义文件。
-- 构建迁移到 Java 21、Gradle 9.8.0、Stonecutter 与 ModDevGradle，启用 Forge 1.20.1 和 NeoForge 1.21.1。26.1.2 节点仍仅预留、未启用。
+- 构建迁移到 Java 21、Gradle 9.8.0、Stonecutter 与 ModDevGradle，启用 Forge 1.20.1、NeoForge 1.21.1 与 NeoForge 26.1.2（Java 25）。
+- 26.1.2 基于 Curios 15、FTB Library / Quests / Teams 26.1.2、JEI 29.43、精妙背包 3.26、Refined Storage 3.2 与 Architectury 20.1 构建：钱包、商店、钢铁之心、失乐园、悬浮背包、FTB 任务提交限制与提示均可在 26.1.2 服务端和客户端启动。饰品冲突检查跟随 Curios 15 的物品变更事件；物品带有注册 ID 与 26.1 物品模型定义；存档数据、提示、冷却、提示音与背包提取使用 26.1 的接口。
+- 修复 1.21.1：悬浮背包配方与 Curios 槽位物品标签此前打包在 1.20.1 的目录（recipes/、tags/items/），1.21 不再读取；现在各版本使用各自的数据目录与配方格式。
+- JUnit/回归测试在 1.20.1 与 1.21.1 上运行；它们通过替身模组列表启动 Minecraft，FancyModLoader 11（26.1）不支持这种方式，因此 26.1.2 在实际运行的服务端与客户端中检查。
 - 发布文件名包含加载器与 Minecraft 版本：adventuresystems-<加载器>-<Minecraft版本>-<模组版本>.jar。
 - Forge 保留原有 NBT 流程；NeoForge 的物品、钱包和商店记录、任务匹配及提示条件使用原生数据组件，不提供旧物品 NBT 转换器。
 - 发布语言 JSON 只保留人工编写的语言键，中英文均为同一套 755 个完整公开键。运行时格式处理保留颜色、参数、资源包覆盖和语言切换，不再生成 `.formatted*` 派生键。

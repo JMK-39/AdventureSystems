@@ -509,7 +509,7 @@ public final class BindingStoreFTB {
         if (expected == null || expected.isEmpty()) return true;
         if (actual == null) return false;
 
-        for (String key : expected.getAllKeys()) {
+        for (String key : dev.xyat.adventuresystems.data.Nbt.keys(expected)) {
             if (!actual.contains(key)) return false;
 
             Tag expectedTag = expected.get(key);

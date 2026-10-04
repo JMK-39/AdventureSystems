@@ -21,7 +21,7 @@ import java.util.List;
 public class LevitationBackpackItem extends Item implements ICurioItem {
 
     public LevitationBackpackItem() {
-        super(new Properties().stacksTo(1).rarity(Rarity.EPIC));
+        super(dev.xyat.adventuresystems.curios.init.ItemProperties.of("levitation_backpack").stacksTo(1).rarity(Rarity.EPIC));
     }
 
     /^**
@@ -73,7 +73,7 @@ import java.util.List;
 public class LevitationBackpackItem extends Item implements ICurioItem {
 
     public LevitationBackpackItem() {
-        super(new Properties().stacksTo(1).rarity(Rarity.EPIC));
+        super(dev.xyat.adventuresystems.curios.init.ItemProperties.of("levitation_backpack").stacksTo(1).rarity(Rarity.EPIC));
     }
 
     /**
