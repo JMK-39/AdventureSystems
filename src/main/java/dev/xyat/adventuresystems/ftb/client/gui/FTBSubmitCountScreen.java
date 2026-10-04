@@ -147,8 +147,8 @@ public class FTBSubmitCountScreen extends KineticPage {
         KineticTheme.shadow(graphics, width(), height());
         KineticTheme.canvasBackground(graphics, width(), height());
         KineticTheme.panel(graphics, left, top, PANEL_W, PANEL_H);
-        graphics.centeredText(title(), left + PANEL_W / 2, top + 14, KineticTheme.current().text(), true);
-        graphics.text(AdventureText.translatable("label.adventuresystems.ftb.submit.desc"), left + MARGIN_X, top + 34, KineticTheme.current().mutedText(), false);
+        graphics.scrollingTextCentered(title(), left + PANEL_W / 2, top + 14, PANEL_W - MARGIN_X * 2, KineticTheme.current().text(), true);
+        graphics.scrollingText(AdventureText.translatable("label.adventuresystems.ftb.submit.desc"), left + MARGIN_X, top + 34, PANEL_W - MARGIN_X * 2, KineticTheme.current().mutedText(), false);
     }
 
     @Override
@@ -176,7 +176,7 @@ public class FTBSubmitCountScreen extends KineticPage {
     }
 
     private void drawLine(KineticGraphics graphics, Component component, int x, int y) {
-        graphics.text(component, x, y, KineticTheme.current().text(), false);
+        graphics.scrollingText(component, x, y, Math.max(0, left + PANEL_W - MARGIN_X - x), KineticTheme.current().text(), false);
     }
 
     @Override

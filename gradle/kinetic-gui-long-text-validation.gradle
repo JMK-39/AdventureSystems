@@ -1,0 +1,21 @@
+// Opt-in screenshots of unsaved editor drafts; never included in release JARs.
+if (project.property('minecraft_version') == '1.21.1') {
+    def metadata = layout.buildDirectory.dir('gui-long-text-validation')
+    def writeMetadata = tasks.register('writeGuiValidationMetadata') {
+        outputs.dir metadata
+        doLast {
+            File target = new File(metadata.get().asFile, 'META-INF/neoforge.mods.toml')
+            target.parentFile.mkdirs()
+            target.setText('modLoader="javafml"\nloaderVersion="[1,)"\nlicense="LGPLv3"\n[[mods]]\nmodId="adventuresystems_gui_validation"\nversion="1.0.0"\ndisplayName="AdventureSystems GUI validation"\n[[dependencies.adventuresystems_gui_validation]]\nmodId="adventuresystems"\ntype="required"\nversionRange="[0,)"\nordering="AFTER"\nside="CLIENT"\n', 'UTF-8')
+        }
+    }
+    tasks.register('guiValidationJar', Jar) {
+        group = 'verification'
+        description = 'Builds the opt-in GUI screenshot fixture, separate from release artifacts.'
+        dependsOn 'testClasses', writeMetadata
+        from(sourceSets.test.output) { include 'dev/xyat/adventureguivalidation/**' }
+        from metadata
+        archiveFileName = 'adventuresystems-gui-validation.jar'
+        destinationDirectory = rootProject.layout.buildDirectory.dir('libs')
+    }
+}

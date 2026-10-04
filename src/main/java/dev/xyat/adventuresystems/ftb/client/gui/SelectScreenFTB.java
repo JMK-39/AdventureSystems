@@ -117,17 +117,11 @@ public class SelectScreenFTB extends KineticPage {
     protected void renderBackground(KineticGraphics graphics, int mouseX, int mouseY, float partialTick) {
         KineticTheme.shadow(graphics, width(), height());
         KineticTheme.panel(graphics, 10, 10, 620, 340);
-        graphics.text(AdventureText.translatable("screen.adventuresystems.ftb.select"), 24, 24, KineticTheme.current().text(), false);
-        graphics.text(AdventureText.translatable("label.adventuresystems.ftb.select.subtitle"), 170, 25, KineticTheme.current().mutedText(), false);
+        graphics.scrollingText(AdventureText.translatable("screen.adventuresystems.ftb.select"), 24, 24, 170 - 24 - 4, KineticTheme.current().text(), false);
+        graphics.scrollingText(AdventureText.translatable("label.adventuresystems.ftb.select.subtitle"), 170, 25, 616 - 170, KineticTheme.current().mutedText(), false);
         KineticTheme.itemSlot(graphics, 410, 48);
         KineticTheme.item(graphics, stack, 410, 48, 18, 1.0F, false);
-        graphics.text(
-                AdventureText.translatable("label.adventuresystems.ftb.item.name", stack.getHoverName().copy()),
-                435,
-                54,
-                KineticTheme.current().text(),
-                false
-        );
+        graphics.scrollingText(AdventureText.translatable("label.adventuresystems.ftb.item.name", stack.getHoverName().copy()), 435, 54, 616 - 435, KineticTheme.current().text(), false);
     }
 
     @Override

@@ -60,14 +60,8 @@ public class TimeEditScreen extends KineticPage {
         int py = (height() - h) / 2;
         KineticTheme.panel(graphics, px, py, w, h);
 
-        graphics.centeredText(title(), width() / 2, py + 15, KineticTheme.current().text(), true);
-        graphics.centeredText(
-                AdventureText.translatable("gui.adventuresystems.tips.tips.hint"),
-                width() / 2,
-                py + 30,
-                KineticTheme.current().text(),
-                true
-        );
+        graphics.scrollingTextCentered(title(), width() / 2, py + 15, w - 24, KineticTheme.current().text(), true);
+        graphics.scrollingTextCentered(AdventureText.translatable("gui.adventuresystems.tips.tips.hint"), width() / 2, py + 30, w - 24, KineticTheme.current().text(), true);
     }
 
     @Override

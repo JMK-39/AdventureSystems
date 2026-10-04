@@ -1,5 +1,19 @@
 # Changelog / 更新日志
 
+## 26.10.4 — 2026-10-04 20:42 +08:00
+
+### English
+
+- Bound and scroll long GUI labels, titles, names and instructions in shop, wallet, FTB and tips editors while preserving colors and clearing neighboring controls.
+- Reserve item-button icon space, raise shop pickers above detail text, separate reward instructions from actions and keep tip conditions scrollable above Save/Back in small windows.
+- All three release builds and exact bilingual key parity pass. Real 1.21.1 GUI checks cover both languages, two window sizes and extended translations; evidence and limits: docs/gui-long-text-verification.md.
+
+### 简体中文
+
+- 商店、钱包、FTB 与提示编辑器的长标签、标题、名称和说明在自己的区域内滚动，保留颜色并避开相邻控件。
+- 物品按钮预留图标，商店选择面板置于详情文字上层，奖励池说明与按钮分行；小窗口的提示条件列表可在保存/返回上方滚动。
+- 三版本发布构建与中英文键名一致性通过；真实 1.21.1 界面检查覆盖中英文、两种窗口与加长翻译，证据与验证范围见 docs/gui-long-text-verification.md。
+
 ## 26.10.4 — 2026-10-04
 
 ### English

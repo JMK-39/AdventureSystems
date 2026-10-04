@@ -73,12 +73,10 @@ final class QuestManageScreen extends KineticPage {
     protected void renderBackground(KineticGraphics graphics, int mouseX, int mouseY, float partialTick) {
         KineticTheme.shadow(graphics, width(), height());
         KineticTheme.panel(graphics, 20, 12, 440, 296);
-        graphics.centeredText(title(), 240, 20, KineticTheme.current().text(), false);
-        graphics.text(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_quest_manage_hint_top"),
-                38, 43, KineticTheme.current().text(), true);
+        graphics.scrollingTextCentered(title(), 240, 20, 440 - 36, KineticTheme.current().text(), false);
+        graphics.scrollingText(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_quest_manage_hint_top"), 38, 43, 440 - 36, KineticTheme.current().text(), true);
         if (draft.questIds.isEmpty()) {
-            graphics.centeredText(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_quest_manage_empty"),
-                    240, 160, KineticTheme.current().text(), false);
+            graphics.scrollingTextCentered(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_quest_manage_empty"), 240, 160, 440 - 36, KineticTheme.current().text(), false);
         }
     }
 }

@@ -10,6 +10,9 @@ import dev.xyat.adventuresystems.tips.client.TipRenderer;
 import dev.xyat.adventuresystems.tips.config.ConfigLoader;
 import dev.xyat.adventuresystems.tips.config.TipsConfigGui;
 import dev.xyat.kineticcore.api.client.gui.input.MouseInput;
+import dev.xyat.kineticcore.api.client.gui.input.MouseDragInput;
+import dev.xyat.kineticcore.api.client.gui.input.ScrollInput;
+import dev.xyat.kineticcore.api.client.gui.scroll.KineticScrollController;
 import dev.xyat.kineticcore.api.client.gui.overlay.KineticOverlays;
 import dev.xyat.kineticcore.api.client.gui.page.KineticPage;
 import dev.xyat.kineticcore.api.client.gui.page.PageLayout;
@@ -57,6 +60,7 @@ public class TipEditorScreen extends KineticPage {
     private int leftW;
     private int editX;
     private int dynamicCondY;
+    private final KineticScrollController conditionScroll = new KineticScrollController();
 
     private static final int[] COLORS = {
             0x000000, 0x0000AA, 0x00AA00, 0x00AAAA, 0xAA0000, 0xAA00AA, 0xFFAA00, 0xAAAAAA,
@@ -115,6 +119,8 @@ public class TipEditorScreen extends KineticPage {
                 )
         ) + 8;
 
+        // Keep long translations from consuming the editor controls' space.
+        maxLabelW = Math.min(maxLabelW, Math.max(24, (guiW - leftW - 30) / 4));
         this.editX = x0 + leftW + maxLabelW + 15;
         int editW = (x0 + guiW - 15) - editX;
 
@@ -269,26 +275,61 @@ public class TipEditorScreen extends KineticPage {
             );
         }
 
-        graphics.text(
-                AdventureText.translatable("gui.adventuresystems.tips.tips.delete_hint"),
-                editX,
-                dynamicCondY,
-                KineticTheme.current().text(),
-                true
-        );
+        graphics.scrollingText(AdventureText.translatable("gui.adventuresystems.tips.tips.delete_hint"), editX, dynamicCondY, Math.max(0, x0 + guiW - 15 - editX), KineticTheme.current().text(), true);
         if (selectedEntry != null && selectedEntry.conditions != null) {
-            renderConditions(graphics, mouseX, mouseY, editX, dynamicCondY + 15);
+            updateConditionScroll();
+            graphics.clipped(editX, conditionTop(), conditionRight(), conditionBottom(),
+                    () -> renderConditions(graphics, mouseX, mouseY, editX, conditionTop() - conditionOffset()));
+            conditionScroll.render(graphics, mouseX, mouseY, conditionRight() + 2, conditionTop(), 3,
+                    Math.max(1, conditionBottom() - conditionTop()), 8);
         }
     }
 
+    private int conditionTop() { return dynamicCondY + 15; }
+    private int conditionBottom() { return y0 + guiH - 34; }
+    private int conditionRight() { return x0 + guiW - 20; }
+    private int conditionOffset() { return (int) Math.round(conditionScroll.smoothOffset()); }
+    private boolean conditionContains(double x, double y) {
+        return x >= editX && x < conditionRight() && y >= conditionTop() && y < conditionBottom();
+    }
+    private void updateConditionScroll() {
+        int contentHeight = 0;
+        if (selectedEntry != null && selectedEntry.conditions != null) {
+            var conditions = selectedEntry.conditions;
+            if (hasText(conditions.structure)) contentHeight += 12;
+            if (hasText(conditions.biome)) contentHeight += 12;
+            if (hasText(conditions.dimension)) contentHeight += 12;
+            if (hasText(conditions.advancement)) contentHeight += 12;
+            if (conditions.items != null && !conditions.items.isEmpty()) contentHeight += 18;
+            if (conditions.curios != null) contentHeight += 18;
+        }
+        int visible = Math.max(1, conditionBottom() - conditionTop());
+        conditionScroll.updateRange(Math.max(0, contentHeight - visible), contentHeight, visible);
+    }
+    @Override
+    protected boolean onMouseScroll(ScrollInput input) {
+        if (!conditionContains(input.x(), input.y())) return false;
+        updateConditionScroll();
+        return conditionScroll.scroll(input.deltaY(), 12);
+    }
+    @Override
+    protected boolean onMouseDrag(MouseDragInput input) {
+        return conditionScroll.drag(input.y(), conditionTop(), Math.max(1, conditionBottom() - conditionTop()), 8);
+    }
+    @Override
+    protected boolean onMouseRelease(MouseInput input) { return conditionScroll.release(input.button()); }
+
     private void drawRightAligned(KineticGraphics graphics, Component text, int x, int y) {
-        graphics.text(text, x - KineticText.width(text), y, KineticTheme.current().text(), true);
+        graphics.scrollingTextRight(text, x, y, Math.max(0, x - (x0 + leftW + 10)), KineticTheme.current().text(), true);
     }
 
     @Override
     protected boolean onMouseClick(MouseInput input) {
         int mouseX = (int) input.x();
         int mouseY = (int) input.y();
+        updateConditionScroll();
+        if (conditionScroll.beginDrag(input.x(), input.y(), input.button(), conditionRight() + 2,
+                conditionTop(), 3, Math.max(1, conditionBottom() - conditionTop()), 8, 2)) return true;
         if (input.isRight() && leftList != null) {
             int index = leftList.itemAt(input.x(), input.y());
             if (index >= 0 && index < displayEntries.size()) {
@@ -300,7 +341,8 @@ public class TipEditorScreen extends KineticPage {
         if (selectedEntry == null || selectedEntry.conditions == null) return false;
         HelpTip.JsonModel.Conditions conditions = selectedEntry.conditions;
         int x = this.editX;
-        int currentY = this.dynamicCondY + 15;
+        if (!conditionContains(mouseX, mouseY)) return false;
+        int currentY = conditionTop() - conditionOffset();
         if (input.isRight()) {
             if (hasText(conditions.structure)) {
                 if (isHover(mouseX, mouseY, x, currentY, 150, 10)) {
@@ -454,13 +496,7 @@ public class TipEditorScreen extends KineticPage {
             if (!conditions.items.isEmpty()) currentY += 18;
         }
         if (conditions.curios != null) {
-            graphics.text(
-                    AdventureText.translatable("gui.adventuresystems.tips.tips.condition.normal", AdventureText.translatable("gui.adventuresystems.tips.tips.cond_prefix.curios")),
-                    x,
-                    currentY,
-                    KineticTheme.current().text(),
-                    true
-            );
+            graphics.scrollingText(AdventureText.translatable("gui.adventuresystems.tips.tips.condition.normal", AdventureText.translatable("gui.adventuresystems.tips.tips.cond_prefix.curios")), x, currentY, 31, KineticTheme.current().text(), true);
             int itemX = x + 35;
             for (HelpTip.JsonModel.ItemCheck check : conditions.curios) {
                 renderItemCheck(graphics, mouseX, mouseY, itemX, currentY, check);
@@ -473,7 +509,7 @@ public class TipEditorScreen extends KineticPage {
         String key = isHover(mouseX, mouseY, x, y, 150, 10)
                 ? "gui.adventuresystems.tips.tips.condition.hover"
                 : "gui.adventuresystems.tips.tips.condition.normal";
-        graphics.text(AdventureText.translatable(key, text), x, y, KineticTheme.current().text(), true);
+        graphics.scrollingText(AdventureText.translatable(key, text), x, y, Math.max(0, conditionRight() - x), KineticTheme.current().text(), true);
     }
 
     private void renderItemCheck(KineticGraphics graphics, int mouseX, int mouseY, int x, int y, HelpTip.JsonModel.ItemCheck check) {
@@ -509,7 +545,8 @@ public class TipEditorScreen extends KineticPage {
         if (selectedEntry == null || selectedEntry.conditions == null) return ItemStack.EMPTY;
         HelpTip.JsonModel.Conditions conditions = selectedEntry.conditions;
         int x = editX;
-        int currentY = dynamicCondY + 15;
+        if (!conditionContains(mouseX, mouseY)) return ItemStack.EMPTY;
+        int currentY = conditionTop() - conditionOffset();
         if (hasText(conditions.structure)) currentY += 12;
         if (hasText(conditions.biome)) currentY += 12;
         if (hasText(conditions.dimension)) currentY += 12;
@@ -580,6 +617,7 @@ public class TipEditorScreen extends KineticPage {
 
     private void select(HelpTip.JsonModel.Entry entry) {
         this.selectedEntry = entry;
+        conditionScroll.reset();
         if (textInput != null) textInput.setTextValue(entry.text != null ? entry.text : "");
         if (leftList != null) {
             leftList.setSelectedIndex(selectedDisplayIndex());

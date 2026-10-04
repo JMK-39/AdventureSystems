@@ -97,16 +97,10 @@ public class FTBBlacklistScreen extends KineticPage {
     protected void renderBackground(KineticGraphics graphics, int mouseX, int mouseY, float partialTick) {
         KineticTheme.shadow(graphics, width(), height());
         KineticTheme.canvasBackground(graphics, width(), height());
-        graphics.text(
-                AdventureText.translatable(
+        graphics.scrollingText(AdventureText.translatable(
                         "label.adventuresystems.ftb.blacklist.count",
                         Component.literal(String.valueOf(allEntries.size()))
-                ),
-                122,
-                16,
-                KineticTheme.current().text(),
-                false
-        );
+                ), 122, 16, Math.max(0, width() - 74 - 4 - 122), KineticTheme.current().text(), false);
     }
 
     @Override

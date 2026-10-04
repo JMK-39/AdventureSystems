@@ -49,7 +49,7 @@ final class CurrencyPickerScreen extends KineticPage {
     @Override
     protected void build(KineticUi ui) {
         Component cancel = AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_cancel");
-        int width = KineticText.width(cancel) + 24;
+        int width = Math.min(KineticText.width(cancel) + 24, PANEL_W - 24);
         ui.button(PANEL_X + (PANEL_W - width) / 2, CANCEL_Y, width).text(cancel).onClick(this::navigateBack).build();
     }
 
@@ -96,10 +96,9 @@ final class CurrencyPickerScreen extends KineticPage {
     protected void renderBackground(KineticGraphics graphics, int mouseX, int mouseY, float partialTick) {
         KineticTheme.shadow(graphics, width(), height());
         KineticTheme.panel(graphics, PANEL_X, PANEL_Y, PANEL_W, PANEL_H);
-        graphics.centeredText(title(), PANEL_X + PANEL_W / 2, PANEL_Y + 8, KineticTheme.current().text(), false);
+        graphics.scrollingTextCentered(title(), PANEL_X + PANEL_W / 2, PANEL_Y + 8, PANEL_W - 24, KineticTheme.current().text(), false);
         if (currencies.isEmpty()) {
-            graphics.centeredText(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_currency_picker_empty"),
-                    PANEL_X + PANEL_W / 2, GRID_Y + GRID_H / 2 - 4, KineticTheme.current().text(), false);
+            graphics.scrollingTextCentered(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_currency_picker_empty"), PANEL_X + PANEL_W / 2, GRID_Y + GRID_H / 2 - 4, PANEL_W - 24, KineticTheme.current().text(), false);
             return;
         }
         int hovered = boxAt(mouseX, mouseY);
@@ -115,7 +114,7 @@ final class CurrencyPickerScreen extends KineticPage {
             Component name = ShopGuiSupport.stackNameComponent(currency.itemId());
             int textX = x + 24;
             int textWidth = boxWidth() - 28;
-            graphics.text(AdventureText.ellipsize(name, textWidth, KineticText::width), textX, y + 8, KineticTheme.current().text(), true);
+            graphics.scrollingText(name, textX, y + 8, textWidth, KineticTheme.current().text(), true);
         }
     }
 
