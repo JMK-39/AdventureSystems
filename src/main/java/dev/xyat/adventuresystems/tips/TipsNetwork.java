@@ -187,17 +187,6 @@ public final class TipsNetwork {
         sendToPlayer(new SyncRuntimeTips(language, snapshotJson(language)), player);
     }
 
-    private static void broadcastRuntimeSnapshot(MinecraftServer server, String languageCode) {
-        if (server == null) return;
-        String language = ConfigLoader.normalizeLanguageCode(languageCode);
-        String json = snapshotJson(language);
-        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-            if (language.equals(CLIENT_LANGUAGES.get(player.getUUID()))) {
-                sendToPlayer(new SyncRuntimeTips(language, json), player);
-            }
-        }
-    }
-
     private static void handleRequestStructure(RequestStructure packet, ServerPacketContext context) {
         ServerPlayer player = context.sender();
         if (!(player.level() instanceof ServerLevel level)) return;
@@ -228,7 +217,8 @@ public final class TipsNetwork {
             success = entries != null && ConfigLoader.saveRawEntriesForLanguage(packet.languageCode(), entries);
             if (success) {
                 CLIENT_LANGUAGES.put(player.getUUID(), packet.languageCode());
-                broadcastRuntimeSnapshot(player.getServer(), packet.languageCode());
+                // Only the editor gets the new tips now; other players receive them when they log in.
+                sendRuntimeSnapshot(player, packet.languageCode());
             }
         }
         sendToPlayer(new EditorSaveResult(success), player);

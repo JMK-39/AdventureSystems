@@ -152,6 +152,7 @@
   "msg.adventuresystems.curios.paradise_lost.boost": "§6[Paradise Lost] §6Devour! Points §b+§b§l%s§r§b §6(Damage Modifier: §c§c%s§r§c%% §6-> §a§a§l%s§r§a%%§6)",
   "tip.adventuresystems.curios.global.hold_shift": "§6[Shift] §9View Attribute Details",
   "tip.adventuresystems.curios.global.hold_alt": "§6[Alt] §bView Conflict List",
+  "tip.adventuresystems.curios.global.values_pending": "§7Values are provided by the server",
   "tip.adventuresystems.curios.global.unbound": "§c[Unbound] §6(Automatically binds when equipped)",
   "tip.adventuresystems.curios.global.bound_to": "§a[Bound to: §6§6§l%s§r§6§a]",
   "tip.adventuresystems.curios.global.void_binding": "§4[Not Owner, Attributes Invalid]",

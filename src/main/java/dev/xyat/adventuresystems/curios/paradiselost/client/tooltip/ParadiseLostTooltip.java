@@ -2,7 +2,7 @@
 /*package dev.xyat.adventuresystems.curios.paradiselost.client.tooltip;
 
 import dev.xyat.adventuresystems.text.AdventureText;
-import dev.xyat.adventuresystems.curios.paradiselost.data.ParadiseLostCurve;
+import dev.xyat.adventuresystems.curios.common.DisplayValues;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
@@ -18,9 +18,9 @@ public class ParadiseLostTooltip {
         tooltip.add(AdventureText.translatable("tip.adventuresystems.curios.paradise_lost.title"));
         tooltip.add(AdventureText.translatable("tip.adventuresystems.curios.paradise_lost.desc"));
 
-        double bonus = ParadiseLostCurve.bonus(score) * 100.0;
-        int nextTarget = ParadiseLostCurve.nextTarget(score);
-        double nextBonus = ParadiseLostCurve.bonus(nextTarget) * 100.0;
+        double bonus = DisplayValues.number(stack, "bonus") * 100.0;
+        int nextTarget = DisplayValues.integer(stack, "next_target");
+        double nextBonus = DisplayValues.number(stack, "next_bonus") * 100.0;
 
         tooltip.add(AdventureText.translatable("tip.adventuresystems.curios.paradise_lost.score",
                 Integer.toString(score),
@@ -34,7 +34,7 @@ public class ParadiseLostTooltip {
                     String.format("%.2f", Math.abs(bonus))));
         }
 
-        if (ParadiseLostCurve.isMaxed(score)) {
+        if (DisplayValues.flag(stack, "maxed")) {
             tooltip.add(AdventureText.translatable("tip.adventuresystems.curios.paradise_lost.max_stage"));
         } else {
             tooltip.add(AdventureText.translatable("tip.adventuresystems.curios.paradise_lost.next_stage",
@@ -48,7 +48,7 @@ public class ParadiseLostTooltip {
 package dev.xyat.adventuresystems.curios.paradiselost.client.tooltip;
 
 import dev.xyat.adventuresystems.text.AdventureText;
-import dev.xyat.adventuresystems.curios.paradiselost.data.ParadiseLostCurve;
+import dev.xyat.adventuresystems.curios.common.DisplayValues;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
@@ -64,9 +64,9 @@ public class ParadiseLostTooltip {
         tooltip.add(AdventureText.translatable("tip.adventuresystems.curios.paradise_lost.title"));
         tooltip.add(AdventureText.translatable("tip.adventuresystems.curios.paradise_lost.desc"));
 
-        double bonus = ParadiseLostCurve.bonus(score) * 100.0;
-        int nextTarget = ParadiseLostCurve.nextTarget(score);
-        double nextBonus = ParadiseLostCurve.bonus(nextTarget) * 100.0;
+        double bonus = DisplayValues.number(stack, "bonus") * 100.0;
+        int nextTarget = DisplayValues.integer(stack, "next_target");
+        double nextBonus = DisplayValues.number(stack, "next_bonus") * 100.0;
 
         tooltip.add(AdventureText.translatable("tip.adventuresystems.curios.paradise_lost.score",
                 Integer.toString(score),
@@ -80,7 +80,7 @@ public class ParadiseLostTooltip {
                     String.format("%.2f", Math.abs(bonus))));
         }
 
-        if (ParadiseLostCurve.isMaxed(score)) {
+        if (DisplayValues.flag(stack, "maxed")) {
             tooltip.add(AdventureText.translatable("tip.adventuresystems.curios.paradise_lost.max_stage"));
         } else {
             tooltip.add(AdventureText.translatable("tip.adventuresystems.curios.paradise_lost.next_stage",

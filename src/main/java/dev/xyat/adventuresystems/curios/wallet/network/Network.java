@@ -159,13 +159,6 @@ public final class Network {
         CHANNEL.sendToPlayer(player, new ClientboundShopRefresh(Data.snapshot(player), Shop.clientTag(player), Shop.isEditMode(player)));
     }
 
-    public static void broadcastShopRefresh(ServerPlayer source) {
-        if (source == null) return;
-        for (ServerPlayer player : source.getServer().getPlayerList().getPlayers()) {
-            refreshShop(player);
-        }
-    }
-
     public static void sync(ServerPlayer player) {
         boolean equipped = Data.hasWallet(player);
         boolean visible = equipped && Data.isHudVisible(player);
@@ -387,7 +380,8 @@ public final class Network {
             toast(player, packet.action() == 4
                     ? "msg.adventuresystems.curios.wallet.shop_move_success"
                     : "msg.adventuresystems.curios.wallet.shop_remove_success");
-            broadcastShopRefresh(player);
+            // Only the editor sees the change now; other players get the new shop when they open it.
+            refreshShop(player);
         } else {
             toast(player, "msg.adventuresystems.curios.wallet.shop_action_fail");
             openShop(player);
@@ -413,7 +407,8 @@ public final class Network {
         );
         if (changed) {
             toast(player, "msg.adventuresystems.curios.wallet.shop_save_success");
-            broadcastShopRefresh(player);
+            // Only the editor sees the change now; other players get the new shop when they open it.
+            refreshShop(player);
         } else {
             toast(player, "msg.adventuresystems.curios.wallet.shop_save_fail");
             openShop(player);

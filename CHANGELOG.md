@@ -1,5 +1,25 @@
 # Changelog / 更新日志
 
+## 26.10.6 — 2026-10-06 07:12 +08:00
+
+### English
+
+- Heart of Steel and Paradise Lost tooltips show the server's numbers. The server writes them onto the accessory itself (refreshed every second while you carry or wear it), so a client never shows its own local settings and nothing is sent to other players when an admin changes them. Until an item has values from the server, its tooltip says so instead of showing numbers. The equip conflict check on the client uses the same server values.
+- Editing the shop refreshes only the editor; other players see the change when they open the shop. Saving tips updates only the editor; other players receive them when they log in.
+- The shop entry editor's page, buy/sell and content mode menus mark their current option yellow as single choices.
+- Shop, wallet, FTB and tips editor text scrolls inside its own region instead of being cut off or running into neighbors.
+- Requires KineticCore 26.10.5+.
+
+### 简体中文
+
+- 钢铁之心与失乐园的提示显示服务端的数值。服务端把数值写在饰品本身上（携带或佩戴时每秒刷新），客户端从不显示本地设置；管理员修改设置时也不会向其他玩家发送任何内容。物品还没有服务端数值时，提示会说明这一点而不显示数字。客户端的装备排斥检查同样使用服务端数值。
+- 编辑商店只刷新编辑者；其他玩家在打开商店时看到变更。保存提示只更新编辑者；其他玩家在登录时获得。
+- 商店条目编辑器的分页、买卖与内容模式菜单作为单选，用黄色标出当前选项。
+- 商店、钱包、FTB 与提示编辑器的文字在各自区域内滚动，不再被截断或压到相邻元素。
+- 需要 KineticCore 26.10.5+。
+
+---
+
 ## 26.10.4 — 2026-10-04 20:42 +08:00
 
 ### English

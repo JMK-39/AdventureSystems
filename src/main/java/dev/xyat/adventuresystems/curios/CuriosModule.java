@@ -73,6 +73,11 @@ public final class CuriosModule {
         SoundEvents.register();
         Network.register();
         CurioConflictHandler.install();
+        // Tooltip numbers travel on the accessories themselves; refreshed once a second for each player.
+        dev.xyat.kineticcore.api.server.event.KineticServerEvents.onPlayerTick(
+                dev.xyat.kineticcore.api.event.KineticEventPriority.NORMAL,
+                dev.xyat.kineticcore.api.server.event.KineticServerEvents.TickPhase.END,
+                player -> { if (player.tickCount % 20 == 0) dev.xyat.adventuresystems.curios.common.DisplayValues.stampPlayer(player); });
         HeartOfSteelModule.install();
         KnockbackImmunityHandler.install();
         ParadiseLostModule.install();

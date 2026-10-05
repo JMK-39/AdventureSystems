@@ -152,6 +152,7 @@
   "msg.adventuresystems.curios.paradise_lost.boost": "§6[失乐园] §6吞噬！点数 §b+§b§l%s§r§b §6(伤害修正: §c§c%s§r§c%% §6-> §a§a§l%s§r§a%%§6)",
   "tip.adventuresystems.curios.global.hold_shift": "§6[Shift] §9查看属性详情",
   "tip.adventuresystems.curios.global.hold_alt": "§6[Alt] §b查看排斥名单",
+  "tip.adventuresystems.curios.global.values_pending": "§7数值由服务器提供",
   "tip.adventuresystems.curios.global.unbound": "§c[未绑定] §6(佩戴后自动绑定)",
   "tip.adventuresystems.curios.global.bound_to": "§a[已绑定: §6§6§l%s§r§6§a]",
   "tip.adventuresystems.curios.global.void_binding": "§4[非本人使用，属性无效]",

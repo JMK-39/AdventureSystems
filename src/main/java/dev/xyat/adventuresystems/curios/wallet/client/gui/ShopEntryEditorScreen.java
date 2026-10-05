@@ -292,14 +292,14 @@ final class ShopEntryEditorScreen extends KineticPage {
         syncBasicInputsQuietly();
         String current = draft.pageName == null ? "" : draft.pageName.trim();
         List<KineticOverlays.MenuItem> items = new ArrayList<>();
-        items.add(KineticOverlays.MenuItem.toggle(pageDisplayName(""),
+        items.add(KineticOverlays.MenuItem.choice(pageDisplayName(""),
                 AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_editor_page_default_tip"),
                 !newPageMode && current.isEmpty(), () -> choosePage("")));
         List<String> known = new ArrayList<>(parent.knownPageNames(draft.mode));
         // 草稿里的分页可能还不在商店里（例如刚新建、尚未保存），也列出来方便切回。
         if (!current.isEmpty() && !known.contains(current)) known.add(0, current);
         for (String page : known) {
-            items.add(KineticOverlays.MenuItem.toggle(AdventureText.literal(page), null,
+            items.add(KineticOverlays.MenuItem.choice(AdventureText.literal(page), null,
                     !newPageMode && page.equals(current), () -> choosePage(page)));
         }
         items.add(KineticOverlays.MenuItem.separator());
@@ -325,9 +325,9 @@ final class ShopEntryEditorScreen extends KineticPage {
 
     private void openTypeMenu() {
         List<KineticOverlays.MenuItem> items = new ArrayList<>();
-        items.add(KineticOverlays.MenuItem.toggle(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_editor_type_buy"),
+        items.add(KineticOverlays.MenuItem.choice(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_editor_type_buy"),
                 null, draft.mode == Shop.Mode.BUY, () -> setDraftMode(Shop.Mode.BUY)));
-        items.add(KineticOverlays.MenuItem.toggle(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_editor_type_sell"),
+        items.add(KineticOverlays.MenuItem.choice(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_editor_type_sell"),
                 null, draft.mode == Shop.Mode.SELL, () -> setDraftMode(Shop.Mode.SELL)));
         openContextMenu(typeButtonX(), typeButtonY() + 22, items);
     }
@@ -345,20 +345,20 @@ final class ShopEntryEditorScreen extends KineticPage {
     private void openContentModeMenu() {
         List<KineticOverlays.MenuItem> items = new ArrayList<>();
         if (draft.mode == Shop.Mode.SELL) {
-            items.add(KineticOverlays.MenuItem.toggle(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_editor_sell_multi_off"),
+            items.add(KineticOverlays.MenuItem.choice(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_editor_sell_multi_off"),
                     AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_editor_tooltip_sell_multi_switch"),
                     !draft.selectable, () -> setContentMode(false, false)));
-            items.add(KineticOverlays.MenuItem.toggle(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_editor_sell_multi_on"),
+            items.add(KineticOverlays.MenuItem.choice(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_editor_sell_multi_on"),
                     AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_editor_tooltip_sell_choices"),
                     draft.selectable, () -> setContentMode(false, true)));
         } else {
-            items.add(KineticOverlays.MenuItem.toggle(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_editor_reward_single_active"),
+            items.add(KineticOverlays.MenuItem.choice(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_editor_reward_single_active"),
                     AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_editor_tooltip_single_reward_mode"),
                     !draft.gacha && !draft.selectable, () -> setContentMode(false, false)));
-            items.add(KineticOverlays.MenuItem.toggle(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_editor_choice_table_active"),
+            items.add(KineticOverlays.MenuItem.choice(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_editor_choice_table_active"),
                     AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_editor_tooltip_choice_table"),
                     draft.selectable, () -> setContentMode(false, true)));
-            items.add(KineticOverlays.MenuItem.toggle(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_editor_gacha_pool_active"),
+            items.add(KineticOverlays.MenuItem.choice(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_editor_gacha_pool_active"),
                     AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_editor_tooltip_gacha_pool"),
                     draft.gacha && !draft.selectable, () -> setContentMode(true, false)));
         }

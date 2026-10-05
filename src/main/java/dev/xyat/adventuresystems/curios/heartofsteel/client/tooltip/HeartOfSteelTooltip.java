@@ -3,7 +3,7 @@
 
 import dev.xyat.adventuresystems.text.AdventureText;
 import dev.xyat.kineticcore.api.runtime.KineticClientRuntime;
-import dev.xyat.adventuresystems.curios.config.CuriosConfig;
+import dev.xyat.adventuresystems.curios.common.DisplayValues;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
@@ -38,30 +38,30 @@ public class HeartOfSteelTooltip {
     public static void addTooltip(ItemStack stack, List<Component> tooltip) {
         Player player = KineticClientRuntime.localPlayer();
         Data data = data(stack, player);
-        tooltip.add(AdventureText.translatable("tip.adventuresystems.curios.heart_of_steel.scaling", "1", oneDecimal(CuriosConfig.hosDamagePerHp * 100.0D)));
+        tooltip.add(AdventureText.translatable("tip.adventuresystems.curios.heart_of_steel.scaling", "1", oneDecimal(DisplayValues.number(stack, "damage_per_hp") * 100.0D)));
         tooltip.add(AdventureText.translatable("tip.adventuresystems.curios.heart_of_steel.stacks", data.stacksText(), data.stacksPerHpText()));
         tooltip.add(AdventureText.translatable("tip.adventuresystems.curios.heart_of_steel.health_bonus", data.totalHealthText(), data.baseHealthText(), data.stackHealthText(), data.healthCapText()));
-        Object efficiency = data.stackHealth() >= Math.max(0.0D, CuriosConfig.hosMaxHealthCap)
+        Object efficiency = data.stackHealth() >= Math.max(0.0D, DisplayValues.integer(stack, "max_health_cap"))
                 ? AdventureText.translatable("tip.adventuresystems.curios.heart_of_steel.max_reached")
-                : CuriosConfig.hosMinGain + "~" + CuriosConfig.hosMaxGain;
+                : DisplayValues.integer(stack, "min_gain") + "~" + DisplayValues.integer(stack, "max_gain");
         tooltip.add(AdventureText.translatable("tip.adventuresystems.curios.heart_of_steel.health_growth_amount", efficiency));
         tooltip.add(AdventureText.translatable("tip.adventuresystems.curios.heart_of_steel.current_damage_bonus", data.damagePercentText(), data.playerMaxHpText(), data.damageCapText()));
-        tooltip.add(AdventureText.translatable("tip.adventuresystems.curios.heart_of_steel.healing_bonus", oneDecimal(CuriosConfig.hosHealMultiplier)));
+        tooltip.add(AdventureText.translatable("tip.adventuresystems.curios.heart_of_steel.healing_bonus", oneDecimal(DisplayValues.number(stack, "heal_multiplier"))));
         tooltip.add(AdventureText.translatable("tip.adventuresystems.curios.heart_of_steel.healing_desc"));
-        tooltip.add(AdventureText.translatable("tip.adventuresystems.curios.heart_of_steel.growth_interval", Integer.toString(CuriosConfig.hosGrowthInterval)));
+        tooltip.add(AdventureText.translatable("tip.adventuresystems.curios.heart_of_steel.growth_interval", Integer.toString(DisplayValues.integer(stack, "growth_interval"))));
     }
 
     private static Data data(ItemStack stack, Player player) {
         CompoundTag nbt = dev.xyat.adventuresystems.data.AdventureItemData.customData(stack);
         int stacks = nbt == null ? 0 : Math.max(0, nbt.getInt(STACKS_KEY));
-        int stacksPerHp = Math.max(1, CuriosConfig.hosStacksPerHp);
-        double healthCap = Math.max(0.0D, CuriosConfig.hosMaxHealthCap);
+        int stacksPerHp = Math.max(1, DisplayValues.integer(stack, "stacks_per_hp"));
+        double healthCap = Math.max(0.0D, DisplayValues.integer(stack, "max_health_cap"));
         double stackHealth = Math.min((double) stacks / stacksPerHp, healthCap);
-        double baseHealth = Math.max(0.0D, CuriosConfig.hosBaseHealth);
+        double baseHealth = Math.max(0.0D, DisplayValues.number(stack, "base_health"));
         double totalHealth = baseHealth + stackHealth;
         double playerMaxHp = player == null ? 20.0D : Math.max(1.0D, player.getMaxHealth());
-        double damageCap = Math.max(0.0D, CuriosConfig.hosDamageCap);
-        double damageBonus = Math.min(playerMaxHp * Math.max(0.0D, CuriosConfig.hosDamagePerHp), damageCap);
+        double damageCap = Math.max(0.0D, DisplayValues.number(stack, "damage_cap"));
+        double damageBonus = Math.min(playerMaxHp * Math.max(0.0D, DisplayValues.number(stack, "damage_per_hp")), damageCap);
         return new Data(stacks, stacksPerHp, baseHealth, stackHealth, totalHealth, healthCap, playerMaxHp, damageBonus, damageCap);
     }
 
@@ -117,7 +117,7 @@ package dev.xyat.adventuresystems.curios.heartofsteel.client.tooltip;
 
 import dev.xyat.adventuresystems.text.AdventureText;
 import dev.xyat.kineticcore.api.runtime.KineticClientRuntime;
-import dev.xyat.adventuresystems.curios.config.CuriosConfig;
+import dev.xyat.adventuresystems.curios.common.DisplayValues;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
@@ -152,30 +152,30 @@ public class HeartOfSteelTooltip {
     public static void addTooltip(ItemStack stack, List<Component> tooltip) {
         Player player = KineticClientRuntime.localPlayer();
         Data data = data(stack, player);
-        tooltip.add(AdventureText.translatable("tip.adventuresystems.curios.heart_of_steel.scaling", "1", oneDecimal(CuriosConfig.hosDamagePerHp * 100.0D)));
+        tooltip.add(AdventureText.translatable("tip.adventuresystems.curios.heart_of_steel.scaling", "1", oneDecimal(DisplayValues.number(stack, "damage_per_hp") * 100.0D)));
         tooltip.add(AdventureText.translatable("tip.adventuresystems.curios.heart_of_steel.stacks", data.stacksText(), data.stacksPerHpText()));
         tooltip.add(AdventureText.translatable("tip.adventuresystems.curios.heart_of_steel.health_bonus", data.totalHealthText(), data.baseHealthText(), data.stackHealthText(), data.healthCapText()));
-        Object efficiency = data.stackHealth() >= Math.max(0.0D, CuriosConfig.hosMaxHealthCap)
+        Object efficiency = data.stackHealth() >= Math.max(0.0D, DisplayValues.integer(stack, "max_health_cap"))
                 ? AdventureText.translatable("tip.adventuresystems.curios.heart_of_steel.max_reached")
-                : CuriosConfig.hosMinGain + "~" + CuriosConfig.hosMaxGain;
+                : DisplayValues.integer(stack, "min_gain") + "~" + DisplayValues.integer(stack, "max_gain");
         tooltip.add(AdventureText.translatable("tip.adventuresystems.curios.heart_of_steel.health_growth_amount", efficiency));
         tooltip.add(AdventureText.translatable("tip.adventuresystems.curios.heart_of_steel.current_damage_bonus", data.damagePercentText(), data.playerMaxHpText(), data.damageCapText()));
-        tooltip.add(AdventureText.translatable("tip.adventuresystems.curios.heart_of_steel.healing_bonus", oneDecimal(CuriosConfig.hosHealMultiplier)));
+        tooltip.add(AdventureText.translatable("tip.adventuresystems.curios.heart_of_steel.healing_bonus", oneDecimal(DisplayValues.number(stack, "heal_multiplier"))));
         tooltip.add(AdventureText.translatable("tip.adventuresystems.curios.heart_of_steel.healing_desc"));
-        tooltip.add(AdventureText.translatable("tip.adventuresystems.curios.heart_of_steel.growth_interval", Integer.toString(CuriosConfig.hosGrowthInterval)));
+        tooltip.add(AdventureText.translatable("tip.adventuresystems.curios.heart_of_steel.growth_interval", Integer.toString(DisplayValues.integer(stack, "growth_interval"))));
     }
 
     private static Data data(ItemStack stack, Player player) {
         CompoundTag nbt = stack.getTag();
         int stacks = nbt == null ? 0 : Math.max(0, nbt.getInt(STACKS_KEY));
-        int stacksPerHp = Math.max(1, CuriosConfig.hosStacksPerHp);
-        double healthCap = Math.max(0.0D, CuriosConfig.hosMaxHealthCap);
+        int stacksPerHp = Math.max(1, DisplayValues.integer(stack, "stacks_per_hp"));
+        double healthCap = Math.max(0.0D, DisplayValues.integer(stack, "max_health_cap"));
         double stackHealth = Math.min((double) stacks / stacksPerHp, healthCap);
-        double baseHealth = Math.max(0.0D, CuriosConfig.hosBaseHealth);
+        double baseHealth = Math.max(0.0D, DisplayValues.number(stack, "base_health"));
         double totalHealth = baseHealth + stackHealth;
         double playerMaxHp = player == null ? 20.0D : Math.max(1.0D, player.getMaxHealth());
-        double damageCap = Math.max(0.0D, CuriosConfig.hosDamageCap);
-        double damageBonus = Math.min(playerMaxHp * Math.max(0.0D, CuriosConfig.hosDamagePerHp), damageCap);
+        double damageCap = Math.max(0.0D, DisplayValues.number(stack, "damage_cap"));
+        double damageBonus = Math.min(playerMaxHp * Math.max(0.0D, DisplayValues.number(stack, "damage_per_hp")), damageCap);
         return new Data(stacks, stacksPerHp, baseHealth, stackHealth, totalHealth, healthCap, playerMaxHp, damageBonus, damageCap);
     }
 

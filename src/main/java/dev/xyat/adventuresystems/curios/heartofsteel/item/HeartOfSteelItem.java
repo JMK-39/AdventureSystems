@@ -28,7 +28,9 @@ public class HeartOfSteelItem extends Item implements ICurioItem {
     @Override
     public boolean canEquip(SlotContext slotContext, ItemStack stack) {
         LivingEntity entity = slotContext.entity();
-        List<String> conflicts = CuriosConfig.hosConflicts;
+        // Clients check the conflicts the server wrote on the item; the server uses its own settings.
+        List<String> conflicts = slotContext.entity().level().isClientSide()
+                ? dev.xyat.adventuresystems.curios.common.DisplayValues.conflicts(stack) : CuriosConfig.hosConflicts;
         for (String conflictId : conflicts) {
             Item conflictItem = KineticRegistries.items().get(KineticResourceIds.parse(conflictId));
             if (conflictItem != null && conflictItem != net.minecraft.world.item.Items.AIR) {
@@ -106,7 +108,9 @@ public class HeartOfSteelItem extends Item implements ICurioItem {
     @Override
     public boolean canEquip(SlotContext slotContext, ItemStack stack) {
         LivingEntity entity = slotContext.entity();
-        List<String> conflicts = CuriosConfig.hosConflicts;
+        // Clients check the conflicts the server wrote on the item; the server uses its own settings.
+        List<String> conflicts = slotContext.entity().level().isClientSide()
+                ? dev.xyat.adventuresystems.curios.common.DisplayValues.conflicts(stack) : CuriosConfig.hosConflicts;
         for (String conflictId : conflicts) {
             Item conflictItem = KineticRegistries.items().get(KineticResourceIds.parse(conflictId));
             if (conflictItem != null && conflictItem != net.minecraft.world.item.Items.AIR) {
