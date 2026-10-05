@@ -192,22 +192,17 @@ final class CommandManageScreen extends KineticPage {
     protected void renderBackground(KineticGraphics graphics, int mouseX, int mouseY, float partialTick) {
         KineticTheme.shadow(graphics, width(), height());
         KineticTheme.panel(graphics, 0, 0, 640, 360);
-        graphics.centeredText(title(), 320, 10, KineticTheme.current().text(), false);
-        graphics.text(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_icon_preview"),
-                18, 46, KineticTheme.current().text(), true);
+        graphics.scrollingTextCentered(title(), 320, 10, Math.max(0, (NEW_X - 4 - 320) * 2), KineticTheme.current().text(), false);
+        graphics.scrollingText(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_icon_preview"), 18, 46, ICON_X - 18 - 4, KineticTheme.current().text(), true);
         boolean iconHovered = KineticTheme.hovering(mouseX, mouseY, ICON_X, ICON_Y, ICON_SIZE, ICON_SIZE);
         KineticTheme.itemSlot(graphics, ICON_X, ICON_Y, ICON_SIZE, ICON_SIZE, 4, false, iconHovered, false);
         graphics.item(ShopGuiSupport.stack(iconId), ICON_X + 2, ICON_Y + 2);
-        graphics.text(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_name"),
-                120, 46, KineticTheme.current().text(), true);
-        graphics.text(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_list"),
-                16, 64, KineticTheme.current().text(), true);
+        graphics.scrollingText(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_name"), 120, 46, 188 - 120 - 4, KineticTheme.current().text(), true);
+        graphics.scrollingText(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_list"), 16, 64, 608, KineticTheme.current().text(), true);
         if (draft.commands.isEmpty()) {
-            graphics.centeredText(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_empty"),
-                    320, 196, KineticTheme.current().text(), false);
+            graphics.scrollingTextCentered(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_empty"), 320, 196, 608, KineticTheme.current().text(), false);
         }
-        graphics.text(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_text"),
-                18, 337, KineticTheme.current().text(), true);
+        graphics.scrollingText(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_text"), 18, 337, 84 - 18 - 4, KineticTheme.current().text(), true);
     }
 
     @Override

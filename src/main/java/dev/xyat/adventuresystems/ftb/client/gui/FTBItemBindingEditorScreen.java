@@ -372,7 +372,7 @@ public class FTBItemBindingEditorScreen extends KineticPage {
     protected void renderBackground(KineticGraphics g, int mx, int my, float pt) {
         KineticTheme.shadow(g, width(), height());
         KineticTheme.canvasBackground(g, width(), height());
-        g.centeredText(title(), width() / 2, 15, KineticTheme.current().text(), true);
+        g.scrollingTextCentered(title(), width() / 2, 15, Math.max(0, Math.min(width() / 2 - (leftX + 220 + 4), width() - 14 - 70 - GAP - 80 - GAP - 70 - 4 - width() / 2) * 2), KineticTheme.current().text(), true);
         KineticTheme.panel(g, leftX, panelY, leftW, panelH);
         KineticTheme.panel(g, rightX, panelY, rightW, panelH);
     }
@@ -386,7 +386,7 @@ public class FTBItemBindingEditorScreen extends KineticPage {
     private void renderLeftTasks(KineticGraphics g, int mx, int my) {
         int titleX = leftX + 8;
         int titleY = panelY + 8;
-        g.text(AdventureText.translatable("label.adventuresystems.ftb.tasks", number(visibleTasks.size()), number(allTasks.size())), titleX, titleY, KineticTheme.current().text(), false);
+        g.scrollingText(AdventureText.translatable("label.adventuresystems.ftb.tasks", number(visibleTasks.size()), number(allTasks.size())), titleX, titleY, leftW - 16, KineticTheme.current().text(), false);
 
         int listX = leftX + 6;
         int listY = panelY + 26;
@@ -405,10 +405,10 @@ public class FTBItemBindingEditorScreen extends KineticPage {
             boolean selected = selectedQuestIds.contains(ref.id());
             boolean hover = mx >= listX && mx < listX + listW && my >= y && my < y + ROW_H;
             KineticTheme.stateSurface(g, listX, y, listW, ROW_H - 1, KineticTheme.Surface.PANEL_ALT, selected, hover, false);
-            String titleText = KineticText.trim(cleanTaskTitle(ref), listW - 8);
+            Component titleText = AdventureText.literal(cleanTaskTitle(ref));
             Component subText = buildTaskChapterLine(ref);
-            g.text(titleText, listX + 4, y + 3, KineticTheme.current().text(), false);
-            g.text(subText, listX + 4, y + 13, KineticTheme.current().text(), false);
+            g.scrollingText(titleText, listX + 4, y + 3, Math.max(0, listW - 8), KineticTheme.current().text(), false);
+            g.scrollingText(subText, listX + 4, y + 13, listW - 8, KineticTheme.current().text(), false);
         }
 
         g.endScissor();
@@ -422,21 +422,21 @@ public class FTBItemBindingEditorScreen extends KineticPage {
         int headerX = rightX + 8;
         int headerY = panelY + 8;
         Component selectedLabel = AdventureText.translatable("label.adventuresystems.ftb.item");
-        g.text(selectedLabel, headerX, headerY, KineticTheme.current().text(), false);
+        g.scrollingText(selectedLabel, headerX, headerY, Math.max(0, selectedItemIconX() - headerX - 4), KineticTheme.current().text(), false);
 
         drawItemSlot(g, selectedItemIconX(), selectedItemIconY(), selectedStack, mx, my, false);
         if (selectedStack.isEmpty()) {
-            g.text(AdventureText.translatable("tip.adventuresystems.ftb.item.choose"), selectedItemIconX() + ITEM_SLOT + 8, selectedItemIconY() + 7, KineticTheme.current().text(), false);
+            g.scrollingText(AdventureText.translatable("tip.adventuresystems.ftb.item.choose"), selectedItemIconX() + ITEM_SLOT + 8 + 52 + 4, selectedItemIconY() + 7, Math.max(0, rightX + rightW - 8 - (selectedItemIconX() + ITEM_SLOT + 8 + 52 + 4)), KineticTheme.current().text(), false);
         }
 
-        g.text(AdventureText.translatable("label.adventuresystems.ftb.custom.items", number(explicitEntries.size())), headerX, panelY + 30, KineticTheme.current().text(), false);
+        g.scrollingText(AdventureText.translatable("label.adventuresystems.ftb.custom.items", number(explicitEntries.size())), headerX, panelY + 30, rightW - 16, KineticTheme.current().text(), false);
         renderExplicitItemGrid(g, mx, my);
 
-        g.text(AdventureText.translatable("label.adventuresystems.ftb.bound.tasks", number(boundTasks.size())), headerX, boundY - 18, KineticTheme.current().text(), false);
+        g.scrollingText(AdventureText.translatable("label.adventuresystems.ftb.bound.tasks", number(boundTasks.size())), headerX, boundY - 18, rightW - 16, KineticTheme.current().text(), false);
         renderBoundTasks(g, mx, my);
 
         if (!selectedStack.isEmpty() && boundTasks.isEmpty() && !dirty) {
-            g.text(AdventureText.translatable("tip.adventuresystems.ftb.default"), rightX + 8, boundY + boundH + 1, KineticTheme.current().text(), false);
+            g.scrollingText(AdventureText.translatable("tip.adventuresystems.ftb.default"), rightX + 8, boundY + boundH + 1, rightW - 16, KineticTheme.current().text(), false);
         }
     }
 
@@ -488,12 +488,12 @@ public class FTBItemBindingEditorScreen extends KineticPage {
             Component star = AdventureText.translatable(favorite
                     ? "label.adventuresystems.ftb.favorite.marker_on"
                     : "label.adventuresystems.ftb.favorite.marker_off");
-            int starW = KineticText.width(star) + 8;
-            String titleText = KineticText.trim(cleanTaskTitle(ref), listW - 8 - starW);
+            int starW = Math.min(KineticText.width(star) + 8, Math.max(16, listW / 4));
+            Component titleText = AdventureText.literal(cleanTaskTitle(ref));
             Component subText = buildTaskChapterLine(ref);
-            g.text(titleText, listX + 4, y + 3, KineticTheme.current().text(), false);
-            g.text(subText, listX + 4, y + 13, KineticTheme.current().text(), false);
-            g.text(star, listX + listW - starW + 2, y + 3, KineticTheme.current().text(), false);
+            g.scrollingText(titleText, listX + 4, y + 3, Math.max(0, listW - 8 - starW), KineticTheme.current().text(), false);
+            g.scrollingText(subText, listX + 4, y + 13, listW - 8, KineticTheme.current().text(), false);
+            g.scrollingText(star, listX + listW - starW + 2, y + 3, Math.max(0, starW - 4), KineticTheme.current().text(), false);
         }
 
         g.endScissor();
@@ -531,7 +531,10 @@ public class FTBItemBindingEditorScreen extends KineticPage {
     }
 
     private int selectedItemIconX() {
-        return rightX + 8 + KineticText.width(AdventureText.translatable("label.adventuresystems.ftb.item")) + 8;
+        int labelEnd = rightX + 8 + KineticText.width(AdventureText.translatable("label.adventuresystems.ftb.item")) + 8;
+        // Reserve the item slot, Save button and a readable hint viewport.
+        int limit = rightX + rightW - 8 - ITEM_SLOT - 8 - 52 - 4 - 60;
+        return Math.max(rightX + 8, Math.min(labelEnd, limit));
     }
 
     private int selectedItemIconY() {

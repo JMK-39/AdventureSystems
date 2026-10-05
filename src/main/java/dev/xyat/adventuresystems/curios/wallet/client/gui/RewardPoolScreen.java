@@ -35,27 +35,27 @@ final class RewardPoolScreen extends KineticPage {
     @Override
     protected void build(KineticUi ui) {
         if (list != null) scrollOffset = list.scrollOffset();
-        ui.button(14, 42, 104).text(AdventureText.translatable(addItemButtonKey()))
+        ui.button(14, 54, 104).text(AdventureText.translatable(addItemButtonKey()))
                 .tooltip(AdventureText.translatable(addItemTooltipKey()))
                 .onClick(this::openItemSelector).build();
         if (!sellMode()) {
-            ui.button(124, 42, 112)
+            ui.button(124, 54, 112)
                     .text(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_add_reward"))
                     .onClick(this::openCommandRewardPicker).build();
         }
         if (gachaMode()) {
-            ui.button(242, 42, 96).text(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_reward_add_empty"))
+            ui.button(242, 54, 96).text(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_reward_add_empty"))
                     .onClick(this::addEmptyReward).build();
         }
         int clearX = gachaMode() ? 344 : sellMode() ? 124 : 242;
-        ui.button(clearX, 42, 78).text(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_reward_clear"))
+        ui.button(clearX, 54, 78).text(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_reward_clear"))
                 .tooltip(AdventureText.translatable(clearTooltipKey()))
                 .onClick(() -> {
                     draft.rewards.clear();
                     selectedIndex = -1;
                     refreshList();
                 }).build();
-        ui.button(544, 42, 82).text(AdventureText.translatable("gui.done"))
+        ui.button(544, 54, 82).text(AdventureText.translatable("gui.done"))
                 .onClick(this::finish).build();
         list = ui.itemActionList(14, 82, 612, 208, listItems())
                 .selected(selectedIndex).scrollOffset(scrollOffset).actionWidth(66)
@@ -213,15 +213,12 @@ final class RewardPoolScreen extends KineticPage {
     protected void renderBackground(KineticGraphics graphics, int mouseX, int mouseY, float partialTick) {
         KineticTheme.shadow(graphics, width(), height());
         KineticTheme.panel(graphics, 0, 0, 640, 360);
-        graphics.centeredText(title(), 320, 10, KineticTheme.current().text(), false);
-        graphics.text(AdventureText.translatable(primaryHintKey()), 14, 26, KineticTheme.current().text(), true);
-        graphics.text(AdventureText.translatable(secondaryHintKey()), 14, 38, KineticTheme.current().text(), true);
-        graphics.text(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_reward_column_count"),
-                14, 318, KineticTheme.current().text(), true);
-        if (gachaMode()) graphics.text(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_reward_column_weight"),
-                182, 318, KineticTheme.current().text(), true);
-        if (draft.rewards.isEmpty()) graphics.centeredText(AdventureText.translatable(emptyListKey()),
-                320, 180, KineticTheme.current().text(), false);
+        graphics.scrollingTextCentered(title(), 320, 10, 608, KineticTheme.current().text(), false);
+        graphics.scrollingText(AdventureText.translatable(primaryHintKey()), 14, 26, 612, KineticTheme.current().text(), true);
+        graphics.scrollingText(AdventureText.translatable(secondaryHintKey()), 14, 38, 612, KineticTheme.current().text(), true);
+        graphics.scrollingText(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_reward_column_count"), 14, 318, 96 - 14 - 4, KineticTheme.current().text(), true);
+        if (gachaMode()) graphics.scrollingText(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_reward_column_weight"), 182, 318, 256 - 182 - 4, KineticTheme.current().text(), true);
+        if (draft.rewards.isEmpty()) graphics.scrollingTextCentered(AdventureText.translatable(emptyListKey()), 320, 180, 608, KineticTheme.current().text(), false);
     }
 
     private static String titleKey(ShopGuiSupport.EditorDraft draft) {

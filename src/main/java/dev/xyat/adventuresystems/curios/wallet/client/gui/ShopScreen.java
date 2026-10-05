@@ -574,7 +574,7 @@ public class ShopScreen extends KineticPage {
         updateSmoothScrolling();
         updateDetailWidgetState();
         renderPanel(graphics);
-        graphics.centeredText(title(), shopTitleX(), top + 8, KineticTheme.current().text(), true);
+        graphics.scrollingTextCentered(title(), shopTitleX(), top + 8, Math.max(0, Math.min(shopTitleX() - (editorModeButtonX() + editorMenuButtonWidth() + 4), backpackButtonX() - 4 - shopTitleX()) * 2), KineticTheme.current().text(), true);
         renderBalanceSection(graphics);
         renderPageScrollBar(graphics, mouseX, mouseY);
         renderListBorder(graphics);
@@ -626,9 +626,9 @@ public class ShopScreen extends KineticPage {
         Component label = AdventureText.translatable("gui.adventuresystems.curios.wallet.balance_title");
         int labelX = x + 8;
         int labelY = y + 7;
-        graphics.text(label, labelX, labelY, KineticTheme.current().text(), true);
+        graphics.scrollingText(label, labelX, labelY, Math.min(KineticText.width(label), Math.max(0, width - 16 - CURRENCY_COLUMNS * 92 - 8)), KineticTheme.current().text(), true);
         List<CurrencyType> currencies = sortedCurrenciesByValueDesc();
-        int cellStartX = labelX + KineticText.width(label) + 8;
+        int cellStartX = labelX + Math.min(KineticText.width(label), Math.max(0, width - 16 - CURRENCY_COLUMNS * 92 - 8)) + 8;
         int usableWidth = x + width - 8 - cellStartX;
         int cellWidth = Math.max(92, usableWidth / CURRENCY_COLUMNS);
         for (int i = 0; i < Math.min(currencies.size(), CURRENCY_COLUMNS * 2); i++) {
@@ -646,18 +646,15 @@ public class ShopScreen extends KineticPage {
         ItemStack stack = stack(currency.itemId());
         String text = formatCompact(displayAmount(currency.itemId()));
         graphics.item(stack, x, y - 5);
-        graphics.text(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_balance_amount", text), x + 20, y, KineticTheme.current().text(), true);
+        graphics.scrollingText(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_balance_amount", text), x + 20, y, Math.max(0, Math.min(width - 20, KineticText.width(text))), KineticTheme.current().text(), true);
         BalanceAnimation animation = animations.get(currency.itemId());
         if (animation != null && animation.deltaVisible()) {
             String delta = formatDelta(animation.delta());
             int deltaX = x + 23 + KineticText.width(text);
             if (deltaX + KineticText.width(delta) <= x + width) {
-                graphics.text(
-                        AdventureText.translatable(animation.delta() > 0L
+                graphics.scrollingText(AdventureText.translatable(animation.delta() > 0L
                                 ? "gui.adventuresystems.curios.wallet.shop_balance_delta_positive"
-                                : "gui.adventuresystems.curios.wallet.shop_balance_delta_negative", delta),
-                        deltaX, y, KineticTheme.current().text(), true
-                );
+                                : "gui.adventuresystems.curios.wallet.shop_balance_delta_negative", delta), deltaX, y, Math.max(0, x + width - deltaX), KineticTheme.current().text(), true);
             }
         }
     }
@@ -720,7 +717,7 @@ public class ShopScreen extends KineticPage {
         Component text = AdventureText.translatable(Objects.equals(activePageName, FAVORITES_PAGE)
                 ? "gui.adventuresystems.curios.wallet.shop_favorites_empty"
                 : "gui.adventuresystems.curios.wallet.shop_page_empty");
-        graphics.centeredText(text, listLeft() + listWidth() / 2, contentTop() + contentHeightVisible() / 2 - 4, KineticTheme.current().text(), true);
+        graphics.scrollingTextCentered(text, listLeft() + listWidth() / 2, contentTop() + contentHeightVisible() / 2 - 4, listWidth() - 8, KineticTheme.current().text(), true);
     }
 
     private void renderProductCellContent(KineticGraphics graphics, Row row, Cell cell) {
@@ -759,12 +756,15 @@ public class ShopScreen extends KineticPage {
         try {
             for (int rowIndex = visibleIndexStart(); rowIndex < visibleIndexEnd(); rowIndex++) {
                 Cell cell = cellForIndex(rowIndex);
-                Shop.Entry entry = rows.get(rowIndex).entry();
+                Row row = rows.get(rowIndex);
+                Shop.Entry entry = row.entry();
                 boolean hovered = isHover(mouseX, mouseY, cell.x(), cell.y(), GRID_CELL_WIDTH, GRID_CELL_HEIGHT);
                 KineticTheme.stateSurface(graphics, cell.x(), cell.y(), GRID_CELL_WIDTH, GRID_CELL_HEIGHT,
                         KineticTheme.Surface.PANEL_ALT, rowIndex == selectedIndex, hovered,
                         entry != null && !canTrade(entry, 1));
-                renderProductCellContent(graphics, rows.get(rowIndex), cell);
+                graphics.clipped(cell.x() + 1, cell.y() + 1, cell.x() + GRID_CELL_WIDTH - 1,
+                        cell.y() + GRID_CELL_HEIGHT - 1,
+                        () -> renderProductCellContent(graphics, row, cell));
                 productScrollController.renderSelectionFlash(graphics, rowIndex,
                         cell.x(), cell.y(), GRID_CELL_WIDTH, GRID_CELL_HEIGHT);
             }
@@ -877,8 +877,8 @@ public class ShopScreen extends KineticPage {
 
     private void drawCellString(KineticGraphics graphics, Component text, int x, int y, int available) {
         if (text == null || text.getString().isBlank()) return;
-        Component line = clipped(text, Math.max(1, available));
-        graphics.text(line, x, y, KineticTheme.current().text(), false);
+        Component line = text;
+        graphics.scrollingText(line, x, y, Math.max(0, available), KineticTheme.current().text(), false);
     }
 
     private Component cellPriceText(String price, boolean available) {
@@ -905,7 +905,7 @@ public class ShopScreen extends KineticPage {
         try {
             Shop.Entry entry = selectedEntry();
             if (entry == null) {
-                graphics.centeredText(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_select_entry_hint"), x + (left + panelWidth - x) / 2, y + 18, KineticTheme.current().text(), true);
+                graphics.scrollingTextCentered(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_select_entry_hint"), x + (left + panelWidth - x) / 2, y + 18, Math.max(0, clipRight - x - 4), KineticTheme.current().text(), true);
                 return;
             }
             ItemStack item = detailDisplayStack(entry);
@@ -913,14 +913,11 @@ public class ShopScreen extends KineticPage {
             graphics.item(item, contentX, y + 6);
             graphics.itemDecorations(item, contentX, y + 6);
             if (hasMultipleRewards(entry)) renderSmallPlus(graphics, contentX + 12, y + 18);
-            graphics.text(
-                    AdventureText.translatable(entry.locked()
+            graphics.scrollingText(AdventureText.translatable(entry.locked()
                             ? "gui.adventuresystems.curios.wallet.shop_detail_name_locked"
                             : "gui.adventuresystems.curios.wallet.shop_detail_name_ready",
-                            clipped(entryDisplayName(entry, item), Math.max(40, clipRight - textX - 4))),
-                    textX, y + 4, KineticTheme.current().text(), true
-            );
-            graphics.text(entryCountText(entry), textX, y + 18, KineticTheme.current().text(), true);
+                            entryDisplayName(entry, item)), textX, y + 4, Math.max(0, clipRight - textX - 4), KineticTheme.current().text(), true);
+            graphics.scrollingText(entryCountText(entry), textX, y + 18, Math.max(0, clipRight - textX - 4), KineticTheme.current().text(), true);
             renderEntryPriceLine(graphics, entry, contentX, y + 33);
             if (mode == Shop.Mode.BUY) {
                 renderBuyPaymentSourceLines(graphics, entry, contentX, detailBuyPaymentY(entry));
@@ -934,11 +931,15 @@ public class ShopScreen extends KineticPage {
                 renderRewardPreview(graphics, entry, contentX, rewardPreviewY(), mouseX, mouseY);
             }
             if (detailTradeControlsVisible(entry)) {
-                graphics.text(tradeAmountLabel(), contentX, detailAmountInputY() + 5, KineticTheme.current().text(), true);
+                graphics.scrollingText(tradeAmountLabel(), contentX, detailAmountInputY() + 5, Math.max(0, detailAmountInputX() - contentX - 4), KineticTheme.current().text(), true);
                 renderTradeCostPreview(graphics, entry);
             }
-            if (isRewardPickerOpen() && isSelectableRewardEntry(entry)) renderRewardPicker(graphics, entry, mouseX, mouseY);
-            if (isQuestPickerOpen() && hasQuestList(entry)) renderQuestPicker(graphics, entry, mouseX, mouseY);
+            if (isRewardPickerOpen() && isSelectableRewardEntry(entry)) {
+                graphics.isolated(() -> { graphics.raise(1); renderRewardPicker(graphics, entry, mouseX, mouseY); });
+            }
+            if (isQuestPickerOpen() && hasQuestList(entry)) {
+                graphics.isolated(() -> { graphics.raise(1); renderQuestPicker(graphics, entry, mouseX, mouseY); });
+            }
         } finally {
             disableShopScissor(graphics);
         }
@@ -950,7 +951,7 @@ public class ShopScreen extends KineticPage {
         Component text = AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_trade_cost_preview", formatCompact(cost));
         int textX = detailTradeCostTextX();
         int textY = detailAmountInputY() + 5;
-        graphics.text(text, textX, textY, KineticTheme.current().text(), false);
+        graphics.scrollingText(text, textX, textY, Math.max(0, detailTradeCostIconX(entry) - textX - 3), KineticTheme.current().text(), false);
         ItemStack stack = tradeCostStack(entry);
         if (!stack.isEmpty()) {
             int slotX = detailTradeCostIconX(entry);
@@ -974,23 +975,20 @@ public class ShopScreen extends KineticPage {
     private void renderStatusLines(KineticGraphics graphics, Shop.Entry entry, int x, int y) {
         int lineY = y;
         if (isSelectableRewardEntry(entry)) {
-            graphics.text(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_sell_choice_hint"), x, lineY, KineticTheme.current().text(), true);
+            graphics.scrollingText(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_sell_choice_hint"), x, lineY, Math.max(0, detailContentX() + detailContentWidth() - x - 4), KineticTheme.current().text(), true);
             lineY += 11;
         }
         long inventoryCount = sellInventoryCount(entry);
-        graphics.text(
-                AdventureText.translatable(inventoryCount > 0L
+        graphics.scrollingText(AdventureText.translatable(inventoryCount > 0L
                         ? "gui.adventuresystems.curios.wallet.shop_sell_inventory_count_ready"
-                        : "gui.adventuresystems.curios.wallet.shop_sell_inventory_count_missing", materialCompact(inventoryCount)),
-                x, lineY, KineticTheme.current().text(), true
-        );
+                        : "gui.adventuresystems.curios.wallet.shop_sell_inventory_count_missing", materialCompact(inventoryCount)), x, lineY, Math.max(0, detailContentX() + detailContentWidth() - x - 4), KineticTheme.current().text(), true);
         lineY += 11;
-        graphics.text(backpackMaterialText(entry), x, lineY, KineticTheme.current().text(), true);
+        graphics.scrollingText(backpackMaterialText(entry), x, lineY, Math.max(0, detailContentX() + detailContentWidth() - x - 4), KineticTheme.current().text(), true);
         lineY += 11;
-        graphics.text(rsMaterialText(entry), x, lineY, KineticTheme.current().text(), true);
+        graphics.scrollingText(rsMaterialText(entry), x, lineY, Math.max(0, detailContentX() + detailContentWidth() - x - 4), KineticTheme.current().text(), true);
         lineY += 11;
         if (sellProgress(entry) > 0L) {
-            graphics.text(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_sell_progress_detail", materialCompact(sellProgress(entry)), materialCompact(sellTradeStack(entry).getCount())), x, lineY, KineticTheme.current().text(), true);
+            graphics.scrollingText(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_sell_progress_detail", materialCompact(sellProgress(entry)), materialCompact(sellTradeStack(entry).getCount())), x, lineY, Math.max(0, detailContentX() + detailContentWidth() - x - 4), KineticTheme.current().text(), true);
         }
     }
 
@@ -998,18 +996,15 @@ public class ShopScreen extends KineticPage {
         int lineY = y;
         if (entry.timedLimitSeconds() > 0) {
             long remaining = timedRemaining(entry);
-            graphics.text(timedLimitText(entry, remaining), x, lineY, KineticTheme.current().text(), true);
+            graphics.scrollingText(timedLimitText(entry, remaining), x, lineY, Math.max(0, detailContentX() + detailContentWidth() - x - 4), KineticTheme.current().text(), true);
             lineY += 14;
         }
         if (entry.totalLimit() > 0) {
             int remaining = totalRemaining(entry);
-            graphics.text(
-                    AdventureText.translatable(remaining > 0
+            graphics.scrollingText(AdventureText.translatable(remaining > 0
                             ? "gui.adventuresystems.curios.wallet.shop_total_limit_status"
                             : "gui.adventuresystems.curios.wallet.shop_total_limit_status_sold_out",
-                            entry.totalBought(), entry.totalLimit(), remaining),
-                    x, lineY, KineticTheme.current().text(), true
-            );
+                            entry.totalBought(), entry.totalLimit(), remaining), x, lineY, Math.max(0, detailContentX() + detailContentWidth() - x - 4), KineticTheme.current().text(), true);
         }
     }
 
@@ -1019,20 +1014,17 @@ public class ShopScreen extends KineticPage {
         long inventoryCount = buyInventoryCount(entry);
         long walletCount = buyWalletCount(entry);
         long total = buyPaymentTotal(entry);
-        graphics.text(AdventureText.translatable(inventoryCount > 0L
+        graphics.scrollingText(AdventureText.translatable(inventoryCount > 0L
                         ? "gui.adventuresystems.curios.wallet.shop_buy_source_inventory_ready"
-                        : "gui.adventuresystems.curios.wallet.shop_buy_source_inventory_empty", materialCompact(inventoryCount)),
-                x, y, KineticTheme.current().text(), true);
-        graphics.text(AdventureText.translatable(walletCount > 0L
+                        : "gui.adventuresystems.curios.wallet.shop_buy_source_inventory_empty", materialCompact(inventoryCount)), x, y, 74 - 4, KineticTheme.current().text(), true);
+        graphics.scrollingText(AdventureText.translatable(walletCount > 0L
                         ? "gui.adventuresystems.curios.wallet.shop_buy_source_wallet_ready"
-                        : "gui.adventuresystems.curios.wallet.shop_buy_source_wallet_empty", materialCompact(walletCount)),
-                x + 74, y, KineticTheme.current().text(), true);
-        graphics.text(buyBackpackMaterialText(entry), x, y + 11, KineticTheme.current().text(), true);
-        graphics.text(buyRsMaterialText(entry), x + 74, y + 11, KineticTheme.current().text(), true);
-        graphics.text(AdventureText.translatable(total >= entry.price()
+                        : "gui.adventuresystems.curios.wallet.shop_buy_source_wallet_empty", materialCompact(walletCount)), x + 74, y, Math.max(0, detailContentX() + detailContentWidth() - (x + 74) - 4), KineticTheme.current().text(), true);
+        graphics.scrollingText(buyBackpackMaterialText(entry), x, y + 11, 74 - 4, KineticTheme.current().text(), true);
+        graphics.scrollingText(buyRsMaterialText(entry), x + 74, y + 11, Math.max(0, detailContentX() + detailContentWidth() - (x + 74) - 4), KineticTheme.current().text(), true);
+        graphics.scrollingText(AdventureText.translatable(total >= entry.price()
                         ? "gui.adventuresystems.curios.wallet.shop_buy_source_total_ready"
-                        : "gui.adventuresystems.curios.wallet.shop_buy_source_total_missing", materialCompact(total)),
-                x, y + 22, KineticTheme.current().text(), true);
+                        : "gui.adventuresystems.curios.wallet.shop_buy_source_total_missing", materialCompact(total)), x, y + 22, Math.max(0, detailContentX() + detailContentWidth() - x - 4), KineticTheme.current().text(), true);
     }
 
     private MutableComponent buyBackpackMaterialText(Shop.Entry entry) {
@@ -1181,7 +1173,7 @@ public class ShopScreen extends KineticPage {
 
     private void renderEntryPriceLine(KineticGraphics graphics, Shop.Entry entry, int x, int y) {
         Component text = entryPriceIconText(entry);
-        graphics.text(text, x, y, KineticTheme.current().text(), false);
+        graphics.scrollingText(text, x, y, Math.max(0, detailPriceIconX(entry) - x - 3), KineticTheme.current().text(), false);
         ItemStack currency = stack(entry.currencyId());
         if (currency.isEmpty()) return;
         int slotX = detailPriceIconX(entry);
@@ -1200,7 +1192,8 @@ public class ShopScreen extends KineticPage {
     }
 
     private int detailPriceIconX(Shop.Entry entry) {
-        return detailContentX() + KineticText.width(entryPriceIconText(entry)) + 3;
+        return Math.min(detailContentX() + detailContentWidth() - DETAIL_PRICE_SLOT_SIZE - 4,
+                detailContentX() + KineticText.width(entryPriceIconText(entry)) + 3);
     }
 
     private int detailPriceIconY() {
@@ -1216,7 +1209,7 @@ public class ShopScreen extends KineticPage {
         int y = balanceY();
         int width = panelWidth - 28;
         Component label = AdventureText.translatable("gui.adventuresystems.curios.wallet.balance_title");
-        int cellStartX = x + 8 + KineticText.width(label) + 8;
+        int cellStartX = x + 8 + Math.min(KineticText.width(label), Math.max(0, width - 16 - CURRENCY_COLUMNS * 92 - 8)) + 8;
         int usableWidth = x + width - 8 - cellStartX;
         int cellWidth = Math.max(92, usableWidth / CURRENCY_COLUMNS);
         List<CurrencyType> currencies = sortedCurrenciesByValueDesc();
@@ -1548,16 +1541,11 @@ public class ShopScreen extends KineticPage {
 
     private void renderRewardPreview(KineticGraphics graphics, Shop.Entry entry, int x, int y, int mouseX, int mouseY) {
         if (y < 0 || rewardPreviewBottomY() - y < 12) return;
-        graphics.text(
-                AdventureText.translatable(entry.selectable()
+        graphics.scrollingText(AdventureText.translatable(entry.selectable()
                         ? (mode == Shop.Mode.SELL
                         ? "gui.adventuresystems.curios.wallet.shop_sell_choice_title"
                         : "gui.adventuresystems.curios.wallet.shop_choice_title")
-                        : "gui.adventuresystems.curios.wallet.shop_reward_probability_title"),
-                x + DETAIL_SECTION_BUTTON_SIZE + 4, y + 4,
-                KineticTheme.current().translatedText(),
-                true
-        );
+                        : "gui.adventuresystems.curios.wallet.shop_reward_probability_title"), x + DETAIL_SECTION_BUTTON_SIZE + 4, y + 4, Math.max(0, detailContentWidth() - DETAIL_SECTION_BUTTON_SIZE - 8), KineticTheme.current().translatedText(), true);
         if (!rewardPreviewExpanded) return;
         List<Shop.Reward> rewards = sortedRewardPreviewRewards(entry);
         if (rewards.isEmpty()) return;
@@ -1860,15 +1848,9 @@ public class ShopScreen extends KineticPage {
         int width = rewardPickerWidth();
         int height = rewardPickerHeight(entry);
         KineticTheme.panelAlt(graphics, x, y, width, height);
-        graphics.text(
-                AdventureText.translatable(mode == Shop.Mode.SELL
+        graphics.scrollingText(AdventureText.translatable(mode == Shop.Mode.SELL
                         ? "gui.adventuresystems.curios.wallet.shop_sell_choice_picker_title"
-                        : "gui.adventuresystems.curios.wallet.shop_choice_picker_title"),
-                x + 5,
-                y + 5,
-                KineticTheme.current().text(),
-                true
-        );
+                        : "gui.adventuresystems.curios.wallet.shop_choice_picker_title"), x + 5, y + 5, Math.max(0, width - 10), KineticTheme.current().text(), true);
         int rewardPickerMax = rewardPickerMaxScroll(entry);
         rewardPickerScroll = Math.max(0D, Math.min(rewardPickerScroll, rewardPickerMax));
         double visualRewardPickerScroll = rewardPickerScrollSmoothing.follow(rewardPickerScroll, rewardPickerMax);
@@ -1903,7 +1885,7 @@ public class ShopScreen extends KineticPage {
                     graphics.itemDecorations(reward.stack(), x + 5, rowY + 2);
                 }
                 int color = active ? KineticTheme.current().translatedText() : KineticTheme.current().text();
-                graphics.text(clipped(rewardName(reward), width - 34), x + 25, rowY + 6, color, true);
+                graphics.scrollingText(rewardName(reward), x + 25, rowY + 6, Math.max(0, width - 34), color, true);
             }
         } finally {
             disableShopScissor(graphics);
@@ -2071,13 +2053,7 @@ public class ShopScreen extends KineticPage {
         graphics.push();
         graphics.raise(5);
         KineticTheme.panel(graphics, x, y, width, height);
-        graphics.centeredText(
-                AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_choice_overlay_title"),
-                x + width / 2,
-                y + 13,
-                KineticTheme.current().text(),
-                true
-        );
+        graphics.scrollingTextCentered(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_choice_overlay_title"), x + width / 2, y + 13, Math.max(0, 2 * (choiceOverlayConfirmX() - 4 - (x + width / 2))), KineticTheme.current().text(), true);
         renderChoiceOverlayGrid(graphics, entry, mouseX, mouseY);
         renderChoiceOverlayScrollbar(graphics, entry, mouseX, mouseY);
         KineticTheme.button(graphics, choiceOverlayCancelX(), choiceOverlayButtonY(), CHOICE_OVERLAY_BUTTON_WIDTH,
@@ -2117,13 +2093,7 @@ public class ShopScreen extends KineticPage {
                     KineticTheme.stateOutline(graphics, slotX, slotY, CHOICE_OVERLAY_SLOT, CHOICE_OVERLAY_SLOT, true, hover, false);
                 }
                 if (reward.empty()) {
-                    graphics.centeredText(
-                            AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_gacha_marker"),
-                            slotX + CHOICE_OVERLAY_SLOT / 2,
-                            slotY + 9,
-                            KineticTheme.current().text(),
-                            true
-                    );
+                    graphics.scrollingTextCentered(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_gacha_marker"), slotX + CHOICE_OVERLAY_SLOT / 2, slotY + 9, CHOICE_OVERLAY_SLOT - 4, KineticTheme.current().text(), true);
                 } else {
                     graphics.item(reward.stack(), slotX + 6, slotY + 5);
                     graphics.itemDecorations(reward.stack(), slotX + 6, slotY + 5);
@@ -2997,7 +2967,7 @@ public class ShopScreen extends KineticPage {
                 ? AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_task_requirement_done")
                 : AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_task_requirement_need", missingRequiredQuestCount(entry));
         Component title = hasMultipleQuests(entry) ? AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_task_multiple", entry.requiredQuestIds().size()) : AdventureText.literal(questTitleById(entry, entry.requiredQuestId()));
-        return AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_task_button", status, clipped(title, Math.max(40, questButtonWidth() - KineticText.width(status) - 24)));
+        return AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_task_button", status, title);
     }
 
     private int missingRequiredQuestCount(Shop.Entry entry) {
@@ -3044,10 +3014,7 @@ public class ShopScreen extends KineticPage {
         graphics.push();
         graphics.raise(3);
         KineticTheme.panelAlt(graphics, x, y, width, height);
-        graphics.text(
-                AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_task_list_title"),
-                x + 5, y + 5, KineticTheme.current().text(), true
-        );
+        graphics.scrollingText(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_task_list_title"), x + 5, y + 5, width - 10, KineticTheme.current().text(), true);
         int questMax = questPickerMaxScroll(entry);
         double visualQuestScroll = questPickerVisualScroll(entry);
         int questStart = Math.max(0, Math.min((int) Math.floor(visualQuestScroll), questMax));
@@ -3092,21 +3059,7 @@ public class ShopScreen extends KineticPage {
 
     private void drawScrollingQuestTitle(KineticGraphics graphics, Component text, int x, int y, int width) {
         if (text == null || text.getString().isBlank() || width <= 0) return;
-        int textWidth = KineticText.width(text);
-        if (textWidth <= width) {
-            graphics.text(text, x, y, KineticTheme.current().text(), true);
-            return;
-        }
-        enableShopScissor(graphics, x, y - 1, x + width, y + 10);
-        try {
-            int overflow = textWidth - width;
-            long time = System.currentTimeMillis();
-            double phase = (time % 5000L) / 5000.0D;
-            int offset = (int) Math.round((Math.sin(phase * Math.PI * 2.0D - Math.PI / 2.0D) + 1.0D) * 0.5D * overflow);
-            graphics.text(text, x - offset, y, KineticTheme.current().text(), true);
-        } finally {
-            disableShopScissor(graphics);
-        }
+        graphics.scrollingText(text, x, y, width, KineticTheme.current().text(), true);
     }
 
     private boolean handleQuestPickerClick(int mouseX, int mouseY) {
@@ -3274,11 +3227,11 @@ public class ShopScreen extends KineticPage {
     }
 
     private int editorMenuButtonWidth() {
-        return fitButtonWidth(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_menu_editor"));
+        return Math.min(fitButtonWidth(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_menu_editor")), panelWidth / 6);
     }
 
     private int sourceMenuButtonWidth() {
-        return fitButtonWidth(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_menu_source"));
+        return Math.min(fitButtonWidth(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_menu_source")), panelWidth / 6);
     }
 
     // 开关项直接用“名称:开/关”和绿/红文字表示状态，不用橘黄选中边框（那是“选中”的意思，容易误读）。
@@ -3470,7 +3423,9 @@ public class ShopScreen extends KineticPage {
 
     private int detailAmountInputX() {
         int desired = detailContentX() + KineticText.width(tradeAmountLabel()) + 5;
-        return Math.min(left + panelWidth - DETAIL_AMOUNT_INPUT_SIZE - 6, Math.max(detailContentX(), desired));
+        // Leave room for the cost text and its item icon after the amount field.
+        int limit = left + panelWidth - 6 - DETAIL_PRICE_SLOT_SIZE - 7 - 40 - 3 - 4 - DETAIL_AMOUNT_INPUT_SIZE;
+        return Math.max(detailContentX(), Math.min(limit, desired));
     }
 
     private int detailTradeCostTextX() {
@@ -3667,7 +3622,7 @@ public class ShopScreen extends KineticPage {
         int y = balanceY();
         int width = panelWidth - 28;
         Component label = AdventureText.translatable("gui.adventuresystems.curios.wallet.balance_title");
-        int cellStartX = x + 8 + KineticText.width(label) + 8;
+        int cellStartX = x + 8 + Math.min(KineticText.width(label), Math.max(0, width - 16 - CURRENCY_COLUMNS * 92 - 8)) + 8;
         int usableWidth = x + width - 8 - cellStartX;
         int cellWidth = Math.max(92, usableWidth / CURRENCY_COLUMNS);
         List<CurrencyType> currencies = sortedCurrenciesByValueDesc();
@@ -4256,17 +4211,9 @@ public class ShopScreen extends KineticPage {
         return KineticTheme.hovering(mouseX, mouseY, x, y, width, height);
     }
 
-    private String clipped(String text, int maxWidth) {
-        return KineticText.trim(text, maxWidth);
-    }
-
-    private Component clipped(Component text, int maxWidth) {
-        return AdventureText.ellipsize(text, maxWidth, KineticText::width);
-    }
-
     private void drawHintText(KineticGraphics graphics, Component text, int x, int y) {
         if (text == null || text.getString().isBlank()) return;
-        graphics.text(text, x, y, KineticTheme.current().text(), true);
+        graphics.scrollingText(text, x, y, Math.max(0, listLeft() + listWidth() - x - 2), KineticTheme.current().text(), true);
     }
 
     private static String formatCompact(long value) {

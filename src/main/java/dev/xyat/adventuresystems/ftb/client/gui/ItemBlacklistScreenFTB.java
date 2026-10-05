@@ -120,18 +120,12 @@ public class ItemBlacklistScreenFTB extends KineticPage {
     protected void renderBackground(KineticGraphics graphics, int mouseX, int mouseY, float partialTick) {
         KineticTheme.shadow(graphics, width(), height());
         KineticTheme.panel(graphics, PANEL_X, PANEL_Y, PANEL_W, PANEL_H);
-        graphics.text(AdventureText.translatable("screen.adventuresystems.ftb_item.blacklist"), 24, 24, KineticTheme.current().text(), false);
-        graphics.text(AdventureText.translatable("label.adventuresystems.ftb_item.blacklist_desc"), 150, 25, KineticTheme.current().mutedText(), false);
-        graphics.text(
-                AdventureText.translatable(
+        graphics.scrollingText(AdventureText.translatable("screen.adventuresystems.ftb_item.blacklist"), 24, 24, 150 - 24 - 4, KineticTheme.current().text(), false);
+        graphics.scrollingText(AdventureText.translatable("label.adventuresystems.ftb_item.blacklist_desc"), 150, 25, 480 - 150 - 4, KineticTheme.current().mutedText(), false);
+        graphics.scrollingText(AdventureText.translatable(
                         "label.adventuresystems.ftb_item.blacklist_count",
                         Component.literal(String.valueOf(filtered.size()))
-                ),
-                480,
-                25,
-                KineticTheme.current().text(),
-                false
-        );
+                ), 480, 25, PANEL_X + PANEL_W - 14 - 480, KineticTheme.current().text(), false);
     }
 
     private void save() {

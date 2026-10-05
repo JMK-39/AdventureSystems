@@ -150,9 +150,9 @@ final class ShopEntryEditorScreen extends KineticPage {
         top = Math.max(4, (height() - panelHeight) / 2);
 
         addButton(typeButtonX(), typeButtonY(), buttonColumnWidth(), typeButtonText(), this::openTypeMenu);
-        addButton(selectItemButtonX(), selectItemButtonY(), buttonColumnWidth(), itemButtonText(), this::openMainItemSelector);
-        addButton(selectCurrencyButtonX(), selectCurrencyButtonY(), buttonColumnWidth(), currencyButtonText(), () -> openChild(new CurrencyPickerScreen(draft)));
-        addButton(selectPaymentButtonX(), selectPaymentButtonY(), buttonColumnWidth(), paymentButtonText(), this::openPaymentItemSelector);
+        addButton(selectItemButtonX(), selectItemButtonY(), buttonColumnWidth(), Component.empty(), this::openMainItemSelector);
+        addButton(selectCurrencyButtonX(), selectCurrencyButtonY(), buttonColumnWidth(), Component.empty(), () -> openChild(new CurrencyPickerScreen(draft)));
+        addButton(selectPaymentButtonX(), selectPaymentButtonY(), buttonColumnWidth(), Component.empty(), this::openPaymentItemSelector);
 
         priceBox = addLongField(
                 inputLeftX(),
@@ -376,7 +376,7 @@ final class ShopEntryEditorScreen extends KineticPage {
     private int actionButtonWidth() {
         int save = KineticText.width(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_editor_save"));
         int cancel = KineticText.width(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_editor_cancel"));
-        return Math.max(save, cancel) + 16;
+        return Math.min(Math.max(save, cancel) + 16, Math.max(40, (panelWidth - 48) / 6));
     }
 
     private void rebuildEditorWidgets() {
@@ -478,7 +478,7 @@ final class ShopEntryEditorScreen extends KineticPage {
         int y = iconSlotY();
         boolean hovered = KineticTheme.hovering(mouseX, mouseY, x, y, ICON_SLOT_SIZE, ICON_SLOT_SIZE);
         Component label = AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_editor_icon_label");
-        graphics.text(label, x + ICON_SLOT_SIZE - KineticText.width(label), basicSectionY() + 5, KineticTheme.current().text(), true);
+        graphics.scrollingTextRight(label, x + ICON_SLOT_SIZE, basicSectionY() + 5, buttonColumnWidth(), KineticTheme.current().text(), true);
         KineticTheme.itemSlot(graphics, x, y, ICON_SLOT_SIZE, ICON_SLOT_SIZE, 4, false, hovered, false);
         if (hasCustomIcon() && !hovered) {
             KineticTheme.indicatorOutline(graphics, x, y, ICON_SLOT_SIZE, ICON_SLOT_SIZE, KineticTheme.Indicator.SUCCESS);
@@ -750,33 +750,33 @@ final class ShopEntryEditorScreen extends KineticPage {
     @Override
     protected void renderBackground(KineticGraphics graphics, int mouseX, int mouseY, float partialTick) {
         KineticTheme.panel(graphics, left, top, panelWidth, panelHeight);
-        graphics.centeredText(title(), left + panelWidth / 2, top + 12, KineticTheme.current().text(), false);
+        graphics.scrollingTextCentered(title(), left + panelWidth / 2, top + 12, Math.max(0, (saveButtonX() - 4 - (left + panelWidth / 2)) * 2), KineticTheme.current().text(), false);
 
         renderSection(graphics, left + 12, basicSectionY(), BASIC_SECTION_HEIGHT, AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_editor_basic_info"));
-        renderButtonItemIcon(graphics, draft.itemId, selectItemButtonX(), selectItemButtonY());
-        renderButtonItemIcon(graphics, currentCurrencyId(), selectCurrencyButtonX(), selectCurrencyButtonY());
-        renderButtonItemIcon(graphics, currentBarterItemId(), selectPaymentButtonX(), selectPaymentButtonY());
+        renderItemButtonContent(graphics, draft.itemId, itemButtonText(), selectItemButtonX(), selectItemButtonY());
+        renderItemButtonContent(graphics, currentCurrencyId(), currencyButtonText(), selectCurrencyButtonX(), selectCurrencyButtonY());
+        renderItemButtonContent(graphics, currentBarterItemId(), paymentButtonText(), selectPaymentButtonX(), selectPaymentButtonY());
         renderIconSlot(graphics, mouseX, mouseY);
 
         renderSection(graphics, left + 12, priceSectionY(), PRICE_SECTION_HEIGHT, AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_editor_price_limit"));
-        graphics.text(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_editor_price_label"), labelLeftX(), priceInputY() + 5, KineticTheme.current().text(), true);
-        graphics.text(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_editor_count_label"), rightLabelX(), priceInputY() + 5, KineticTheme.current().text(), true);
-        graphics.text(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_editor_timed_label"), labelLeftX(), dailyInputY() + 5, KineticTheme.current().text(), true);
-        graphics.text(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_editor_total_label"), rightLabelX(), dailyInputY() + 5, KineticTheme.current().text(), true);
-        graphics.text(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_editor_page_label"), labelLeftX(), pageInputY() + 5, KineticTheme.current().text(), true);
-        graphics.text(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_editor_quest_need_label"), rightLabelX(), pageInputY() + 5, KineticTheme.current().text(), true);
-        graphics.text(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_editor_display_name_label"), labelLeftX(), displayNameInputY() + 5, KineticTheme.current().text(), true);
-        graphics.text(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_manage_label"), commandManageButtonX(), commandManageButtonY() - 14, KineticTheme.current().text(), true);
-        graphics.text(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_count", draft.commands.size()), commandManageButtonX(), commandManageButtonY() + 26, KineticTheme.current().text(), true);
-        graphics.text(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_editor_description_label"), commandAreaX(), descriptionInputY() - 12, KineticTheme.current().text(), true);
+        graphics.scrollingText(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_editor_price_label"), labelLeftX(), priceInputY() + 5, FIELD_LABEL_WIDTH + 2, KineticTheme.current().text(), true);
+        graphics.scrollingText(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_editor_count_label"), rightLabelX(), priceInputY() + 5, FIELD_LABEL_WIDTH + 2, KineticTheme.current().text(), true);
+        graphics.scrollingText(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_editor_timed_label"), labelLeftX(), dailyInputY() + 5, FIELD_LABEL_WIDTH + 2, KineticTheme.current().text(), true);
+        graphics.scrollingText(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_editor_total_label"), rightLabelX(), dailyInputY() + 5, FIELD_LABEL_WIDTH + 2, KineticTheme.current().text(), true);
+        graphics.scrollingText(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_editor_page_label"), labelLeftX(), pageInputY() + 5, FIELD_LABEL_WIDTH + 2, KineticTheme.current().text(), true);
+        graphics.scrollingText(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_editor_quest_need_label"), rightLabelX(), pageInputY() + 5, FIELD_LABEL_WIDTH + 2, KineticTheme.current().text(), true);
+        graphics.scrollingText(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_editor_display_name_label"), labelLeftX(), displayNameInputY() + 5, FIELD_LABEL_WIDTH + 2, KineticTheme.current().text(), true);
+        graphics.scrollingText(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_manage_label"), commandManageButtonX(), commandManageButtonY() - 14, commandAreaWidth(), KineticTheme.current().text(), true);
+        graphics.scrollingText(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_count", draft.commands.size()), commandManageButtonX(), commandManageButtonY() + 26, commandAreaWidth(), KineticTheme.current().text(), true);
+        graphics.scrollingText(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_editor_description_label"), commandAreaX(), descriptionInputY() - 12, commandAreaWidth(), KineticTheme.current().text(), true);
 
         renderSection(graphics, left + 12, questSectionY(), QUEST_SECTION_HEIGHT, AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_editor_requirements"));
-        graphics.text(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_editor_quest_count", draft.questIds.size()), innerLeft(), questSectionY() + 28, KineticTheme.current().text(), true);
-        graphics.text(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_editor_quest_rule", draft.requiredQuestCount <= 0 ? draft.questIds.size() : Math.min(draft.requiredQuestCount, draft.questIds.size())), rightLabelX(), questSectionY() + 28, KineticTheme.current().text(), true);
+        graphics.scrollingText(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_editor_quest_count", draft.questIds.size()), innerLeft(), questSectionY() + 28, Math.max(0, rightLabelX() - innerLeft() - 4), KineticTheme.current().text(), true);
+        graphics.scrollingText(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_editor_quest_rule", draft.requiredQuestCount <= 0 ? draft.questIds.size() : Math.min(draft.requiredQuestCount, draft.questIds.size())), rightLabelX(), questSectionY() + 28, Math.max(0, questManageButtonX() - rightLabelX() - 4), KineticTheme.current().text(), true);
 
         renderSection(graphics, left + 12, contentSectionY(), contentSectionHeight(), contentSectionTitle());
-        graphics.text(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_editor_content_mode_label"), labelLeftX(), contentModeButtonY() + 5, KineticTheme.current().text(), true);
-        graphics.text(contentCountText(), contentPreviewX(), contentPreviewY() + 5, KineticTheme.current().text(), true);
+        graphics.scrollingText(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_editor_content_mode_label"), labelLeftX(), contentModeButtonY() + 5, FIELD_LABEL_WIDTH + 2, KineticTheme.current().text(), true);
+        graphics.scrollingText(contentCountText(), contentPreviewX(), contentPreviewY() + 5, Math.max(0, innerRight() - contentPreviewX()), KineticTheme.current().text(), true);
     }
 
     private Component contentCountText() {
@@ -790,15 +790,18 @@ final class ShopEntryEditorScreen extends KineticPage {
     }
 
 
-    private void renderButtonItemIcon(KineticGraphics graphics, String id, int buttonX, int buttonY) {
-        if (id == null || id.isBlank()) return;
-        graphics.item(ShopGuiSupport.stack(id), buttonX + buttonColumnWidth() - 20, buttonY + 2);
+    private void renderItemButtonContent(KineticGraphics graphics, String id, Component label, int buttonX, int buttonY) {
+        boolean hasIcon = id != null && !id.isBlank();
+        // Keep the original label center, leaving a four-pixel gap before the item icon.
+        graphics.scrollingTextCentered(label, buttonX + buttonColumnWidth() / 2, buttonY + 6,
+                Math.max(0, buttonColumnWidth() - (hasIcon ? 48 : 8)), KineticTheme.current().text(), true);
+        if (hasIcon) graphics.item(ShopGuiSupport.stack(id), buttonX + buttonColumnWidth() - 20, buttonY + 2);
     }
 
 
     private void renderSection(KineticGraphics graphics, int x, int y, int height, Component title) {
         KineticTheme.panelAlt(graphics, x, y, panelWidth - 24, height);
-        graphics.text(title, x + 10, y + 5, KineticTheme.current().text(), true);
+        graphics.scrollingText(title, x + 10, y + 5, Math.max(0, (y == basicSectionY() ? innerRight() - buttonColumnWidth() - 4 : innerRight()) - (x + 10)), KineticTheme.current().text(), true);
     }
 
     @Override

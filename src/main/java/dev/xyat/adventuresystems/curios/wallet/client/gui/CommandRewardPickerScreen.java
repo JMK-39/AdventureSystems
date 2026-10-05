@@ -53,12 +53,10 @@ final class CommandRewardPickerScreen extends KineticPage {
     protected void renderBackground(KineticGraphics graphics, int mouseX, int mouseY, float partialTick) {
         KineticTheme.shadow(graphics, width(), height());
         KineticTheme.panel(graphics, 20, 10, 520, 280);
-        graphics.centeredText(title(), 280, 18, KineticTheme.current().text(), false);
-        graphics.text(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_pick_hint"),
-                34, 44, KineticTheme.current().text(), true);
+        graphics.scrollingTextCentered(title(), 280, 18, 520 - 28, KineticTheme.current().text(), false);
+        graphics.scrollingText(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_pick_hint"), 34, 44, 520 - 28, KineticTheme.current().text(), true);
         if (draft.commands.isEmpty()) {
-            graphics.centeredText(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_empty"),
-                    280, 160, KineticTheme.current().text(), false);
+            graphics.scrollingTextCentered(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_empty"), 280, 160, 520 - 28, KineticTheme.current().text(), false);
         }
     }
 

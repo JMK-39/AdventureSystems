@@ -266,7 +266,7 @@ public class MainScreen extends KineticPage {
         for (KineticButton button : rowExpanders) if (button != null) button.setControlVisible(false);
         KineticTheme.shadow(graphics, width(), height());
         KineticTheme.panel(graphics, 10, 15, 430, 270);
-        graphics.centeredText(title(), 225, 23, KineticTheme.current().text(), false);
+        graphics.scrollingTextCentered(title(), 225, 23, 430 - 24, KineticTheme.current().text(), false);
     }
 
     private enum Action { WITHDRAW, CONVERT_ONE, CONVERT_ALL }

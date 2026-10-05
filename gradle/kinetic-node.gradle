@@ -340,3 +340,5 @@ if (pMinecraft.startsWith('26.')) {
 
 // English and Chinese must expose exactly the same authored translation keys.
 apply from: rootProject.file('gradle/kinetic-language-validation.gradle')
+
+apply from: rootProject.file('gradle/kinetic-gui-long-text-validation.gradle')

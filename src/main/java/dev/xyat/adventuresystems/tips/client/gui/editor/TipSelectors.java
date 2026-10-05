@@ -53,7 +53,7 @@ public class TipSelectors {
             }
             loadData();
             updateSearch(searchText);
-            ui.textField(20, 10, width() - 100)
+            ui.textField(20, 36, width() - 40)
                     .label(Component.empty())
                     .placeholder(AdventureText.translatable("gui.adventuresystems.tips.tips.search"))
                     .value(searchText)
@@ -66,7 +66,7 @@ public class TipSelectors {
                     .text(AdventureText.translatable("gui.adventuresystems.tips.tips.cancel"))
                     .onClick(this::closeToParent).build();
 
-            this.listWidget = ui.selectionList(20, 40, width() - 40, height() - 50,
+            this.listWidget = ui.selectionList(20, 66, width() - 40, height() - 76,
                     selectionItems())
                     .selected(-1).scrollOffset(listScroll)
                     .onSelect(index -> {
@@ -171,7 +171,7 @@ public class TipSelectors {
 
         @Override
         protected void renderBackground(KineticGraphics graphics, int mouseX, int mouseY, float partialTick) {
-            graphics.centeredText(title(), width() / 2, 15, KineticTheme.current().text(), true);
+            graphics.scrollingTextCentered(title(), width() / 2, 15, Math.max(0, width() - 148), KineticTheme.current().text(), true);
         }
 
         @Override
