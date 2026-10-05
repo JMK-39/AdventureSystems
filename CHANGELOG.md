@@ -8,6 +8,8 @@
 - Editing the shop refreshes only the editor; other players see the change when they open the shop. Saving tips updates only the editor; other players receive them when they log in.
 - The shop entry editor's page, buy/sell and content mode menus mark their current option yellow as single choices.
 - Shop, wallet, FTB and tips editor text scrolls inside its own region instead of being cut off or running into neighbors.
+- The tips structure, biome, advancement and dimension pickers list their entries as plain text rows instead of a column of buttons.
+- On 26.1.2 the shop entry editor's item, currency and barter item buttons were blank; they show their text and item icon as on the other versions. The editor's fields and labels keep 3 px clear of the section frames.
 - Requires KineticCore 26.10.5+.
 
 ### 简体中文
@@ -16,6 +18,8 @@
 - 编辑商店只刷新编辑者；其他玩家在打开商店时看到变更。保存提示只更新编辑者；其他玩家在登录时获得。
 - 商店条目编辑器的分页、买卖与内容模式菜单作为单选，用黄色标出当前选项。
 - 商店、钱包、FTB 与提示编辑器的文字在各自区域内滚动，不再被截断或压到相邻元素。
+- 提示的结构、生物群系、进度和维度选择器改用纯文字行列出条目，不再是一列按钮。
+- 26.1.2 上商店条目编辑器的物品、货币与以物易物按钮显示为空白；现在与其他版本一样显示文字和物品图标。编辑器的输入框和标签与分区边框保持 3 像素间距。
 - 需要 KineticCore 26.10.5+。
 
 ---

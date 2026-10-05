@@ -68,6 +68,7 @@ public class TipSelectors {
 
             this.listWidget = ui.selectionList(20, 66, width() - 40, height() - 76,
                     selectionItems())
+                    .textRows()
                     .selected(-1).scrollOffset(listScroll)
                     .onSelect(index -> {
                         if (index < 0 || index >= displayEntries.size()) return;

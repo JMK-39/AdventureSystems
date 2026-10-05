@@ -408,8 +408,9 @@ final class ShopEntryEditorScreen extends KineticPage {
     private int questSectionY() { return priceSectionY() + PRICE_SECTION_HEIGHT + 6; }
     private int contentSectionY() { return questSectionY() + QUEST_SECTION_HEIGHT + 6; }
     private int contentSectionHeight() { return Math.max(46, top + panelHeight - contentSectionY() - 10); }
-    private int innerLeft() { return left + 14; }
-    private int innerRight() { return left + panelWidth - 14; }
+    // Sections start 12 px in with a 1 px frame; content keeps 3 px clear of the frame.
+    private int innerLeft() { return left + 16; }
+    private int innerRight() { return left + panelWidth - 16; }
     private int innerWidth() { return Math.max(1, innerRight() - innerLeft()); }
     private int buttonColumnWidth() { return Math.max(82, (innerWidth() - BUTTON_GAP * 4 - ICON_SLOT_SIZE) / 4); }
     // 自定义列表图标格：在基础信息一行的最右侧。
@@ -753,9 +754,6 @@ final class ShopEntryEditorScreen extends KineticPage {
         graphics.scrollingTextCentered(title(), left + panelWidth / 2, top + 12, Math.max(0, (saveButtonX() - 4 - (left + panelWidth / 2)) * 2), KineticTheme.current().text(), false);
 
         renderSection(graphics, left + 12, basicSectionY(), BASIC_SECTION_HEIGHT, AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_editor_basic_info"));
-        renderItemButtonContent(graphics, draft.itemId, itemButtonText(), selectItemButtonX(), selectItemButtonY());
-        renderItemButtonContent(graphics, currentCurrencyId(), currencyButtonText(), selectCurrencyButtonX(), selectCurrencyButtonY());
-        renderItemButtonContent(graphics, currentBarterItemId(), paymentButtonText(), selectPaymentButtonX(), selectPaymentButtonY());
         renderIconSlot(graphics, mouseX, mouseY);
 
         renderSection(graphics, left + 12, priceSectionY(), PRICE_SECTION_HEIGHT, AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_editor_price_limit"));
@@ -777,6 +775,14 @@ final class ShopEntryEditorScreen extends KineticPage {
         renderSection(graphics, left + 12, contentSectionY(), contentSectionHeight(), contentSectionTitle());
         graphics.scrollingText(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_editor_content_mode_label"), labelLeftX(), contentModeButtonY() + 5, FIELD_LABEL_WIDTH + 2, KineticTheme.current().text(), true);
         graphics.scrollingText(contentCountText(), contentPreviewX(), contentPreviewY() + 5, Math.max(0, innerRight() - contentPreviewX()), KineticTheme.current().text(), true);
+    }
+
+    // The picker buttons have no label of their own; their text and item icon go above the button.
+    @Override
+    protected void renderForeground(KineticGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        renderItemButtonContent(graphics, draft.itemId, itemButtonText(), selectItemButtonX(), selectItemButtonY());
+        renderItemButtonContent(graphics, currentCurrencyId(), currencyButtonText(), selectCurrencyButtonX(), selectCurrencyButtonY());
+        renderItemButtonContent(graphics, currentBarterItemId(), paymentButtonText(), selectPaymentButtonX(), selectPaymentButtonY());
     }
 
     private Component contentCountText() {

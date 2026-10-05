@@ -331,9 +331,14 @@ if (pLoader == 'neoforge') {
 }
 
 // The tests above boot Minecraft through a stand-in FancyModLoader mod list, which FancyModLoader 11 (26.1) no
-// longer supports, so 26.1 nodes skip them; 26.1.2 is checked in a running game instead.
+// longer supports, so 26.1 nodes skip them and compile only the GUI capture and its 26.1 entry,
+// which check 26.1.2 in a running game.
 if (pMinecraft.startsWith('26.')) {
-    ['compileTestJava', 'test', 'verifyTextFormatting', 'verifyTipsComponents', 'verifyFTBItemComponents'].each { String name ->
+    sourceSets.test.java {
+        include 'dev/xyat/adventurevalidation/GuiCaptureEntry.java'
+        include 'dev/xyat/adventurevalidation/GuiCaptureValidation.java'
+    }
+    ['test', 'verifyTextFormatting', 'verifyTipsComponents', 'verifyFTBItemComponents'].each { String name ->
         tasks.matching { it.name == name }.configureEach { enabled = false }
     }
 }
