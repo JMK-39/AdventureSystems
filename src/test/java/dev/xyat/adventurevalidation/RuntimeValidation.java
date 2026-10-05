@@ -12,7 +12,9 @@ public final class RuntimeValidation {
     private static final java.util.Set<String> observedPauseTips=new java.util.HashSet<>();
     private static boolean pauseVerified;
     private static long lastDiagnostic;
-    public RuntimeValidation(){net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(this::login);
+    public RuntimeValidation(){
+        if(Boolean.getBoolean("adventuresystems.guiValidation")){dev.xyat.kineticcore.api.runtime.KineticPlatform.runOnClient(() -> GuiCaptureValidation::install);return;}
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(this::login);
         dev.xyat.kineticcore.api.runtime.KineticPlatform.runOnClient(() -> () -> {
             dev.xyat.kineticcore.api.client.event.KineticClientEvents.onTick(dev.xyat.kineticcore.api.client.event.KineticClientEvents.TickPhase.END, () -> {
                 var level=dev.xyat.kineticcore.api.runtime.KineticClientRuntime.currentLevel();
