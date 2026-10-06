@@ -102,7 +102,7 @@ public final class GuiLongTextValidation {
         boolean changed=!lang.equals(mc.getLanguageManager().getSelected());
         mc.getLanguageManager().setSelected(lang);
         mc.options.languageCode=lang;
-        int width=phase==1 || phase==3?1536:854,height=phase==1 || phase==3?864:480;
+        int width=phase==1 || phase==3?1920:854,height=phase==1 || phase==3?1080:480;
         mc.getWindow().setWindowed(width,height);mc.resizeDisplay();
         if(changed)reload=mc.reloadResourcePacks();
         else {if(phase==4){stressOriginal=Language.getInstance();Language.inject(new StressLanguage(stressOriginal));}try{nextPage();}catch(Exception error){throw new IllegalStateException(error);}}
