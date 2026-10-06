@@ -337,6 +337,7 @@ if (pMinecraft.startsWith('26.')) {
     sourceSets.test.java {
         include 'dev/xyat/adventurevalidation/GuiCaptureEntry.java'
         include 'dev/xyat/adventurevalidation/GuiCaptureValidation.java'
+        include 'dev/xyat/adventurevalidation/WalletHoldingsCheck.java'
     }
     ['test', 'verifyTextFormatting', 'verifyTipsComponents', 'verifyFTBItemComponents'].each { String name ->
         tasks.matching { it.name == name }.configureEach { enabled = false }

@@ -14,6 +14,7 @@ public final class RuntimeValidation {
     private static long lastDiagnostic;
     public RuntimeValidation(){
         if(Boolean.getBoolean("adventuresystems.guiValidation")){dev.xyat.kineticcore.api.runtime.KineticPlatform.runOnClient(() -> GuiCaptureValidation::install);return;}
+        if(Boolean.getBoolean("adventuresystems.walletHoldingsCheck")){dev.xyat.kineticcore.api.runtime.KineticPlatform.runOnClient(() -> WalletHoldingsCheck::install);return;}
         net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(this::login);
         dev.xyat.kineticcore.api.runtime.KineticPlatform.runOnClient(() -> () -> {
             dev.xyat.kineticcore.api.client.event.KineticClientEvents.onTick(dev.xyat.kineticcore.api.client.event.KineticClientEvents.TickPhase.END, () -> {

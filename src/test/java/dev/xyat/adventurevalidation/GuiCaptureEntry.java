@@ -8,6 +8,9 @@ public final class GuiCaptureEntry {
         if (Boolean.getBoolean("adventuresystems.guiValidation")) {
             dev.xyat.kineticcore.api.runtime.KineticPlatform.runOnClient(() -> GuiCaptureValidation::install);
         }
+        if (Boolean.getBoolean("adventuresystems.walletHoldingsCheck")) {
+            dev.xyat.kineticcore.api.runtime.KineticPlatform.runOnClient(() -> WalletHoldingsCheck::install);
+        }
     }
 }
 *///?}
