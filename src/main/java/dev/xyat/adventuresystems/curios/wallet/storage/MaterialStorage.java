@@ -122,6 +122,16 @@ public final class MaterialStorage {
         //?}
     }
 
+    /** Size of every inventory stack that counts as {@code target}, in slot order. */
+    public static int[] inventoryStacks(Inventory inventory, ItemStack target) {
+        java.util.List<Integer> counts = new java.util.ArrayList<>();
+        for (int i = 0; i < inventory.getContainerSize(); i++) {
+            ItemStack stack = inventory.getItem(i);
+            if (WalletMaterialMatcher.matches(stack, target)) counts.add(stack.getCount());
+        }
+        return counts.stream().mapToInt(Integer::intValue).toArray();
+    }
+
     private static long inventoryCount(Inventory inventory, ItemStack target) {
         long count = 0L;
         for (int i = 0; i < inventory.getContainerSize(); i++) {

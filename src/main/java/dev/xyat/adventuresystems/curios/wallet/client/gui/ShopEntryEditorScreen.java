@@ -807,7 +807,10 @@ final class ShopEntryEditorScreen extends KineticPage {
 
     private void renderSection(KineticGraphics graphics, int x, int y, int height, Component title) {
         KineticTheme.panelAlt(graphics, x, y, panelWidth - 24, height);
-        graphics.scrollingText(title, x + 10, y + 5, Math.max(0, (y == basicSectionY() ? innerRight() - buttonColumnWidth() - 4 : innerRight()) - (x + 10)), KineticTheme.current().text(), true);
+        // The basic and price section titles share their rows with the icon label and the command column.
+        int titleRight = y == basicSectionY() ? innerRight() - buttonColumnWidth() - 4
+                : y == priceSectionY() ? commandAreaX() - 4 : innerRight();
+        graphics.scrollingText(title, x + 10, y + 5, Math.max(0, titleRight - (x + 10)), KineticTheme.current().text(), true);
     }
 
     @Override

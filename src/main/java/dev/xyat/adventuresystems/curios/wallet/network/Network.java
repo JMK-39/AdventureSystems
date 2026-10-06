@@ -19,6 +19,8 @@ public final class Network {
     private static final int MAX_SHOP_ACTIONS_PER_SECOND = 8;
     private static final long SHOP_ACTION_WINDOW_TICKS = 20L;
     private static final Map<ServerPlayer, ShopActionWindow> SHOP_ACTION_WINDOWS = new WeakHashMap<>();
+    // Last holdings refresh per player; the open wallet asks every 2 s, answered at most once a second.
+    private static final Map<ServerPlayer, Long> HOLDINGS_REFRESHED = new WeakHashMap<>();
     private static final PacketChannel CHANNEL = PacketChannel.create(
             KineticResourceIds.of(CuriosModule.MODID, "currency_wallet"),
             "1",
@@ -146,7 +148,33 @@ public final class Network {
 
     public static void open(ServerPlayer player) {
         if (!Data.hasWallet(player)) return;
-        send(player, true, Data.isHudVisible(player), true, Data.snapshot(player));
+        send(player, true, Data.isHudVisible(player), true, withStorage(player, Data.snapshot(player)));
+    }
+
+    /** Key of the per-currency holdings outside the wallet; not an item ID, so it never reads as a balance. */
+    public static final String STORAGE_KEY = "$storage";
+
+    /**
+     * Adds what the player holds of each currency outside the wallet (inventory stacks, Sophisticated Backpacks and
+     * the bound RS network), so the wallet tooltip can show where the money is. Sent only to this player.
+     */
+    private static CompoundTag withStorage(ServerPlayer player, CompoundTag balances) {
+        CompoundTag storage = new CompoundTag();
+        for (var currency : Data.currencies()) {
+            if (!currency.hasItem()) continue;
+            var stack = new net.minecraft.world.item.ItemStack(currency.item());
+            var held = dev.xyat.adventuresystems.curios.wallet.storage.MaterialStorage.snapshot(player, stack);
+            CompoundTag entry = new CompoundTag();
+            entry.putLong("inventory", held.inventoryCount());
+            entry.putIntArray("stacks", dev.xyat.adventuresystems.curios.wallet.storage.MaterialStorage.inventoryStacks(player.getInventory(), stack));
+            entry.putBoolean("backpack_shown", held.backpackLoaded() && held.hasBackpack());
+            entry.putLong("backpack", held.backpackCount());
+            entry.putString("rs_state", held.rsState().name());
+            entry.putLong("rs", held.rsCount());
+            storage.put(currency.itemId(), entry);
+        }
+        balances.put(STORAGE_KEY, storage);
+        return balances;
     }
 
     public static void openShop(ServerPlayer player) {
@@ -184,6 +212,11 @@ public final class Network {
             for (String arg : args) builder.append("|").append(arg == null ? "" : arg.replace("|", "/"));
         }
         return builder.toString();
+    }
+
+    /** Asks for fresh holdings (inventory, backpacks, RS) while the wallet screen is open. */
+    public static void requestHoldings() {
+        CHANNEL.sendToServer(new ServerboundAction(6, "", ""));
     }
 
     public static void sendDepositAll() {
@@ -305,8 +338,18 @@ public final class Network {
         else if (packet.action() == 5) {
             boolean hidden = Data.toggleHudHidden(player);
             toast(player, hidden ? "msg.adventuresystems.curios.wallet.hud_off" : "msg.adventuresystems.curios.wallet.hud_on");
+        } else if (packet.action() == 6) {
+            long now = System.currentTimeMillis();
+            Long last = HOLDINGS_REFRESHED.get(player);
+            if (last != null && now - last < 1000L) return;
+            HOLDINGS_REFRESHED.put(player, now);
         }
-        sync(player);
+        // The player acted in the wallet, so the reply also carries fresh holdings.
+        if (!Data.hasWallet(player)) {
+            sync(player);
+            return;
+        }
+        send(player, false, Data.isHudVisible(player), true, withStorage(player, Data.snapshot(player)));
     }
 
     private static void handleShopAction(ServerboundShopAction packet, ServerPacketContext context) {

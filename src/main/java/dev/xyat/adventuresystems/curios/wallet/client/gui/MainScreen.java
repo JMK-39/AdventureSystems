@@ -1,5 +1,6 @@
 package dev.xyat.adventuresystems.curios.wallet.client.gui;
 
+import dev.xyat.adventuresystems.curios.wallet.client.Client;
 import dev.xyat.adventuresystems.curios.wallet.data.CurrencyType;
 import dev.xyat.adventuresystems.curios.wallet.data.Data;
 import dev.xyat.adventuresystems.curios.wallet.network.Network;
@@ -140,6 +141,60 @@ public class MainScreen extends KineticPage {
         });
     }
 
+    private int holdingsTicks;
+
+    // The open wallet asks the server for fresh holdings every 2 s; the server answers only this player.
+    @Override
+    protected void onTick() {
+        if (++holdingsTicks >= 40) {
+            holdingsTicks = 0;
+            Network.requestHoldings();
+        }
+    }
+
+    /** Where a currency is held: the wallet, each inventory stack, Sophisticated Backpacks, RS storage and the total. */
+    private List<Component> holdingLines(String currencyId) {
+        List<Component> lines = new ArrayList<>();
+        lines.add(ShopGuiSupport.stackNameComponent(currencyId));
+        long wallet = Data.readAmount(balances, currencyId);
+        lines.add(AdventureText.translatable("gui.adventuresystems.curios.wallet.holdings_wallet", ShopGuiSupport.formatExact(wallet)));
+        if (!(Client.holdings().get(currencyId) instanceof CompoundTag data)) return lines;
+        long total = wallet;
+        long inventory = Data.readAmount(data, "inventory");
+        int[] stacks = data.get("stacks") instanceof net.minecraft.nbt.IntArrayTag array ? array.getAsIntArray() : new int[0];
+        if (stacks.length > 1) {
+            StringBuilder parts = new StringBuilder();
+            for (int i = 0; i < Math.min(stacks.length, 8); i++) parts.append(i == 0 ? "" : " + ").append(stacks[i]);
+            if (stacks.length > 8) parts.append(" + …");
+            lines.add(AdventureText.translatable("gui.adventuresystems.curios.wallet.holdings_inventory_stacks",
+                    ShopGuiSupport.formatExact(inventory), parts.toString()));
+        } else {
+            lines.add(AdventureText.translatable("gui.adventuresystems.curios.wallet.holdings_inventory", ShopGuiSupport.formatExact(inventory)));
+        }
+        total = safeAdd(total, inventory);
+        if (data.getBoolean("backpack_shown")) {
+            long backpack = Data.readAmount(data, "backpack");
+            lines.add(AdventureText.translatable("gui.adventuresystems.curios.wallet.holdings_backpack", ShopGuiSupport.formatExact(backpack)));
+            total = safeAdd(total, backpack);
+        }
+        switch (data.getString("rs_state")) {
+            case "BOUND" -> {
+                long rs = Data.readAmount(data, "rs");
+                lines.add(AdventureText.translatable("gui.adventuresystems.curios.wallet.holdings_rs", ShopGuiSupport.formatExact(rs)));
+                total = safeAdd(total, rs);
+            }
+            case "UNBOUND" -> lines.add(AdventureText.translatable("gui.adventuresystems.curios.wallet.holdings_rs_unbound"));
+            case "MISSING" -> lines.add(AdventureText.translatable("gui.adventuresystems.curios.wallet.holdings_rs_missing"));
+            default -> { }
+        }
+        lines.add(AdventureText.translatable("gui.adventuresystems.curios.wallet.holdings_total", ShopGuiSupport.formatExact(total)));
+        return lines;
+    }
+
+    private static long safeAdd(long a, long b) {
+        return b > 0 && a > Long.MAX_VALUE - b ? Long.MAX_VALUE : a + b;
+    }
+
     private Component actionTooltip(Row row) {
         return AdventureText.translatable(switch (row.action()) {
             case WITHDRAW -> "gui.adventuresystems.curios.wallet.tooltip_withdraw";
@@ -251,8 +306,8 @@ public class MainScreen extends KineticPage {
             int buttonX = row.action() == Action.WITHDRAW ? actionX - EXPAND_WIDTH - BUTTON_GAP : actionX;
             if (mouseX() >= buttonX) return null;
             if (row.action() == Action.WITHDRAW) {
-                return AdventureText.translatable("gui.adventuresystems.curios.wallet.tooltip_exact",
-                        ShopGuiSupport.formatExact(Data.readAmount(balances, row.from())));
+                MainScreen.this.showTooltip(holdingLines(row.from()));
+                return null;
             }
             return AdventureText.translatable(row.action() == Action.CONVERT_ONE
                     ? "gui.adventuresystems.curios.wallet.tooltip_convert_one"

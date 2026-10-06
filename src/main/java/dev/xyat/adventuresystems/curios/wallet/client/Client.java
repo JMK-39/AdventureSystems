@@ -28,6 +28,7 @@ public final class Client {
     private static final long SHOP_PARENT_TIMEOUT_MS = 10_000L;
     private static KineticKeyBindings.Binding openKey;
     private static CompoundTag hudBalances = new CompoundTag();
+    private static CompoundTag holdings = new CompoundTag();
     private static boolean hudVisible;
     private static KineticGui.NavigationParent pendingShopParent;
     private static long pendingShopParentExpiresAt;
@@ -57,6 +58,7 @@ public final class Client {
         if (!equipped) {
             hudVisible = false;
             hudBalances = new CompoundTag();
+            holdings = new CompoundTag();
             if (KineticGui.currentPage(MainScreen.class) != null || KineticGui.findPage(ShopScreen.class) != null) {
                 KineticGui.closeScreen();
             }
@@ -65,6 +67,8 @@ public final class Client {
 
         hudVisible = visible;
         hudBalances = balances == null ? new CompoundTag() : balances.copy();
+        // Holdings come only with wallet actions and refreshes; the periodic sync keeps the last ones.
+        if (hudBalances.get(Network.STORAGE_KEY) instanceof CompoundTag held) holdings = held.copy();
 
         if (open) {
             KineticGui.open(new MainScreen(hudBalances, hudVisible));
@@ -158,9 +162,15 @@ public final class Client {
         return hudBalances == null ? EMPTY : hudBalances;
     }
 
+    /** Per currency, what the server last reported outside the wallet (inventory, backpacks, RS); empty until then. */
+    public static CompoundTag holdings() {
+        return holdings == null ? EMPTY : holdings;
+    }
+
     public static void clearClientWalletState() {
         hudVisible = false;
         hudBalances = new CompoundTag();
+        holdings = new CompoundTag();
         clearPendingShopParent();
         if (KineticGui.currentPage(MainScreen.class) != null || KineticGui.findPage(ShopScreen.class) != null) {
             KineticGui.closeScreen();

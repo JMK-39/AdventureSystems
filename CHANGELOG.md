@@ -10,6 +10,8 @@
 - Shop, wallet, FTB and tips editor text scrolls inside its own region instead of being cut off or running into neighbors.
 - The tips structure, biome, advancement and dimension pickers list their entries as plain text rows instead of a column of buttons.
 - On 26.1.2 the shop entry editor's item, currency and barter item buttons were blank; they show their text and item icon as on the other versions. The editor's fields and labels keep 3 px clear of the section frames.
+- Hovering a currency in the wallet shows where that money is: the wallet, the inventory (with each stack's size), Sophisticated Backpacks, the bound RS network (or why it is unavailable) and the total. The server counts them only for the player looking: when the wallet opens, after a wallet action, and every 2 seconds while the wallet stays open. The regular wallet sync does not carry them and nothing is sent to other players.
+- The shop entry editor's "Price & Limits" title stops before the command rewards column, and the reward pool hides its weight field outside gacha pools, where it had no label and could not be edited.
 - Requires KineticCore 26.10.5+.
 
 ### 简体中文
@@ -20,6 +22,8 @@
 - 商店、钱包、FTB 与提示编辑器的文字在各自区域内滚动，不再被截断或压到相邻元素。
 - 提示的结构、生物群系、进度和维度选择器改用纯文字行列出条目，不再是一列按钮。
 - 26.1.2 上商店条目编辑器的物品、货币与以物易物按钮显示为空白；现在与其他版本一样显示文字和物品图标。编辑器的输入框和标签与分区边框保持 3 像素间距。
+- 在钱包中悬停某种货币，会显示这些钱都在哪里：钱包、背包（含每一组的数量）、精妙背包、已绑定的 RS 网络（或不可用的原因）以及总计。服务端只为查看的玩家统计：打开钱包时、钱包操作之后，以及钱包保持打开时每 2 秒一次。常规的钱包同步不携带这些数据，也不会发送给其他玩家。
+- 商店条目编辑器的"价格与限购"标题在指令奖励一栏之前结束；奖励池在非抽奖池中隐藏权重输入框，那里它既没有标签也无法编辑。
 - 需要 KineticCore 26.10.5+。
 
 ---

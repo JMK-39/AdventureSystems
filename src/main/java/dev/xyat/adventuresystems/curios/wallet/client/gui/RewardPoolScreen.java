@@ -75,6 +75,8 @@ final class RewardPoolScreen extends KineticPage {
         boolean editable = selectedIndex >= 0 && selectedIndex < draft.rewards.size();
         countBox.setEnabled(editable && !draft.rewards.get(selectedIndex).empty());
         weightBox.setEnabled(editable && gachaMode());
+        // Weights only apply to gacha pools; elsewhere the field has no label and nothing to edit.
+        weightBox.setControlVisible(gachaMode());
     }
 
     private List<ItemActionItem> listItems() {
