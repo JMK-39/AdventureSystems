@@ -58,7 +58,7 @@
 
 - Verified native item-component and village tip conditions in the real 1.21.1 client: standalone sword, village without items, both matching tips rotating, damage mismatch and leaving the structure; 19 checks passed, with test inventory/position restored.
 - Added six useful general tips to the English/Chinese default configurations for timed rotation even without matching conditions. Removed the redundant instruction to press Esc. Existing custom files remain intact.
-- Migrated build architecture to Java 21, Gradle 9.8.0, Stonecutter and ModDevGradle; enabled Forge 1.20.1, NeoForge 1.21.1 and NeoForge 26.1.2 (Java 25).
+- Migrated build architecture to Gradle 9.8.0, Stonecutter and ModDevGradle; enabled Forge 1.20.1, NeoForge 1.21.1 and NeoForge 26.1.2 (Java 25).
 - 26.1.2 builds against Curios 15, FTB Library / Quests / Teams 26.1.2, JEI 29.43, Sophisticated Backpacks 3.26, Refined Storage 3.2 and Architectury 20.1: wallet, shop, Heart of Steel, Paradise Lost, Levitation Backpack, FTB quest submission limits and tips start on a 26.1.2 server and client. Slot conflict checks follow Curios 15's item-change event; items carry their registry id and 26.1 item model definitions; saved data, tooltips, cooldowns, notify sounds and backpack extraction use the 26.1 APIs.
 - Fixed on 1.21.1: the Levitation Backpack recipe and the Curios slot item tags were packaged in 1.20.1 folders (recipes/, tags/items/) that 1.21 no longer reads; each version now ships its own data folder and recipe format.
 - Renamed four item textures to lowercase (invicon_iron_*.png); resource paths must be lowercase, so the game skipped them on every version with an "Invalid path" warning.
@@ -74,7 +74,7 @@
 
 - 在真实 1.21.1 客户端验证物品组件与村庄提示：单独持剑、村庄内空手、两种匹配提示轮换、耐久不符与离开结构均通过；共 19 项检查，测试背包和位置已恢复。
 - 中英文默认配置增加六条实用通用提示，无条件匹配时也可定时轮换；删除多余的“按 Esc”操作提示，保留已有自定义文件。
-- 构建迁移到 Java 21、Gradle 9.8.0、Stonecutter 与 ModDevGradle，启用 Forge 1.20.1、NeoForge 1.21.1 与 NeoForge 26.1.2（Java 25）。
+- 构建迁移到 Gradle 9.8.0、Stonecutter 与 ModDevGradle，启用 Forge 1.20.1、NeoForge 1.21.1 与 NeoForge 26.1.2（Java 25）。
 - 26.1.2 基于 Curios 15、FTB Library / Quests / Teams 26.1.2、JEI 29.43、精妙背包 3.26、Refined Storage 3.2 与 Architectury 20.1 构建：钱包、商店、钢铁之心、失乐园、悬浮背包、FTB 任务提交限制与提示均可在 26.1.2 服务端和客户端启动。饰品冲突检查跟随 Curios 15 的物品变更事件；物品带有注册 ID 与 26.1 物品模型定义；存档数据、提示、冷却、提示音与背包提取使用 26.1 的接口。
 - 修复 1.21.1：悬浮背包配方与 Curios 槽位物品标签此前打包在 1.20.1 的目录（recipes/、tags/items/），1.21 不再读取；现在各版本使用各自的数据目录与配方格式。
 - 将四张物品贴图改为小写文件名（invicon_iron_*.png）；资源路径必须小写，此前各版本都会以“Invalid path”警告跳过它们。
