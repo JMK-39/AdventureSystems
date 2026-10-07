@@ -1627,7 +1627,7 @@ public class ShopScreen extends KineticPage {
                 if (rewardIndex < 0) continue;
                 Shop.Reward reward = rewards.get(rewardIndex);
                 int cellX = listX + column * (cellWidth + REWARD_PREVIEW_CELL_GAP);
-                renderRewardPreviewCell(graphics, reward, cellX, rowY);
+                renderRewardPreviewCell(graphics, reward, cellX, rowY, cellWidth);
             }
         }
         disableShopScissor(graphics);
@@ -1643,13 +1643,14 @@ public class ShopScreen extends KineticPage {
         KineticTheme.panelAlt(graphics, x, y, detailContentWidth(), bottom - y);
     }
 
-    private void renderRewardPreviewCell(KineticGraphics graphics, Shop.Reward reward, int x, int y) {
+    private void renderRewardPreviewCell(KineticGraphics graphics, Shop.Reward reward, int x, int y, int width) {
         renderItemCheckerSlot(graphics, x, y, REWARD_PREVIEW_SLOT_SIZE);
         ItemStack stack = reward.empty() ? new ItemStack(net.minecraft.world.item.Items.BARRIER) : reward.stack();
         graphics.item(stack, x, y);
         graphics.itemDecorations(stack, x, y);
         String chanceText = percent(reward.chance());
-        graphics.text(chanceText, x + REWARD_PREVIEW_SLOT_SIZE + 6, y + 4, KineticTheme.current().translatedText(), true);
+        graphics.scrollingText(Component.literal(chanceText), x + REWARD_PREVIEW_SLOT_SIZE + 6, y + 4,
+                Math.max(0, width - REWARD_PREVIEW_SLOT_SIZE - 8), KineticTheme.current().translatedText(), true);
     }
 
     private void renderRewardPreviewScrollbar(KineticGraphics graphics, Scrollbar scrollbar, int mouseX, int mouseY) {
