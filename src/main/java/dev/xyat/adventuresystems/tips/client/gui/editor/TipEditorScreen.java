@@ -520,14 +520,18 @@ public class TipEditorScreen extends KineticPage {
         //?}
         boolean hovered = isHover(mouseX, mouseY, x, y, 18, 18);
         KineticTheme.itemSlot(graphics, x, y, 18, 4, hovered);
-        graphics.item(stack, x + 1, y + 1);
+        KineticTheme.item(graphics, stack, x, y, 18, 0.875F, false);
+        graphics.push();
+        graphics.translate(x + 2, y + 2);
+        graphics.scale(0.875F, 0.875F);
         //? if >=1.21 {
-        /*if ("WEAK".equals(check.componentMode)) graphics.itemDecorations(stack, x + 1, y + 1, "W");
-        else if ("STRONG".equals(check.componentMode)) graphics.itemDecorations(stack, x + 1, y + 1, "S");
+        /*if ("WEAK".equals(check.componentMode)) graphics.itemDecorations(stack, 0, 0, "W");
+        else if ("STRONG".equals(check.componentMode)) graphics.itemDecorations(stack, 0, 0, "S");
         *///?} else {
-        if ("WEAK".equals(check.nbtMode)) graphics.itemDecorations(stack, x + 1, y + 1, "W");
-        else if ("STRONG".equals(check.nbtMode)) graphics.itemDecorations(stack, x + 1, y + 1, "S");
+        if ("WEAK".equals(check.nbtMode)) graphics.itemDecorations(stack, 0, 0, "W");
+        else if ("STRONG".equals(check.nbtMode)) graphics.itemDecorations(stack, 0, 0, "S");
         //?}
+        graphics.pop();
     }
 
     @Override

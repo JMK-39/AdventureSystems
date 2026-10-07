@@ -86,8 +86,8 @@ public class ShopScreen extends KineticPage {
     private static final int DETAIL_GAP = 6;
     private static final int DETAIL_CONTENT_LEFT_PAD = 8;
     private static final int DETAIL_RIGHT_MARGIN = 2;
-    private static final float CURRENCY_ITEM_SCALE = 0.80F;
-    private static final float PRODUCT_ITEM_SCALE = 1.20F;
+    private static final int CURRENCY_SLOT_SIZE = 16;
+    private static final float CURRENCY_ITEM_SCALE = 0.75F;
     private static final int NUMBER_BAR_HEIGHT = 14;
     private static final int DETAIL_AMOUNT_INPUT_SIZE = 18;
     private static final int DETAIL_SECTION_BUTTON_SIZE = 16;
@@ -692,7 +692,8 @@ public class ShopScreen extends KineticPage {
     private void renderCurrencyCell(KineticGraphics graphics, CurrencyType currency, int x, int y, int width) {
         ItemStack stack = stack(currency.itemId());
         String text = formatCompact(displayAmount(currency.itemId()));
-        graphics.item(stack, x, y - 5);
+        renderItemCheckerSlot(graphics, x, y - 5, 18);
+        KineticTheme.item(graphics, stack, x, y - 5, 18, 0.875F, false);
         graphics.scrollingText(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_balance_amount", text), x + 20, y, Math.max(0, Math.min(width - 20, KineticText.width(text))), KineticTheme.current().text(), true);
         BalanceAnimation animation = animations.get(currency.itemId());
         if (animation != null && animation.deltaVisible()) {
@@ -776,9 +777,9 @@ public class ShopScreen extends KineticPage {
         int itemSlotY = cellItemSlotY(cell);
         ItemStack displayStack = cellDisplayStack(entry);
         renderItemCheckerSlot(graphics, itemSlotX, itemSlotY, PRODUCT_SLOT_SIZE);
-        renderProductItem(graphics, displayStack, itemSlotX + 1, itemSlotY + 1);
+        renderProductItem(graphics, displayStack, itemSlotX, itemSlotY);
         // “+”放在格子左上角：右下角是物品数量。
-        if (hasMultipleRewards(entry)) renderSmallPlus(graphics, itemSlotX + 1, itemSlotY + 1);
+        if (hasMultipleRewards(entry)) renderSmallPlus(graphics, itemSlotX + 3, itemSlotY + 3);
 
         renderCellStatus(graphics, entry, cell, itemSlotX + PRODUCT_SLOT_SIZE + 3);
 
@@ -789,7 +790,7 @@ public class ShopScreen extends KineticPage {
         int numberW = cellNumberWidth(price);
         renderNumberBar(graphics, numberX, numberY, numberW);
         drawCellString(graphics, cellPriceText(price, canTrade), numberX + 3, numberY + (NUMBER_BAR_HEIGHT - 8) / 2, numberW - 6);
-        renderCurrencyItem(graphics, currency, numberX + numberW + 1, numberY - 1);
+        renderCurrencyItem(graphics, currency, numberX + numberW + 2, numberY - 1);
     }
 
     private void renderProductButtonContents(KineticGraphics graphics, int mouseX, int mouseY) {
@@ -864,7 +865,7 @@ public class ShopScreen extends KineticPage {
 
     private int cellNumberWidth(String price) {
         int startOffset = PRODUCT_SLOT_SIZE + 5;
-        int maximum = Math.max(24, GRID_CELL_WIDTH - startOffset - 17);
+        int maximum = Math.max(24, GRID_CELL_WIDTH - startOffset - CURRENCY_SLOT_SIZE - 4);
         // Always the full width, so the currency icon after the badge never moves with the price.
         return maximum;
     }
@@ -900,13 +901,7 @@ public class ShopScreen extends KineticPage {
     }
 
     private void renderProductItem(KineticGraphics graphics, ItemStack stack, int x, int y) {
-        graphics.push();
-        graphics.translate(x, y);
-        graphics.scale(PRODUCT_ITEM_SCALE, PRODUCT_ITEM_SCALE);
-        graphics.item(stack, 0, 0);
-        graphics.pop();
-        int decorationOffset = Math.round(16.0F * PRODUCT_ITEM_SCALE) - 16;
-        graphics.itemDecorations(stack, x + decorationOffset, y + decorationOffset);
+        KineticTheme.item(graphics, stack, x, y, PRODUCT_SLOT_SIZE, 1.0F, true);
     }
 
     private void renderNumberBar(KineticGraphics graphics, int x, int y, int width) {
@@ -917,11 +912,8 @@ public class ShopScreen extends KineticPage {
     }
 
     private void renderCurrencyItem(KineticGraphics graphics, ItemStack stack, int x, int y) {
-        graphics.push();
-        graphics.translate(x, y);
-        graphics.scale(CURRENCY_ITEM_SCALE, CURRENCY_ITEM_SCALE);
-        graphics.item(stack, 0, 0);
-        graphics.pop();
+        renderItemCheckerSlot(graphics, x, y, CURRENCY_SLOT_SIZE);
+        KineticTheme.item(graphics, stack, x, y, CURRENCY_SLOT_SIZE, CURRENCY_ITEM_SCALE, false);
     }
 
     private void drawCellString(KineticGraphics graphics, Component text, int x, int y, int available) {
@@ -961,7 +953,7 @@ public class ShopScreen extends KineticPage {
             renderItemCheckerSlot(graphics, contentX - 2, y + 4);
             graphics.item(item, contentX, y + 6);
             graphics.itemDecorations(item, contentX, y + 6);
-            if (hasMultipleRewards(entry)) renderSmallPlus(graphics, contentX + 12, y + 18);
+            if (hasMultipleRewards(entry)) renderSmallPlus(graphics, contentX + 8, y + 15);
             graphics.scrollingText(AdventureText.translatable(entry.locked()
                             ? "gui.adventuresystems.curios.wallet.shop_detail_name_locked"
                             : "gui.adventuresystems.curios.wallet.shop_detail_name_ready",
@@ -1006,7 +998,7 @@ public class ShopScreen extends KineticPage {
             int slotX = detailTradeCostIconX(entry);
             int slotY = detailTradeCostIconY();
             renderItemCheckerSlot(graphics, slotX, slotY, DETAIL_PRICE_SLOT_SIZE);
-            graphics.item(stack, slotX, slotY);
+            KineticTheme.item(graphics, stack, slotX, slotY, DETAIL_PRICE_SLOT_SIZE, 0.75F, false);
         }
     }
 
@@ -1228,7 +1220,7 @@ public class ShopScreen extends KineticPage {
         int slotX = detailPriceIconX(entry);
         int slotY = detailPriceIconY();
         renderItemCheckerSlot(graphics, slotX, slotY, DETAIL_PRICE_SLOT_SIZE);
-        graphics.item(currency, slotX, slotY);
+        KineticTheme.item(graphics, currency, slotX, slotY, DETAIL_PRICE_SLOT_SIZE, 0.75F, false);
     }
 
     private Component entryPriceIconText(Shop.Entry entry) {
@@ -1646,8 +1638,7 @@ public class ShopScreen extends KineticPage {
     private void renderRewardPreviewCell(KineticGraphics graphics, Shop.Reward reward, int x, int y, int width) {
         renderItemCheckerSlot(graphics, x, y, REWARD_PREVIEW_SLOT_SIZE);
         ItemStack stack = reward.empty() ? new ItemStack(net.minecraft.world.item.Items.BARRIER) : reward.stack();
-        graphics.item(stack, x, y);
-        graphics.itemDecorations(stack, x, y);
+        KineticTheme.item(graphics, stack, x, y, REWARD_PREVIEW_SLOT_SIZE, 0.75F, true);
         String chanceText = percent(reward.chance());
         graphics.scrollingText(Component.literal(chanceText), x + REWARD_PREVIEW_SLOT_SIZE + 6, y + 4,
                 Math.max(0, width - REWARD_PREVIEW_SLOT_SIZE - 8), KineticTheme.current().translatedText(), true);
@@ -1932,8 +1923,7 @@ public class ShopScreen extends KineticPage {
                 Shop.Reward reward = entry.rewards().get(index);
                 KineticTheme.itemSlot(graphics, x + 4, rowY + 1, 18, 4, hover);
                 if (!reward.empty()) {
-                    graphics.item(reward.stack(), x + 5, rowY + 2);
-                    graphics.itemDecorations(reward.stack(), x + 5, rowY + 2);
+                    KineticTheme.item(graphics, reward.stack(), x + 4, rowY + 1, 18, 0.875F, true);
                 }
                 int color = active ? KineticTheme.current().translatedText() : KineticTheme.current().text();
                 graphics.scrollingText(rewardName(reward), x + 25, rowY + 6, Math.max(0, width - 34), color, true);
@@ -4010,7 +4000,7 @@ public class ShopScreen extends KineticPage {
         int itemX = cellItemSlotX(cell);
         int itemY = cellItemSlotY(cell);
         renderItemCheckerSlot(graphics, itemX, itemY, PRODUCT_SLOT_SIZE);
-                renderProductItem(graphics, cellDisplayStack(entry), itemX + 1, itemY + 1);
+                renderProductItem(graphics, cellDisplayStack(entry), itemX, itemY);
 
         Component primary = cellPrimaryStatusText(entry);
         Component limit = cellLimitStatusText(entry);
@@ -4038,7 +4028,7 @@ public class ShopScreen extends KineticPage {
                 KineticTheme.Surface.FIELD, false, false, !canTrade
         );
         drawCellString(graphics, cellPriceText(price, canTrade), numberX + 3, numberY + (NUMBER_BAR_HEIGHT - 8) / 2, numberW - 6);
-                renderCurrencyItem(graphics, stack(entry.currencyId()), numberX + numberW + 1, numberY - 1);
+                renderCurrencyItem(graphics, stack(entry.currencyId()), numberX + numberW + 2, numberY - 1);
             }
 
 

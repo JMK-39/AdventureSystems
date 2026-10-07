@@ -276,7 +276,8 @@ public class MainScreen extends KineticPage {
             int slotX = x + 4;
             int slotY = y + 5;
             KineticTheme.itemSlot(graphics, slotX, slotY, 18, hovered && mouseX() < slotX + 18);
-            graphics.item(ShopGuiSupport.stack(row.action() == Action.WITHDRAW ? row.from() : row.to()), slotX + 1, slotY + 1);
+            KineticTheme.item(graphics, ShopGuiSupport.stack(row.action() == Action.WITHDRAW ? row.from() : row.to()),
+                    slotX, slotY, 18, 0.875F, false);
 
             boolean currency = row.action() == Action.WITHDRAW;
             int textRight = currency ? expandX : actionX;
