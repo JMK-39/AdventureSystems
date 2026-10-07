@@ -1,5 +1,17 @@
 # Changelog / 更新日志
 
+## 2026-10-08 — Shop reward probabilities / 商店奖励概率
+
+### English
+
+- Shop reward probabilities scroll within their original item cell instead of covering neighboring items.
+
+### 简体中文
+
+- 商店奖励概率在原有物品格内滚动显示，不再覆盖相邻物品。
+
+---
+
 ## 26.10.6 — 2026-10-06 07:12 +08:00
 
 ### English
