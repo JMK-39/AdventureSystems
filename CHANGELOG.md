@@ -1,5 +1,19 @@
 # Changelog / 更新日志
 
+## 2026-10-08 — Item preview backgrounds / 物品预览背景
+
+### English
+
+- Shop balances, the small currency icons beside product prices, and the currency picker now share the same item-slot backgrounds.
+- FTB item previews keep clear spacing between slots, and item icons stay inside their preview backgrounds.
+
+### 简体中文
+
+- 商店余额、商品计价的小货币图标与货币选择器统一使用物品格背景。
+- FTB 物品预览格之间保持清晰间距，物品图标留在预览格内，不再贴边。
+
+---
+
 ## 2026-10-08 — Shop reward probabilities / 商店奖励概率
 
 ### English
