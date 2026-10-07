@@ -6,7 +6,6 @@ import dev.xyat.kineticcore.api.client.gui.input.MouseInput;
 import dev.xyat.kineticcore.api.client.gui.input.ScrollInput;
 import dev.xyat.kineticcore.api.client.gui.page.KineticPage;
 import dev.xyat.kineticcore.api.client.gui.render.KineticGraphics;
-import dev.xyat.kineticcore.api.client.gui.text.KineticText;
 import dev.xyat.kineticcore.api.client.gui.theme.KineticTheme;
 import dev.xyat.kineticcore.api.client.gui.ui.KineticUi;
 import dev.xyat.adventuresystems.text.AdventureText;
@@ -21,22 +20,21 @@ import java.util.Objects;
  * 货币选择：两列方框，每个方框显示货币图标与名称，点击方框即选择；当前货币橘黄边框，悬停蓝色边框。
  */
 final class CurrencyPickerScreen extends KineticPage {
-    private static final int PANEL_X = 20;
-    private static final int PANEL_Y = 20;
     private static final int PANEL_W = 320;
-    private static final int PANEL_H = 200;
     private static final int COLUMNS = 2;
     private static final int BOX_GAP = 4;
     private static final int BOX_H = 24;
-    private static final int GRID_X = PANEL_X + 10;
-    private static final int GRID_Y = PANEL_Y + 24;
+    private static final int MAX_ROWS = 5;
     private static final int GRID_W = PANEL_W - 20;
-    private static final int CANCEL_Y = PANEL_Y + PANEL_H - 30;
-    private static final int GRID_H = CANCEL_Y - 6 - GRID_Y;
+    // Title above the grid, Cancel button below it, and the margins around both.
+    private static final int TITLE_SPACE = 24;
+    private static final int CANCEL_SPACE = 6 + 20 + 10;
 
     private final ShopGuiSupport.EditorDraft draft;
     private final List<CurrencyType> currencies;
     private int scrollRows;
+    // The panel holds as many rows as there are currencies (up to MAX_ROWS) and sits in the middle of the canvas.
+    private int panelX, panelY, panelH, gridX, gridY, gridH, cancelY;
 
     CurrencyPickerScreen(ShopGuiSupport.EditorDraft draft) {
         super(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_currency_picker_title"));
@@ -48,17 +46,26 @@ final class CurrencyPickerScreen extends KineticPage {
 
     @Override
     protected void build(KineticUi ui) {
+        int rows = Math.max(1, Math.min(MAX_ROWS, (currencies.size() + COLUMNS - 1) / COLUMNS));
+        gridH = rows * (BOX_H + BOX_GAP) - BOX_GAP;
+        panelH = TITLE_SPACE + gridH + CANCEL_SPACE;
+        panelX = (width() - PANEL_W) / 2;
+        panelY = Math.max(0, (height() - panelH) / 2);
+        gridX = panelX + 10;
+        gridY = panelY + TITLE_SPACE;
+        cancelY = gridY + gridH + 6;
         Component cancel = AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_cancel");
-        int width = Math.min(KineticText.width(cancel) + 24, PANEL_W - 24);
-        ui.button(PANEL_X + (PANEL_W - width) / 2, CANCEL_Y, width).text(cancel).onClick(this::navigateBack).build();
+        // A fixed width in every language; the label scrolls when longer.
+        int width = 80;
+        ui.button(panelX + (PANEL_W - width) / 2, cancelY, width).text(cancel).onClick(this::navigateBack).build();
     }
 
     private static int boxWidth() {
         return (GRID_W - BOX_GAP * (COLUMNS - 1)) / COLUMNS;
     }
 
-    private static int visibleRows() {
-        return Math.max(1, (GRID_H + BOX_GAP) / (BOX_H + BOX_GAP));
+    private int visibleRows() {
+        return Math.max(1, (gridH + BOX_GAP) / (BOX_H + BOX_GAP));
     }
 
     private int maxScrollRows() {
@@ -67,11 +74,11 @@ final class CurrencyPickerScreen extends KineticPage {
     }
 
     private int boxX(int index) {
-        return GRID_X + (index % COLUMNS) * (boxWidth() + BOX_GAP);
+        return gridX + (index % COLUMNS) * (boxWidth() + BOX_GAP);
     }
 
     private int boxY(int index) {
-        return GRID_Y + (index / COLUMNS - scrollRows) * (BOX_H + BOX_GAP);
+        return gridY + (index / COLUMNS - scrollRows) * (BOX_H + BOX_GAP);
     }
 
     private boolean boxVisible(int index) {
@@ -95,10 +102,10 @@ final class CurrencyPickerScreen extends KineticPage {
     @Override
     protected void renderBackground(KineticGraphics graphics, int mouseX, int mouseY, float partialTick) {
         KineticTheme.shadow(graphics, width(), height());
-        KineticTheme.panel(graphics, PANEL_X, PANEL_Y, PANEL_W, PANEL_H);
-        graphics.scrollingTextCentered(title(), PANEL_X + PANEL_W / 2, PANEL_Y + 8, PANEL_W - 24, KineticTheme.current().text(), false);
+        KineticTheme.panel(graphics, panelX, panelY, PANEL_W, panelH);
+        graphics.scrollingTextCentered(title(), panelX + PANEL_W / 2, panelY + 8, PANEL_W - 24, KineticTheme.current().text(), false);
         if (currencies.isEmpty()) {
-            graphics.scrollingTextCentered(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_currency_picker_empty"), PANEL_X + PANEL_W / 2, GRID_Y + GRID_H / 2 - 4, PANEL_W - 24, KineticTheme.current().text(), false);
+            graphics.scrollingTextCentered(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_currency_picker_empty"), panelX + PANEL_W / 2, gridY + (gridH - 8) / 2, PANEL_W - 24, KineticTheme.current().text(), false);
             return;
         }
         int hovered = boxAt(mouseX, mouseY);
@@ -141,7 +148,7 @@ final class CurrencyPickerScreen extends KineticPage {
 
     @Override
     protected boolean onMouseScroll(ScrollInput input) {
-        if (!input.inside(GRID_X, GRID_Y, GRID_W, GRID_H) || maxScrollRows() <= 0) return false;
+        if (!input.inside(gridX, gridY, GRID_W, gridH) || maxScrollRows() <= 0) return false;
         scrollRows = Math.max(0, Math.min(maxScrollRows(), scrollRows - (int) Math.signum(input.deltaY())));
         return true;
     }

@@ -20,6 +20,10 @@ final class CommandRewardPickerScreen extends KineticPage {
     private final boolean gacha;
     private KineticItemGrid grid;
     private int scrollOffset;
+    // The grid shows the rows its commands need (2 to 6, then it scrolls) and the panel sits in the middle of the canvas.
+    private static final int GRID_COLUMNS = (492 - 2 * 6 + 6) / (26 + 6);
+    private int top;
+    private int gridHeight;
 
     CommandRewardPickerScreen(ShopGuiSupport.EditorDraft draft, boolean gacha) {
         super(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_pick_title"));
@@ -31,7 +35,10 @@ final class CommandRewardPickerScreen extends KineticPage {
     @Override
     protected void build(KineticUi ui) {
         if (grid != null) scrollOffset = grid.scrollOffset();
-        ui.button(444, 24, 76)
+        int rows = Math.max(2, Math.min(6, (draft.commands.size() + GRID_COLUMNS - 1) / GRID_COLUMNS));
+        gridHeight = 6 + rows * (26 + 6);
+        top = Math.max(0, (height() - (56 + gridHeight + 14)) / 2);
+        ui.button(444, top + 14, 76)
                 .text(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_cancel"))
                 .onClick(this::navigateBack).build();
         List<ItemGridItem> items = new ArrayList<>(draft.commands.size());
@@ -39,7 +46,7 @@ final class CommandRewardPickerScreen extends KineticPage {
             items.add(new ItemGridItem(ShopGuiSupport.stack(command.iconId()), null,
                     true, false, false, ItemGridOutline.NONE));
         }
-        grid = ui.itemGrid(34, 66, 492, 200, ItemGridDensity.LARGE, items)
+        grid = ui.itemGrid(34, top + 56, 492, gridHeight, ItemGridDensity.LARGE, items)
                 .scrollOffset(scrollOffset).onClick(this::selectCommand).build();
     }
 
@@ -52,11 +59,12 @@ final class CommandRewardPickerScreen extends KineticPage {
     @Override
     protected void renderBackground(KineticGraphics graphics, int mouseX, int mouseY, float partialTick) {
         KineticTheme.shadow(graphics, width(), height());
-        KineticTheme.panel(graphics, 20, 10, 520, 280);
-        graphics.scrollingTextCentered(title(), 280, 18, 520 - 28, KineticTheme.current().text(), false);
-        graphics.scrollingText(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_pick_hint"), 34, 44, 520 - 28, KineticTheme.current().text(), true);
+        KineticTheme.panel(graphics, 20, top, 520, 56 + gridHeight + 14);
+        // Centred, and ending 4 px before the Cancel button on the right.
+        graphics.scrollingTextCentered(title(), 280, top + 8, 2 * (444 - 4 - 280), KineticTheme.current().text(), false);
+        graphics.scrollingText(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_pick_hint"), 34, top + 38, 520 - 28, KineticTheme.current().text(), true);
         if (draft.commands.isEmpty()) {
-            graphics.scrollingTextCentered(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_empty"), 280, 160, 520 - 28, KineticTheme.current().text(), false);
+            graphics.scrollingTextCentered(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_empty"), 280, top + 56 + (gridHeight - 8) / 2, 520 - 28, KineticTheme.current().text(), false);
         }
     }
 

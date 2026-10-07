@@ -59,13 +59,17 @@ public class ShopScreen extends KineticPage {
     private static final int CLOSE_BUTTON_WIDTH = 52;
     private static final int DETAIL_WIDTH = 160;
     private static final int GRID_CELL_WIDTH = 90;
-    private static final int GRID_CELL_HEIGHT = 26;
+    // Room for a status line 3 px under the top line and a 14 px price badge 2 px above the bottom line.
+    private static final int GRID_CELL_HEIGHT = 32;
     private static final int GRID_COLUMN_GAP = 1;
     private static final int GRID_ROW_GAP = 3;
     private static final int GRID_TOP_PADDING = 1;
     private static final int PRODUCT_SLOT_SIZE = 20;
     private static final int DETAIL_AMOUNT_SLIDER_WIDTH = 118;
     private static final int CURRENCY_COLUMNS = 4;
+    private static final int TRADE_AMOUNT_LABEL_WIDTH = 60;
+    // The balance label has the same room in every language and scrolls when longer, so the currency cells never move.
+    private static final int BALANCE_LABEL_W = 40;
     private static final int CURRENCY_ROW_HEIGHT = 20;
     private static final int GRID_MAX_COLUMNS = 5;
     private static final int PAGE_TAB_HEIGHT = 20;
@@ -84,7 +88,7 @@ public class ShopScreen extends KineticPage {
     private static final int DETAIL_RIGHT_MARGIN = 2;
     private static final float CURRENCY_ITEM_SCALE = 0.80F;
     private static final float PRODUCT_ITEM_SCALE = 1.20F;
-    private static final int NUMBER_BAR_HEIGHT = 11;
+    private static final int NUMBER_BAR_HEIGHT = 14;
     private static final int DETAIL_AMOUNT_INPUT_SIZE = 18;
     private static final int DETAIL_SECTION_BUTTON_SIZE = 16;
     private static final int REWARD_PREVIEW_HEADER_HEIGHT = 16;
@@ -560,6 +564,47 @@ public class ShopScreen extends KineticPage {
         }
     }
 
+
+    // Controls can draw above the page-drawn reward dialog, reward preview and quest list in some modpacks, so the controls under an
+    // open dialog are hidden while it shows. They are shown again at the start of the next frame, before the normal
+    // per-frame state decides whether they should be visible.
+    private final List<KineticControl> hiddenUnderOverlay = new ArrayList<>();
+
+    private void restoreControlsUnderOverlay() {
+        for (KineticControl control : hiddenUnderOverlay) control.setControlVisible(true);
+        hiddenUnderOverlay.clear();
+    }
+
+    private void hideControlsUnderOverlay() {
+        Shop.Entry entry = selectedEntry();
+        boolean choice = isChoiceOverlayOpen();
+        boolean quests = isQuestPickerOpen() && hasQuestList(entry);
+        boolean rewards = isRewardPickerOpen() && isSelectableRewardEntry(entry);
+        if (!choice && !quests && !rewards) return;
+        List<KineticControl> controls = new ArrayList<>();
+        for (KineticControl control : new KineticControl[] {tradeButton, questButton, amountMinusButton, amountPlusButton,
+                amountTenButton, amountMaxButton, amountSlider, buyModeButton, sellModeButton, editorModeButton,
+                backpackSourceButton, amountBox, searchBox, favoritesPageButton, allPageButton, pagePrevButton,
+                pageNextButton, rewardPreviewToggleButton}) {
+            if (control != null) controls.add(control);
+        }
+        controls.addAll(pageButtons);
+        for (KineticControl control : controls) {
+            if (!control.controlVisible()) continue;
+            boolean covered = choice && overlaps(control, choiceOverlayX(), choiceOverlayY(), choiceOverlayWidth(), choiceOverlayHeight())
+                    || quests && overlaps(control, questPickerX(), questPickerY(), questPickerWidth(), questPickerHeight(entry))
+                    || rewards && overlaps(control, rewardPickerX(), rewardPickerY(), rewardPickerWidth(), rewardPickerHeight(entry));
+            if (!covered) continue;
+            control.setControlVisible(false);
+            hiddenUnderOverlay.add(control);
+        }
+    }
+
+    private static boolean overlaps(KineticControl control, int x, int y, int width, int height) {
+        return control.controlX() < x + width && control.controlX() + control.controlWidth() > x
+                && control.controlY() < y + height && control.controlY() + control.controlHeight() > y;
+    }
+
     private void updateAmountButton(KineticButton button, int slot, boolean visible) {
         if (button == null) return;
         button.moveControlX(detailAmountQuickButtonX(slot));
@@ -572,7 +617,9 @@ public class ShopScreen extends KineticPage {
     @Override
     protected void renderBackground(@NotNull KineticGraphics graphics, int mouseX, int mouseY, float partialTick) {
         updateSmoothScrolling();
+        restoreControlsUnderOverlay();
         updateDetailWidgetState();
+        hideControlsUnderOverlay();
         renderPanel(graphics);
         graphics.scrollingTextCentered(title(), shopTitleX(), top + 8, Math.max(0, Math.min(shopTitleX() - (editorModeButtonX() + editorMenuButtonWidth() + 4), backpackButtonX() - 4 - shopTitleX()) * 2), KineticTheme.current().text(), true);
         renderBalanceSection(graphics);
@@ -626,9 +673,9 @@ public class ShopScreen extends KineticPage {
         Component label = AdventureText.translatable("gui.adventuresystems.curios.wallet.balance_title");
         int labelX = x + 8;
         int labelY = y + 7;
-        graphics.scrollingText(label, labelX, labelY, Math.min(KineticText.width(label), Math.max(0, width - 16 - CURRENCY_COLUMNS * 92 - 8)), KineticTheme.current().text(), true);
+        graphics.scrollingText(label, labelX, labelY, BALANCE_LABEL_W, KineticTheme.current().text(), true);
         List<CurrencyType> currencies = sortedCurrenciesByValueDesc();
-        int cellStartX = labelX + Math.min(KineticText.width(label), Math.max(0, width - 16 - CURRENCY_COLUMNS * 92 - 8)) + 8;
+        int cellStartX = labelX + BALANCE_LABEL_W + 8;
         int usableWidth = x + width - 8 - cellStartX;
         int cellWidth = Math.max(92, usableWidth / CURRENCY_COLUMNS);
         for (int i = 0; i < Math.min(currencies.size(), CURRENCY_COLUMNS * 2); i++) {
@@ -741,7 +788,7 @@ public class ShopScreen extends KineticPage {
         int numberY = cellNumberY(cell);
         int numberW = cellNumberWidth(price);
         renderNumberBar(graphics, numberX, numberY, numberW);
-        drawCellString(graphics, cellPriceText(price, canTrade), numberX + 3, numberY + 1, numberW - 5);
+        drawCellString(graphics, cellPriceText(price, canTrade), numberX + 3, numberY + (NUMBER_BAR_HEIGHT - 8) / 2, numberW - 6);
         renderCurrencyItem(graphics, currency, numberX + numberW + 1, numberY - 1);
     }
 
@@ -777,9 +824,10 @@ public class ShopScreen extends KineticPage {
         Component primary = cellPrimaryStatusText(entry);
         Component limit = cellLimitStatusText(entry);
         int available = Math.max(4, cell.x() + GRID_CELL_WIDTH - 3 - minX);
-        int y = cell.y() + 2;
+        int y = cell.y() + 3;
         if (primary != null && limit != null) {
-            int primaryWidth = Math.min(KineticText.width(primary), Math.max(8, available / 2));
+            // Fixed halves, so the limit text starts at the same place in every language; each half scrolls.
+            int primaryWidth = Math.max(8, (available - 3) / 2);
             drawCellString(graphics, primary, minX, y, primaryWidth);
             int limitX = minX + primaryWidth + 3;
             drawCellString(graphics, limit, limitX, y, Math.max(1, available - primaryWidth - 3));
@@ -803,7 +851,7 @@ public class ShopScreen extends KineticPage {
     }
 
     private int cellItemSlotY(Cell cell) {
-        return cell.y() + 3;
+        return cell.y() + (GRID_CELL_HEIGHT - PRODUCT_SLOT_SIZE) / 2;
     }
 
     private int cellNumberX(Cell cell) {
@@ -817,7 +865,8 @@ public class ShopScreen extends KineticPage {
     private int cellNumberWidth(String price) {
         int startOffset = PRODUCT_SLOT_SIZE + 5;
         int maximum = Math.max(24, GRID_CELL_WIDTH - startOffset - 17);
-        return Math.min(maximum, Math.max(24, KineticText.width(price) + 6));
+        // Always the full width, so the currency icon after the badge never moves with the price.
+        return maximum;
     }
 
     private Component cellPrimaryStatusText(Shop.Entry entry) {
@@ -1192,8 +1241,8 @@ public class ShopScreen extends KineticPage {
     }
 
     private int detailPriceIconX(Shop.Entry entry) {
-        return Math.min(detailContentX() + detailContentWidth() - DETAIL_PRICE_SLOT_SIZE - 4,
-                detailContentX() + KineticText.width(entryPriceIconText(entry)) + 3);
+        // A fixed spot at the right of the detail area, whatever the language; the price text scrolls before it.
+        return detailContentX() + detailContentWidth() - DETAIL_PRICE_SLOT_SIZE - 4;
     }
 
     private int detailPriceIconY() {
@@ -1208,8 +1257,7 @@ public class ShopScreen extends KineticPage {
         int x = left + 14;
         int y = balanceY();
         int width = panelWidth - 28;
-        Component label = AdventureText.translatable("gui.adventuresystems.curios.wallet.balance_title");
-        int cellStartX = x + 8 + Math.min(KineticText.width(label), Math.max(0, width - 16 - CURRENCY_COLUMNS * 92 - 8)) + 8;
+        int cellStartX = x + 8 + BALANCE_LABEL_W + 8;
         int usableWidth = x + width - 8 - cellStartX;
         int cellWidth = Math.max(92, usableWidth / CURRENCY_COLUMNS);
         List<CurrencyType> currencies = sortedCurrenciesByValueDesc();
@@ -1815,7 +1863,9 @@ public class ShopScreen extends KineticPage {
     }
 
     private int rewardPickerY() {
-        return contentTop() + 36;
+        // Below the Quest Required button (2 px clear) when the selected entry shows one.
+        int y = contentTop() + 36;
+        return hasQuestList(selectedEntry()) ? Math.max(y, questButtonY() + 16 + 2) : y;
     }
 
     private int rewardPickerWidth() {
@@ -2052,6 +2102,7 @@ public class ShopScreen extends KineticPage {
         int height = choiceOverlayHeight();
         graphics.push();
         graphics.raise(5);
+        graphics.fill(x, y, x + width, y + height, 0xFF161616);
         KineticTheme.panel(graphics, x, y, width, height);
         graphics.scrollingTextCentered(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_choice_overlay_title"), x + width / 2, y + 13, Math.max(0, 2 * (choiceOverlayConfirmX() - 4 - (x + width / 2))), KineticTheme.current().text(), true);
         renderChoiceOverlayGrid(graphics, entry, mouseX, mouseY);
@@ -2864,7 +2915,7 @@ public class ShopScreen extends KineticPage {
     }
 
     private int pageButtonWidth(Component label) {
-        return Math.max(36, Math.min(126, KineticText.width(label) + 18));
+        return PAGE_TAB_WIDTH;
     }
 
     private int pageButtonWidthForPage(String page) {
@@ -3013,6 +3064,8 @@ public class ShopScreen extends KineticPage {
         int height = questPickerHeight(entry);
         graphics.push();
         graphics.raise(3);
+        // The list covers the detail text under it, so it gets an opaque backing under the themed panel.
+        graphics.fill(x, y, x + width, y + height, 0xFF161616);
         KineticTheme.panelAlt(graphics, x, y, width, height);
         graphics.scrollingText(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_task_list_title"), x + 5, y + 5, width - 10, KineticTheme.current().text(), true);
         int questMax = questPickerMaxScroll(entry);
@@ -3222,16 +3275,16 @@ public class ShopScreen extends KineticPage {
         return sellButtonX() + TOP_BUTTON_WIDTH + 8;
     }
 
-    private static int fitButtonWidth(Component label) {
-        return KineticText.width(label) + 14;
-    }
+    // Menu buttons and page tabs have fixed widths in every language; their labels scroll when longer.
+    private static final int MENU_BUTTON_WIDTH = 64;
+    private static final int PAGE_TAB_WIDTH = 80;
 
     private int editorMenuButtonWidth() {
-        return Math.min(fitButtonWidth(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_menu_editor")), panelWidth / 6);
+        return Math.min(MENU_BUTTON_WIDTH, panelWidth / 6);
     }
 
     private int sourceMenuButtonWidth() {
-        return Math.min(fitButtonWidth(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_menu_source")), panelWidth / 6);
+        return Math.min(MENU_BUTTON_WIDTH, panelWidth / 6);
     }
 
     // 开关项直接用“名称:开/关”和绿/红文字表示状态，不用橘黄选中边框（那是“选中”的意思，容易误读）。
@@ -3422,7 +3475,8 @@ public class ShopScreen extends KineticPage {
     }
 
     private int detailAmountInputX() {
-        int desired = detailContentX() + KineticText.width(tradeAmountLabel()) + 5;
+        // The label has the same room in every language and scrolls when longer.
+        int desired = detailContentX() + TRADE_AMOUNT_LABEL_WIDTH + 5;
         // Leave room for the cost text and its item icon after the amount field.
         int limit = left + panelWidth - 6 - DETAIL_PRICE_SLOT_SIZE - 7 - 40 - 3 - 4 - DETAIL_AMOUNT_INPUT_SIZE;
         return Math.max(detailContentX(), Math.min(limit, desired));
@@ -3433,8 +3487,8 @@ public class ShopScreen extends KineticPage {
     }
 
     private int detailTradeCostIconX(Shop.Entry entry) {
-        Component text = AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_trade_cost_preview", formatCompact(tradeCostAmount(entry)));
-        return Math.min(left + panelWidth - DETAIL_PRICE_SLOT_SIZE - 7, detailTradeCostTextX() + KineticText.width(text) + 3);
+        // A fixed spot at the right edge; the cost text scrolls before it.
+        return left + panelWidth - DETAIL_PRICE_SLOT_SIZE - 7;
     }
 
     private int detailTradeCostIconY() {
@@ -3523,7 +3577,8 @@ public class ShopScreen extends KineticPage {
     }
 
     private int detailAmountSliderY() {
-        return detailTradeButtonY() - 31;
+        // The slider ends 2 px above the quick amount buttons.
+        return detailTradeButtonY() - 33;
     }
 
     private int detailAmountQuickButtonWidth() {
@@ -3543,7 +3598,8 @@ public class ShopScreen extends KineticPage {
     }
 
     private int detailTradeButtonY() {
-        return detailBottom() - BUTTON_HEIGHT + 6;
+        // The trade button keeps 2 px above the detail panel's bottom line.
+        return detailBottom() - BUTTON_HEIGHT + 5;
     }
 
     private int detailTradeButtonWidth() {
@@ -3621,8 +3677,7 @@ public class ShopScreen extends KineticPage {
         int x = left + 14;
         int y = balanceY();
         int width = panelWidth - 28;
-        Component label = AdventureText.translatable("gui.adventuresystems.curios.wallet.balance_title");
-        int cellStartX = x + 8 + Math.min(KineticText.width(label), Math.max(0, width - 16 - CURRENCY_COLUMNS * 92 - 8)) + 8;
+        int cellStartX = x + 8 + BALANCE_LABEL_W + 8;
         int usableWidth = x + width - 8 - cellStartX;
         int cellWidth = Math.max(92, usableWidth / CURRENCY_COLUMNS);
         List<CurrencyType> currencies = sortedCurrenciesByValueDesc();
@@ -3962,7 +4017,8 @@ public class ShopScreen extends KineticPage {
         int available = Math.max(4, cell.x() + GRID_CELL_WIDTH - 3 - minX);
         int textY = cell.y() + 2;
         if (primary != null && limit != null) {
-            int primaryWidth = Math.min(KineticText.width(primary), Math.max(8, available / 2));
+            // Fixed halves, so the limit text starts at the same place in every language; each half scrolls.
+            int primaryWidth = Math.max(8, (available - 3) / 2);
             drawCellString(graphics, primary, minX, textY, primaryWidth);
             int limitX = minX + primaryWidth + 3;
             drawCellString(graphics, limit, limitX, textY, Math.max(1, available - primaryWidth - 3));
@@ -3980,7 +4036,7 @@ public class ShopScreen extends KineticPage {
                 graphics, numberX, numberY, numberW, NUMBER_BAR_HEIGHT,
                 KineticTheme.Surface.FIELD, false, false, !canTrade
         );
-        drawCellString(graphics, cellPriceText(price, canTrade), numberX + 3, numberY + 1, numberW - 5);
+        drawCellString(graphics, cellPriceText(price, canTrade), numberX + 3, numberY + (NUMBER_BAR_HEIGHT - 8) / 2, numberW - 6);
                 renderCurrencyItem(graphics, stack(entry.currencyId()), numberX + numberW + 1, numberY - 1);
             }
 

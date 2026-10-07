@@ -31,6 +31,12 @@ public class MainScreen extends KineticPage {
     private KineticButton hudButton;
     private WalletRows list;
     private int scrollOffset;
+    // The panel is as tall as its rows need (up to MAX_VISIBLE_ROWS, then the list scrolls) and sits in the middle of the canvas.
+    private static final int MAX_VISIBLE_ROWS = 7;
+    private static final int LIST_TOP = 53;
+    private static final int PANEL_BOTTOM = 11;
+    private int top;
+    private int listHeight;
 
     public MainScreen(CompoundTag balances, boolean hudCurrencyVisible) {
         super(AdventureText.translatable("gui.adventuresystems.curios.wallet.title"));
@@ -51,14 +57,16 @@ public class MainScreen extends KineticPage {
     @Override
     protected void build(KineticUi ui) {
         if (list != null) scrollOffset = list.scrollOffset();
-        ui.button(22, 37, 60).text(AdventureText.translatable("gui.adventuresystems.curios.wallet.deposit_short"))
+        listHeight = visibleRows() * WalletRows.ROW_HEIGHT;
+        top = Math.max(0, (height() - (LIST_TOP + listHeight + PANEL_BOTTOM)) / 2);
+        ui.button(22, top + 22, 60).text(AdventureText.translatable("gui.adventuresystems.curios.wallet.deposit_short"))
                 .onClick(Network::sendDepositAll).build();
-        ui.button(88, 37, 60).text(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop"))
+        ui.button(88, top + 22, 60).text(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop"))
                 .onClick(Network::sendOpenShop).build();
-        hudButton = ui.button(302, 37, 60).text(hudText())
+        hudButton = ui.button(302, top + 22, 60).text(hudText())
                 .tooltip(AdventureText.translatable("gui.adventuresystems.curios.wallet.hud_button_tip"))
                 .onClick(Network::sendToggleHudCurrency).build();
-        ui.button(368, 37, 60).text(AdventureText.translatable("gui.adventuresystems.curios.wallet.close"))
+        ui.button(368, top + 22, 60).text(AdventureText.translatable("gui.adventuresystems.curios.wallet.close"))
                 .onClick(this::close).build();
         list = ui.add(new WalletRows());
         list.setItems(rows);
@@ -125,7 +133,14 @@ public class MainScreen extends KineticPage {
 
     private void refreshList() {
         rebuildRows();
-        if (list != null) list.setItems(rows);
+        if (list == null) return;
+        // A server update can add or remove currencies; the panel then changes height with them.
+        if (visibleRows() * WalletRows.ROW_HEIGHT != listHeight) rebuild();
+        else list.setItems(rows);
+    }
+
+    private int visibleRows() {
+        return Math.max(1, Math.min(MAX_VISIBLE_ROWS, rows.size()));
     }
 
     private Component expandLabel(Row row) {
@@ -244,7 +259,7 @@ public class MainScreen extends KineticPage {
         private static final int BUTTON_GAP = 4;
 
         private WalletRows() {
-            super(22, 68, 406, 206, ROW_HEIGHT);
+            super(22, top + LIST_TOP, 406, listHeight, ROW_HEIGHT);
         }
 
         @Override
@@ -268,7 +283,7 @@ public class MainScreen extends KineticPage {
             Component name = currency ? ShopGuiSupport.stackNameComponent(row.from())
                     : AdventureText.translatable("gui.adventuresystems.curios.wallet.exchange_to",
                             ShopGuiSupport.stackNameComponent(row.to()));
-            graphics.scrollingText(name, x + 28, y + 3, textRight - x - 34,
+            graphics.scrollingText(name, x + 28, y + 4, textRight - x - 34,
                     KineticTheme.current().text(), false);
             Component detail = currency
                     ? AdventureText.translatable("gui.adventuresystems.curios.wallet.amount_value",
@@ -320,8 +335,8 @@ public class MainScreen extends KineticPage {
         for (KineticButton button : rowActions) button.setControlVisible(false);
         for (KineticButton button : rowExpanders) if (button != null) button.setControlVisible(false);
         KineticTheme.shadow(graphics, width(), height());
-        KineticTheme.panel(graphics, 10, 15, 430, 270);
-        graphics.scrollingTextCentered(title(), 225, 23, 430 - 24, KineticTheme.current().text(), false);
+        KineticTheme.panel(graphics, 10, top, 430, LIST_TOP + listHeight + PANEL_BOTTOM);
+        graphics.scrollingTextCentered(title(), 225, top + 8, 430 - 24, KineticTheme.current().text(), false);
     }
 
     private enum Action { WITHDRAW, CONVERT_ONE, CONVERT_ALL }

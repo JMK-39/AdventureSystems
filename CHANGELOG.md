@@ -12,6 +12,11 @@
 - On 26.1.2 the shop entry editor's item, currency and barter item buttons were blank; they show their text and item icon as on the other versions. The editor's fields and labels keep 3 px clear of the section frames.
 - Hovering a currency in the wallet shows where that money is: the wallet, the inventory (with each stack's size), Sophisticated Backpacks, the bound RS network (or why it is unavailable) and the total. The server counts them only for the player looking: when the wallet opens, after a wallet action, and every 2 seconds while the wallet stays open. The regular wallet sync does not carry them and nothing is sent to other players.
 - The shop entry editor's "Price & Limits" title stops before the command rewards column, and the reward pool hides its weight field outside gacha pools, where it had no label and could not be edited.
+- The wallet, the shop currency picker, the command reward picker and the quest requirement list are only as tall as their content needs (up to a limit, then they scroll) and sit in the middle of the window, instead of a fixed full-height frame with a large empty area below a few rows. The wallet rows' text keeps 2 px from the row frame. The command picker's title stops before its Cancel button, and its hint no longer touches the button.
+- The shop entry editor's item, currency and barter buttons show only their text; the squeezed-in item icon is gone, since the display icon slot already shows the item. Their tooltips name the chosen item and its ID.
+- In the shop, the reward choice dialog and the quest list hide the controls underneath while they are open and have an opaque background, so page buttons and text no longer show through them. Product tiles are taller, so their status line and price keep 2 to 3 px from the tile and badge frames; the trade amount slider keeps 2 px above the quick amount buttons, and the Buy button 2 px above the panel's bottom line.
+- The FTB item binding editor's task rows are taller, so both text lines keep clear of the row frame instead of the second line sitting on its bottom line.
+- Every screen keeps the same layout in every language: the shop balance label, page tabs, menu buttons, trade amount label and the editor's Save/Cancel buttons have fixed widths, the price and trade cost icons stay at fixed spots, the FTB item label and favourite column and the tips editor label column have fixed widths, and the currency picker's Cancel button no longer grows with its text. Longer text scrolls. The shop entry editor's item, currency and barter buttons draw their own labels, centred like every other button instead of sitting low.
 - Requires KineticCore 26.10.5+.
 
 ### 简体中文
@@ -24,6 +29,11 @@
 - 26.1.2 上商店条目编辑器的物品、货币与以物易物按钮显示为空白；现在与其他版本一样显示文字和物品图标。编辑器的输入框和标签与分区边框保持 3 像素间距。
 - 在钱包中悬停某种货币，会显示这些钱都在哪里：钱包、背包（含每一组的数量）、精妙背包、已绑定的 RS 网络（或不可用的原因）以及总计。服务端只为查看的玩家统计：打开钱包时、钱包操作之后，以及钱包保持打开时每 2 秒一次。常规的钱包同步不携带这些数据，也不会发送给其他玩家。
 - 商店条目编辑器的"价格与限购"标题在指令奖励一栏之前结束；奖励池在非抽奖池中隐藏权重输入框，那里它既没有标签也无法编辑。
+- 钱包、商店货币选择、指令奖励选择和任务需求列表的高度按内容决定（超过上限后滚动），并位于窗口中央，不再是固定的整高边框、几行内容下面留下一大片空白。钱包行内文字与行边框保持 2 像素。指令奖励选择的标题在取消按钮之前结束，提示文字也不再紧贴该按钮。
+- 商店条目编辑器的物品、货币与以物易物按钮只显示文字，去掉了挤在按钮里的物品图标，因为右侧显示图标格已经显示该物品。按钮的悬浮提示会列出所选物品的名称与 ID。
+- 商店中的奖励选择对话框和任务列表打开时会隐藏其下方的控件，并使用不透明背景，页面按钮和文字不再透出来。商品格子加高，状态文字和价格与格子边框、价格框保持 2 至 3 像素；交易数量滑块与快捷数量按钮之间保持 2 像素，购买按钮与面板底边线保持 2 像素。
+- FTB 物品绑定编辑器的任务行加高，两行文字都与行边框保持距离，第二行不再压在底边线上。
+- 所有语言下界面排版相同：商店的余额标签、分页标签、菜单按钮、交易数量标签以及条目编辑器的保存/取消按钮使用固定宽度，价格与交易花费的图标位置固定，FTB 物品标签与收藏列以及提示编辑器的标签列宽度固定，货币选择的取消按钮也不再随文字变宽。过长的文字滚动显示。商店条目编辑器的物品、货币与以物易物按钮由按钮自己绘制文字，与其他按钮一样垂直居中，不再偏下。
 - 需要 KineticCore 26.10.5+。
 
 ---

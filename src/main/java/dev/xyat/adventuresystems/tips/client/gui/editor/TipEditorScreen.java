@@ -111,13 +111,8 @@ public class TipEditorScreen extends KineticPage {
         this.y0 = (height() - guiH) / 2;
 
         this.leftW = (int) (guiW * 0.30D);
-        int maxLabelW = Math.max(
-                KineticText.width(AdventureText.translatable("gui.adventuresystems.tips.tips.label.content")),
-                Math.max(
-                        KineticText.width(AdventureText.translatable("gui.adventuresystems.tips.tips.label.setting")),
-                        KineticText.width(AdventureText.translatable("gui.adventuresystems.tips.tips.label.condition"))
-                )
-        ) + 8;
+        // The label column has the same width in every language; longer labels scroll inside it.
+        int maxLabelW = 50 + 8;
 
         // Keep long translations from consuming the editor controls' space.
         maxLabelW = Math.min(maxLabelW, Math.max(24, (guiW - leftW - 30) / 4));

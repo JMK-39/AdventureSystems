@@ -1,5 +1,5 @@
-//? if >=1.21 && <26 {
-/*package dev.xyat.adventureguivalidation;
+//? if <26 {
+package dev.xyat.adventureguivalidation;
 
 import dev.xyat.kineticcore.api.client.event.KineticClientEvents;
 import dev.xyat.kineticcore.api.client.gui.KineticGui;
@@ -27,7 +27,7 @@ import java.util.concurrent.CompletableFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/^** Uses the existing client and unsaved page drafts. Never clicks or saves editor changes. *^/
+/*** Uses the existing client and unsaved page drafts. Never clicks or saves editor changes. */
 public final class GuiLongTextValidation {
     private static final Logger LOG=LoggerFactory.getLogger(GuiLongTextValidation.class);
     private static final String ROOT=System.getProperty("adventuresystems.guiValidation.output", "gui-validation");
@@ -152,7 +152,7 @@ public final class GuiLongTextValidation {
             case 20,21,22,23 -> p=(KineticPage)construct(WALLET+"RewardPoolScreen",draft);
             case 24,25 -> p=new FTBItemBindingEditorScreen();
             case 26 -> {
-                var file=ClientQuestFile.getInstance();var chapter=new Chapter(0x7000,file,null);var quest=new Quest(0x7001,chapter);
+                var file=questFile();var chapter=new Chapter(0x7000,file,null);var quest=new Quest(0x7001,chapter);
                 var task=new ItemTask(0x7002,quest).setStackAndCount(new ItemStack(Items.EMERALD),32);
                 p=new FTBSubmitCountScreen(task);
             }
@@ -170,7 +170,16 @@ public final class GuiLongTextValidation {
         if(index==25){((List<RefFTB>)field(p,"visibleTasks")).addAll(refs());((List<RefFTB>)field(p,"allTasks")).addAll(refs());((List<RefFTB>)field(p,"boundTasks")).addAll(refs());setField(p,"selectedStack",namedStack());setField(p,"dirty",true);}
     }
     private static CompoundTag balances(){var tag=new CompoundTag();for(var currency:dev.xyat.adventuresystems.curios.wallet.data.Data.currencies())tag.putLong(currency.itemId(),123456789L);return tag;}
-    private static ItemStack namedStack(){var stack=new ItemStack(Items.DIAMOND_SWORD);stack.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME,dev.xyat.adventuresystems.text.AdventureText.literal(LONG_NAME));return stack;}
+    //? if >=1.21 {
+    /*private static ClientQuestFile questFile(){return ClientQuestFile.getInstance();}
+    *///?} else {
+    private static ClientQuestFile questFile(){return ClientQuestFile.INSTANCE;}
+    //?}
+    //? if >=1.21 {
+    /*private static ItemStack namedStack(){var stack=new ItemStack(Items.DIAMOND_SWORD);stack.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME,dev.xyat.adventuresystems.text.AdventureText.literal(LONG_NAME));return stack;}
+    *///?} else {
+    private static ItemStack namedStack(){var stack=new ItemStack(Items.DIAMOND_SWORD);stack.setHoverName(dev.xyat.adventuresystems.text.AdventureText.literal(LONG_NAME));return stack;}
+    //?}
     private static List<RefFTB> refs(){return List.of(new RefFTB(1,"0000000000000001",LONG_NAME,LONG_NAME,"local",LONG_NAME),new RefFTB(2,"0000000000000002","Short task","Short chapter","local","Short task"));}
     private static Shop.Entry entry(Shop.Mode mode,boolean gacha,boolean choice,boolean locked){
         var rewards=List.of(new Shop.Reward(namedStack(),10,50.0D,LONG_NAME,""),new Shop.Reward(new ItemStack(Items.EMERALD),10,50.0D,"Short reward",""));
@@ -257,4 +266,4 @@ public final class GuiLongTextValidation {
         @Override public net.minecraft.util.FormattedCharSequence getVisualOrder(net.minecraft.network.chat.FormattedText text){return delegate.getVisualOrder(text);}
     }
 }
-*///?}
+//?}

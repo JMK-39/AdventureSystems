@@ -11,7 +11,6 @@ import dev.xyat.kineticcore.api.client.gui.ui.NumberType;
 import dev.xyat.kineticcore.api.client.gui.widget.KineticButton;
 import dev.xyat.kineticcore.api.client.gui.widget.KineticNumberField;
 import dev.xyat.kineticcore.api.client.gui.widget.KineticTextField;
-import dev.xyat.kineticcore.api.client.gui.text.KineticText;
 import dev.xyat.kineticcore.api.client.gui.overlay.KineticOverlays;
 import dev.xyat.kineticcore.api.client.gui.selector.KineticSelectors;
 import dev.xyat.adventuresystems.text.AdventureText;
@@ -42,6 +41,11 @@ final class ShopEntryEditorScreen extends KineticPage {
     private KineticNumberField dailyLimitBox;
     private KineticNumberField totalLimitBox;
     private KineticTextField pageBox;
+    // Item, currency and barter buttons: their labels name the chosen item; the item itself shows in the display icon
+    // slot and the button tooltip, so the buttons carry no squeezed-in icon.
+    private KineticButton itemButton;
+    private KineticButton currencyButton;
+    private KineticButton paymentButton;
     private KineticButton pageButton;
     /** 分页选择器选了“新建分页…”，此时用输入框填写新分页名。 */
     private boolean newPageMode;
@@ -150,9 +154,9 @@ final class ShopEntryEditorScreen extends KineticPage {
         top = Math.max(4, (height() - panelHeight) / 2);
 
         addButton(typeButtonX(), typeButtonY(), buttonColumnWidth(), typeButtonText(), this::openTypeMenu);
-        addButton(selectItemButtonX(), selectItemButtonY(), buttonColumnWidth(), Component.empty(), this::openMainItemSelector);
-        addButton(selectCurrencyButtonX(), selectCurrencyButtonY(), buttonColumnWidth(), Component.empty(), () -> openChild(new CurrencyPickerScreen(draft)));
-        addButton(selectPaymentButtonX(), selectPaymentButtonY(), buttonColumnWidth(), Component.empty(), this::openPaymentItemSelector);
+        itemButton = addButton(selectItemButtonX(), selectItemButtonY(), buttonColumnWidth(), itemButtonText(), this::openMainItemSelector);
+        currencyButton = addButton(selectCurrencyButtonX(), selectCurrencyButtonY(), buttonColumnWidth(), currencyButtonText(), () -> openChild(new CurrencyPickerScreen(draft)));
+        paymentButton = addButton(selectPaymentButtonX(), selectPaymentButtonY(), buttonColumnWidth(), paymentButtonText(), this::openPaymentItemSelector);
 
         priceBox = addLongField(
                 inputLeftX(),
@@ -374,9 +378,8 @@ final class ShopEntryEditorScreen extends KineticPage {
     }
 
     private int actionButtonWidth() {
-        int save = KineticText.width(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_editor_save"));
-        int cancel = KineticText.width(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_editor_cancel"));
-        return Math.min(Math.max(save, cancel) + 16, Math.max(40, (panelWidth - 48) / 6));
+        // The same width in every language; the labels scroll when longer.
+        return Math.min(64, Math.max(40, (panelWidth - 48) / 6));
     }
 
     private void rebuildEditorWidgets() {
@@ -780,9 +783,10 @@ final class ShopEntryEditorScreen extends KineticPage {
     // The picker buttons have no label of their own; their text and item icon go above the button.
     @Override
     protected void renderForeground(KineticGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        renderItemButtonContent(graphics, draft.itemId, itemButtonText(), selectItemButtonX(), selectItemButtonY());
-        renderItemButtonContent(graphics, currentCurrencyId(), currencyButtonText(), selectCurrencyButtonX(), selectCurrencyButtonY());
-        renderItemButtonContent(graphics, currentBarterItemId(), paymentButtonText(), selectPaymentButtonX(), selectPaymentButtonY());
+        // The buttons draw their own labels, centred and scrolling like every other button.
+        if (itemButton != null) itemButton.setText(itemButtonText());
+        if (currencyButton != null) currencyButton.setText(currencyButtonText());
+        if (paymentButton != null) paymentButton.setText(paymentButtonText());
     }
 
     private Component contentCountText() {
@@ -796,13 +800,6 @@ final class ShopEntryEditorScreen extends KineticPage {
     }
 
 
-    private void renderItemButtonContent(KineticGraphics graphics, String id, Component label, int buttonX, int buttonY) {
-        boolean hasIcon = id != null && !id.isBlank();
-        // Keep the original label center, leaving a four-pixel gap before the item icon.
-        graphics.scrollingTextCentered(label, buttonX + buttonColumnWidth() / 2, buttonY + 6,
-                Math.max(0, buttonColumnWidth() - (hasIcon ? 48 : 8)), KineticTheme.current().text(), true);
-        if (hasIcon) graphics.item(ShopGuiSupport.stack(id), buttonX + buttonColumnWidth() - 20, buttonY + 2);
-    }
 
 
     private void renderSection(KineticGraphics graphics, int x, int y, int height, Component title) {
@@ -824,28 +821,16 @@ final class ShopEntryEditorScreen extends KineticPage {
                     AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_editor_icon_tip")), 260);
             return;
         }
-        ItemStack stack = hoveredEditorItem(mouseX, mouseY);
-        if (!stack.isEmpty()) {
-            showItemTooltip(stack);
-            return;
-        }
         List<Component> tooltip = editorTooltipAt(mouseX, mouseY);
         if (!tooltip.isEmpty()) showTooltip(tooltip);
-    }
-
-    private ItemStack hoveredEditorItem(int mouseX, int mouseY) {
-        if (draft.itemId != null && !draft.itemId.isBlank() && KineticTheme.hovering(mouseX, mouseY, selectItemButtonX() + buttonColumnWidth() - 20, selectItemButtonY() + 2, 16, 16)) return ShopGuiSupport.stack(draft.itemId);
-        if (!currentCurrencyId().isBlank() && KineticTheme.hovering(mouseX, mouseY, selectCurrencyButtonX() + buttonColumnWidth() - 20, selectCurrencyButtonY() + 2, 16, 16)) return ShopGuiSupport.stack(currentCurrencyId());
-        if (!currentBarterItemId().isBlank() && KineticTheme.hovering(mouseX, mouseY, selectPaymentButtonX() + buttonColumnWidth() - 20, selectPaymentButtonY() + 2, 16, 16)) return ShopGuiSupport.stack(currentBarterItemId());
-        return ItemStack.EMPTY;
     }
 
     private List<Component> editorTooltipAt(int mouseX, int mouseY) {
         List<Component> tooltip = new ArrayList<>();
         if (KineticTheme.hovering(mouseX, mouseY, typeButtonX(), typeButtonY(), buttonColumnWidth(), 20)) addTooltip(tooltip, "gui.adventuresystems.curios.wallet.shop_editor_type_label", "gui.adventuresystems.curios.wallet.shop_editor_tooltip_type");
-        else if (KineticTheme.hovering(mouseX, mouseY, selectItemButtonX(), selectItemButtonY(), buttonColumnWidth(), 20)) addTooltip(tooltip, "gui.adventuresystems.curios.wallet.shop_editor_item_label", "gui.adventuresystems.curios.wallet.shop_editor_tooltip_item");
-        else if (KineticTheme.hovering(mouseX, mouseY, selectCurrencyButtonX(), selectCurrencyButtonY(), buttonColumnWidth(), 20)) addTooltip(tooltip, "gui.adventuresystems.curios.wallet.shop_editor_currency_label", "gui.adventuresystems.curios.wallet.shop_editor_tooltip_currency");
-        else if (KineticTheme.hovering(mouseX, mouseY, selectPaymentButtonX(), selectPaymentButtonY(), buttonColumnWidth(), 20)) addTooltip(tooltip, "gui.adventuresystems.curios.wallet.shop_editor_payment_item", "gui.adventuresystems.curios.wallet.shop_editor_tooltip_payment_item");
+        else if (KineticTheme.hovering(mouseX, mouseY, selectItemButtonX(), selectItemButtonY(), buttonColumnWidth(), 20)) { addTooltip(tooltip, "gui.adventuresystems.curios.wallet.shop_editor_item_label", "gui.adventuresystems.curios.wallet.shop_editor_tooltip_item"); addItemLine(tooltip, draft.itemId); }
+        else if (KineticTheme.hovering(mouseX, mouseY, selectCurrencyButtonX(), selectCurrencyButtonY(), buttonColumnWidth(), 20)) { addTooltip(tooltip, "gui.adventuresystems.curios.wallet.shop_editor_currency_label", "gui.adventuresystems.curios.wallet.shop_editor_tooltip_currency"); addItemLine(tooltip, currentCurrencyId()); }
+        else if (KineticTheme.hovering(mouseX, mouseY, selectPaymentButtonX(), selectPaymentButtonY(), buttonColumnWidth(), 20)) { addTooltip(tooltip, "gui.adventuresystems.curios.wallet.shop_editor_payment_item", "gui.adventuresystems.curios.wallet.shop_editor_tooltip_payment_item"); addItemLine(tooltip, currentBarterItemId()); }
         else if (KineticTheme.hovering(mouseX, mouseY, priceBox.controlX(), priceBox.controlY(), priceBox.controlWidth(), 18)) addTooltip(tooltip, "gui.adventuresystems.curios.wallet.shop_editor_price_label", "gui.adventuresystems.curios.wallet.shop_editor_tooltip_price");
         else if (KineticTheme.hovering(mouseX, mouseY, countBox.controlX(), countBox.controlY(), countBox.controlWidth(), 18)) addTooltip(tooltip, "gui.adventuresystems.curios.wallet.shop_editor_count_label", "gui.adventuresystems.curios.wallet.shop_editor_tooltip_count");
         else if (KineticTheme.hovering(mouseX, mouseY, dailyLimitBox.controlX(), dailyLimitBox.controlY(), dailyLimitBox.controlWidth(), 18)) addTooltip(tooltip, "gui.adventuresystems.curios.wallet.shop_editor_timed_label", "gui.adventuresystems.curios.wallet.shop_editor_tooltip_timed");
@@ -870,6 +855,13 @@ final class ShopEntryEditorScreen extends KineticPage {
     private void addTooltip(List<Component> tooltip, String titleKey, String bodyKey) {
         tooltip.add(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_editor_tooltip_title", AdventureText.translatable(titleKey)));
         tooltip.add(AdventureText.translatable(bodyKey));
+    }
+
+    // The chosen item (name and id) under the button hint, since the buttons no longer show its icon.
+    private static void addItemLine(List<Component> tooltip, String id) {
+        if (id == null || id.isBlank()) return;
+        tooltip.add(ShopGuiSupport.stackNameComponent(id));
+        tooltip.add(Component.literal(id).withStyle(net.minecraft.ChatFormatting.DARK_GRAY));
     }
     private static boolean isControlVisible(KineticControl control) {
         return control != null && control.controlVisible();
