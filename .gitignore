@@ -38,3 +38,6 @@ versions/*/logs/
 .vscode/
 
 logs/
+*.zip
+*.7z
+/wiki/

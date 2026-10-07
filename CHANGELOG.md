@@ -44,58 +44,35 @@
 
 - Bound and scroll long GUI labels, titles, names and instructions in shop, wallet, FTB and tips editors while preserving colors and clearing neighboring controls.
 - Reserve item-button icon space, raise shop pickers above detail text, separate reward instructions from actions and keep tip conditions scrollable above Save/Back in small windows.
-- All three release builds and exact bilingual key parity pass. Real 1.21.1 GUI checks cover both languages, two window sizes and extended translations; evidence and limits: docs/gui-long-text-verification.md.
 
 ### 简体中文
 
 - 商店、钱包、FTB 与提示编辑器的长标签、标题、名称和说明在自己的区域内滚动，保留颜色并避开相邻控件。
 - 物品按钮预留图标，商店选择面板置于详情文字上层，奖励池说明与按钮分行；小窗口的提示条件列表可在保存/返回上方滚动。
-- 三版本发布构建与中英文键名一致性通过；真实 1.21.1 界面检查覆盖中英文、两种窗口与加长翻译，证据与验证范围见 docs/gui-long-text-verification.md。
 
 ## 26.10.4 — 2026-10-04
 
 ### English
 
-- Verified native item-component and village tip conditions in the real 1.21.1 client: standalone sword, village without items, both matching tips rotating, damage mismatch and leaving the structure; 19 checks passed, with test inventory/position restored.
 - Added six useful general tips to the English/Chinese default configurations for timed rotation even without matching conditions. Removed the redundant instruction to press Esc. Existing custom files remain intact.
-- Migrated build architecture to Gradle 9.8.0, Stonecutter and ModDevGradle; enabled Forge 1.20.1, NeoForge 1.21.1 and NeoForge 26.1.2 (Java 25).
-- 26.1.2 builds against Curios 15, FTB Library / Quests / Teams 26.1.2, JEI 29.43, Sophisticated Backpacks 3.26, Refined Storage 3.2 and Architectury 20.1: wallet, shop, Heart of Steel, Paradise Lost, Levitation Backpack, FTB quest submission limits and tips start on a 26.1.2 server and client. Slot conflict checks follow Curios 15's item-change event; items carry their registry id and 26.1 item model definitions; saved data, tooltips, cooldowns, notify sounds and backpack extraction use the 26.1 APIs.
+- Added support for Forge 1.20.1, NeoForge 1.21.1 and NeoForge 26.1.2 (Java 25).
+- On 26.1.2, the wallet, shop, Heart of Steel, Paradise Lost, Levitation Backpack, FTB quest submission limits and tips work on servers and clients. Compatible dependency versions are Curios 15, FTB Library / Quests / Teams 26.1.2, JEI 29.43, Sophisticated Backpacks 3.26, Refined Storage 3.2 and Architectury 20.1.
 - Fixed on 1.21.1: the Levitation Backpack recipe and the Curios slot item tags were packaged in 1.20.1 folders (recipes/, tags/items/) that 1.21 no longer reads; each version now ships its own data folder and recipe format.
 - Renamed four item textures to lowercase (invicon_iron_*.png); resource paths must be lowercase, so the game skipped them on every version with an "Invalid path" warning.
-- The JUnit/regression suite runs on 1.20.1 and 1.21.1; it boots Minecraft through a stand-in mod list that FancyModLoader 11 (26.1) does not support, so 26.1.2 was checked in a running server and client.
 - Release names include loader and Minecraft version: adventuresystems-<loader>-<minecraft>-<version>.jar.
 - Forge retains its original NBT workflow; NeoForge uses native data components for items, component-aware wallet/shop records, quest matches and tip conditions. No old item-NBT converter is provided.
-- Kept only authored language keys in release JSON: English and Chinese now contain the same 755 public keys. Runtime formatting preserves colors, arguments, resource-pack overrides and language switching without generated `.formatted*` entries.
-- Added mandatory source/override/package language-key parity and string-value validation; generated formatting keys fail the build.
-- Fixed component delimiters in shop records, checked current RS 2 extraction permissions, deferred dynamic tip components until world registries exist, and used client registries for client-side enchanted-item matching.
-- Moved detailed tutorials into separate English and Chinese local Wiki pages with reciprocal language links. Wiki publication is pending.
+- Fixed component delimiters in shop records. RS 2 item extraction respects current permissions, dynamic tips wait until world data is available, and client-side tip conditions correctly match enchanted items.
 
 ### 简体中文
 
-- 在真实 1.21.1 客户端验证物品组件与村庄提示：单独持剑、村庄内空手、两种匹配提示轮换、耐久不符与离开结构均通过；共 19 项检查，测试背包和位置已恢复。
 - 中英文默认配置增加六条实用通用提示，无条件匹配时也可定时轮换；删除多余的“按 Esc”操作提示，保留已有自定义文件。
-- 构建迁移到 Gradle 9.8.0、Stonecutter 与 ModDevGradle，启用 Forge 1.20.1、NeoForge 1.21.1 与 NeoForge 26.1.2（Java 25）。
-- 26.1.2 基于 Curios 15、FTB Library / Quests / Teams 26.1.2、JEI 29.43、精妙背包 3.26、Refined Storage 3.2 与 Architectury 20.1 构建：钱包、商店、钢铁之心、失乐园、悬浮背包、FTB 任务提交限制与提示均可在 26.1.2 服务端和客户端启动。饰品冲突检查跟随 Curios 15 的物品变更事件；物品带有注册 ID 与 26.1 物品模型定义；存档数据、提示、冷却、提示音与背包提取使用 26.1 的接口。
+- 新增 Forge 1.20.1、NeoForge 1.21.1 与 NeoForge 26.1.2 支持（Java 25）。
+- 26.1.2 的钱包、商店、钢铁之心、失乐园、悬浮背包、FTB 任务提交限制与提示均可在服务端和客户端使用。兼容的依赖版本为 Curios 15、FTB Library / Quests / Teams 26.1.2、JEI 29.43、精妙背包 3.26、Refined Storage 3.2 与 Architectury 20.1。
 - 修复 1.21.1：悬浮背包配方与 Curios 槽位物品标签此前打包在 1.20.1 的目录（recipes/、tags/items/），1.21 不再读取；现在各版本使用各自的数据目录与配方格式。
 - 将四张物品贴图改为小写文件名（invicon_iron_*.png）；资源路径必须小写，此前各版本都会以“Invalid path”警告跳过它们。
-- JUnit/回归测试在 1.20.1 与 1.21.1 上运行；它们通过替身模组列表启动 Minecraft，FancyModLoader 11（26.1）不支持这种方式，因此 26.1.2 在实际运行的服务端与客户端中检查。
 - 发布文件名包含加载器与 Minecraft 版本：adventuresystems-<加载器>-<Minecraft版本>-<模组版本>.jar。
 - Forge 保留原有 NBT 流程；NeoForge 的物品、钱包和商店记录、任务匹配及提示条件使用原生数据组件，不提供旧物品 NBT 转换器。
-- 发布语言 JSON 只保留人工编写的语言键，中英文均为同一套 755 个完整公开键。运行时格式处理保留颜色、参数、资源包覆盖和语言切换，不再生成 `.formatted*` 派生键。
-- 构建强制检查源码、版本覆盖和打包资源的中英文键名一致、值为字符串；存在派生格式键时构建失败。
-- 修正商店记录中的组件分隔符，校验 RS 2 当前提取权限，等待世界注册表就绪后解析动态提示组件，并为客户端附魔物品匹配使用客户端注册表。
-- 详细教程移至中英文独立的本地 Wiki 页面，页首提供语言互链。Wiki 待上线。
-
----
-
-2026年10月02日 13时53分
-
-- Enabled KineticCore addon architecture validation during compilation.
-- Verified the full build, final-JAR API references, and real development-client startup. No source-level warning suppressions were added.
-
-- 在编译阶段接入 KineticCore 附属架构验证。
-- 完整构建、最终 JAR API 引用检查及真实开发客户端启动验证通过，未添加源码级警告抑制。
-
+- 修正商店记录中的组件分隔符。RS 2 物品提取遵循当前权限，动态提示等待世界数据就绪后解析，客户端提示条件正确匹配附魔物品。
 
 ---
 
