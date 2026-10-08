@@ -314,6 +314,48 @@ tasks.register('verifyTextFormatting', JavaExec) {
 }
 tasks.named('check').configure { dependsOn tasks.named('verifyTextFormatting') }
 
+// MDG can retain Forge's original signatures after remapping its classes. Standalone
+// regression JVMs use unsigned copies, as in KineticCore; the game and release JARs
+// continue to use the original dependencies.
+if (pLoader == 'forge') {
+    def regressionJars = layout.buildDirectory.dir('tmp/unsignedRegressionClasspath')
+    def signatureFile = ~/META-INF\/[^\/]+\.(SF|RSA|DSA|EC)/
+    def unsignedClasspath = tasks.register('unsignAdventureRegressionClasspath') {
+        inputs.files(sourceSets.test.runtimeClasspath)
+        outputs.dir(regressionJars)
+        doLast {
+            File directory = regressionJars.get().asFile
+            project.delete(directory)
+            directory.mkdirs()
+            sourceSets.test.runtimeClasspath.files.findAll { it.isFile() && it.name.endsWith('.jar') }.each { File jar ->
+                new java.util.zip.ZipFile(jar).withCloseable { zip ->
+                    if (!zip.entries().toList().any { it.name ==~ signatureFile }) return
+                    new java.util.zip.ZipOutputStream(new FileOutputStream(new File(directory, jar.name))).withCloseable { out ->
+                        zip.entries().each { entry ->
+                            if (entry.name ==~ signatureFile) return
+                            out.putNextEntry(new java.util.zip.ZipEntry(entry.name))
+                            zip.getInputStream(entry).withCloseable { out << it }
+                            out.closeEntry()
+                        }
+                    }
+                }
+            }
+        }
+    }
+    ['test', 'verifyTextFormatting'].each { String taskName ->
+        tasks.named(taskName).configure {
+            dependsOn unsignedClasspath
+            doFirst {
+                File directory = regressionJars.get().asFile
+                classpath = files(classpath.files.collect { File file ->
+                    File unsigned = new File(directory, file.name)
+                    unsigned.isFile() ? unsigned : file
+                })
+            }
+        }
+    }
+}
+
 apply from: rootProject.file('gradle/kinetic-runtime-validation.gradle')
 tasks.named('test', Test).configure { exclude 'dev/xyat/adventurevalidation/**' }
 
