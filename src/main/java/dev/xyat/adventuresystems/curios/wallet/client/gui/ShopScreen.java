@@ -87,7 +87,7 @@ public class ShopScreen extends KineticPage {
     private static final int DETAIL_CONTENT_LEFT_PAD = 8;
     private static final int DETAIL_RIGHT_MARGIN = 2;
     private static final int CURRENCY_SLOT_SIZE = 16;
-    private static final float CURRENCY_ITEM_SCALE = 0.75F;
+    private static final float CURRENCY_ITEM_SCALE = 0.625F;
     private static final int NUMBER_BAR_HEIGHT = 14;
     private static final int DETAIL_AMOUNT_INPUT_SIZE = 18;
     private static final int DETAIL_SECTION_BUTTON_SIZE = 16;
@@ -693,7 +693,7 @@ public class ShopScreen extends KineticPage {
         ItemStack stack = stack(currency.itemId());
         String text = formatCompact(displayAmount(currency.itemId()));
         renderItemCheckerSlot(graphics, x, y - 5, 18);
-        KineticTheme.item(graphics, stack, x, y - 5, 18, 0.875F, false);
+        KineticTheme.item(graphics, stack, x, y - 5, 18, 0.75F, false);
         graphics.scrollingText(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_balance_amount", text), x + 20, y, Math.max(0, Math.min(width - 20, KineticText.width(text))), KineticTheme.current().text(), true);
         BalanceAnimation animation = animations.get(currency.itemId());
         if (animation != null && animation.deltaVisible()) {
@@ -901,7 +901,7 @@ public class ShopScreen extends KineticPage {
     }
 
     private void renderProductItem(KineticGraphics graphics, ItemStack stack, int x, int y) {
-        KineticTheme.item(graphics, stack, x, y, PRODUCT_SLOT_SIZE, 1.0F, true);
+        KineticTheme.item(graphics, stack, x, y, PRODUCT_SLOT_SIZE, 0.875F, true);
     }
 
     private void renderNumberBar(KineticGraphics graphics, int x, int y, int width) {
@@ -951,7 +951,7 @@ public class ShopScreen extends KineticPage {
             }
             ItemStack item = detailDisplayStack(entry);
             renderItemCheckerSlot(graphics, contentX - 2, y + 4);
-            graphics.item(item, contentX, y + 6);
+            KineticTheme.item(graphics, item, contentX - 2, y + 4, 20, 0.875F, false);
             graphics.itemDecorations(item, contentX, y + 6);
             if (hasMultipleRewards(entry)) renderSmallPlus(graphics, contentX + 8, y + 15);
             graphics.scrollingText(AdventureText.translatable(entry.locked()
@@ -998,7 +998,7 @@ public class ShopScreen extends KineticPage {
             int slotX = detailTradeCostIconX(entry);
             int slotY = detailTradeCostIconY();
             renderItemCheckerSlot(graphics, slotX, slotY, DETAIL_PRICE_SLOT_SIZE);
-            KineticTheme.item(graphics, stack, slotX, slotY, DETAIL_PRICE_SLOT_SIZE, 0.75F, false);
+            KineticTheme.item(graphics, stack, slotX, slotY, DETAIL_PRICE_SLOT_SIZE, 0.625F, false);
         }
     }
 
@@ -1220,7 +1220,7 @@ public class ShopScreen extends KineticPage {
         int slotX = detailPriceIconX(entry);
         int slotY = detailPriceIconY();
         renderItemCheckerSlot(graphics, slotX, slotY, DETAIL_PRICE_SLOT_SIZE);
-        KineticTheme.item(graphics, currency, slotX, slotY, DETAIL_PRICE_SLOT_SIZE, 0.75F, false);
+        KineticTheme.item(graphics, currency, slotX, slotY, DETAIL_PRICE_SLOT_SIZE, 0.625F, false);
     }
 
     private Component entryPriceIconText(Shop.Entry entry) {
@@ -1638,7 +1638,7 @@ public class ShopScreen extends KineticPage {
     private void renderRewardPreviewCell(KineticGraphics graphics, Shop.Reward reward, int x, int y, int width) {
         renderItemCheckerSlot(graphics, x, y, REWARD_PREVIEW_SLOT_SIZE);
         ItemStack stack = reward.empty() ? new ItemStack(net.minecraft.world.item.Items.BARRIER) : reward.stack();
-        KineticTheme.item(graphics, stack, x, y, REWARD_PREVIEW_SLOT_SIZE, 0.75F, true);
+        KineticTheme.item(graphics, stack, x, y, REWARD_PREVIEW_SLOT_SIZE, 0.625F, true);
         String chanceText = percent(reward.chance());
         graphics.scrollingText(Component.literal(chanceText), x + REWARD_PREVIEW_SLOT_SIZE + 6, y + 4,
                 Math.max(0, width - REWARD_PREVIEW_SLOT_SIZE - 8), KineticTheme.current().translatedText(), true);
@@ -1923,7 +1923,7 @@ public class ShopScreen extends KineticPage {
                 Shop.Reward reward = entry.rewards().get(index);
                 KineticTheme.itemSlot(graphics, x + 4, rowY + 1, 18, 4, hover);
                 if (!reward.empty()) {
-                    KineticTheme.item(graphics, reward.stack(), x + 4, rowY + 1, 18, 0.875F, true);
+                    KineticTheme.item(graphics, reward.stack(), x + 4, rowY + 1, 18, 0.75F, true);
                 }
                 int color = active ? KineticTheme.current().translatedText() : KineticTheme.current().text();
                 graphics.scrollingText(rewardName(reward), x + 25, rowY + 6, Math.max(0, width - 34), color, true);

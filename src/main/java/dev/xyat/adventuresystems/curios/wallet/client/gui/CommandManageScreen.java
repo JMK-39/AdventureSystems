@@ -196,7 +196,7 @@ final class CommandManageScreen extends KineticPage {
         graphics.scrollingText(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_icon_preview"), 18, 46, ICON_X - 18 - 4, KineticTheme.current().text(), true);
         boolean iconHovered = KineticTheme.hovering(mouseX, mouseY, ICON_X, ICON_Y, ICON_SIZE, ICON_SIZE);
         KineticTheme.itemSlot(graphics, ICON_X, ICON_Y, ICON_SIZE, ICON_SIZE, 4, false, iconHovered, false);
-        graphics.item(ShopGuiSupport.stack(iconId), ICON_X + 2, ICON_Y + 2);
+        KineticTheme.item(graphics, ShopGuiSupport.stack(iconId), ICON_X, ICON_Y, ICON_SIZE, 0.875F, false);
         graphics.scrollingText(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_name"), 120, 46, 188 - 120 - 4, KineticTheme.current().text(), true);
         graphics.scrollingText(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_list"), 16, 64, 608, KineticTheme.current().text(), true);
         if (draft.commands.isEmpty()) {

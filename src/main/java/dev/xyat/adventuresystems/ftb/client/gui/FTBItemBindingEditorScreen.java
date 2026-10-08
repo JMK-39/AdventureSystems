@@ -548,7 +548,7 @@ public class FTBItemBindingEditorScreen extends KineticPage {
         boolean hovered = mx >= x && mx < x + ITEM_SLOT && my >= y && my < y + ITEM_SLOT;
         int slotSize = ITEM_SLOT - 2;
         KineticTheme.itemSlot(g, x + 1, y + 1, slotSize, slotSize, 4, selected, hovered, false);
-        KineticTheme.item(g, stack, x + 1, y + 1, slotSize, 1.0F, false);
+        KineticTheme.item(g, stack, x + 1, y + 1, slotSize, 0.875F, false);
     }
 
     @Override

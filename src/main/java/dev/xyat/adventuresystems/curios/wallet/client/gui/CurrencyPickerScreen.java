@@ -117,8 +117,8 @@ final class CurrencyPickerScreen extends KineticPage {
             boolean selected = Objects.equals(currency.itemId(), draft.currencyId);
             KineticTheme.stateSurface(graphics, x, y, boxWidth(), BOX_H, KineticTheme.Surface.PANEL_ALT,
                     selected, i == hovered, false);
-            KineticTheme.itemSlot(graphics, x + 2, y + 2, 20, 4, i == hovered);
-            graphics.item(ShopGuiSupport.stack(currency.itemId()), x + 4, y + 4);
+            KineticTheme.itemSlot(graphics, x + 3, y + 3, 18, 4, i == hovered);
+            KineticTheme.item(graphics, ShopGuiSupport.stack(currency.itemId()), x + 3, y + 3, 18, 0.75F, false);
             Component name = ShopGuiSupport.stackNameComponent(currency.itemId());
             int textX = x + 24;
             int textWidth = boxWidth() - 28;

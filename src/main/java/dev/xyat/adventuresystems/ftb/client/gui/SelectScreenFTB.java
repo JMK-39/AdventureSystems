@@ -120,7 +120,7 @@ public class SelectScreenFTB extends KineticPage {
         graphics.scrollingText(AdventureText.translatable("screen.adventuresystems.ftb.select"), 24, 24, 170 - 24 - 4, KineticTheme.current().text(), false);
         graphics.scrollingText(AdventureText.translatable("label.adventuresystems.ftb.select.subtitle"), 170, 25, 616 - 170, KineticTheme.current().mutedText(), false);
         KineticTheme.itemSlot(graphics, 410, 48);
-        KineticTheme.item(graphics, stack, 410, 48, 18, 0.875F, false);
+        KineticTheme.item(graphics, stack, 410, 48, 18, 0.75F, false);
         graphics.scrollingText(AdventureText.translatable("label.adventuresystems.ftb.item.name", stack.getHoverName().copy()), 435, 54, 616 - 435, KineticTheme.current().text(), false);
     }
 

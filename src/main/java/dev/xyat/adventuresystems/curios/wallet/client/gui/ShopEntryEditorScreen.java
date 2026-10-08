@@ -488,7 +488,7 @@ final class ShopEntryEditorScreen extends KineticPage {
             KineticTheme.indicatorOutline(graphics, x, y, ICON_SLOT_SIZE, ICON_SLOT_SIZE, KineticTheme.Indicator.SUCCESS);
         }
         String id = hasCustomIcon() ? draft.iconId : draft.itemId;
-        if (id != null && !id.isBlank()) graphics.item(ShopGuiSupport.stack(id), x + 2, y + 2);
+        if (id != null && !id.isBlank()) KineticTheme.item(graphics, ShopGuiSupport.stack(id), x, y, ICON_SLOT_SIZE, 0.875F, false);
     }
 
     private void openIconSelector() {
