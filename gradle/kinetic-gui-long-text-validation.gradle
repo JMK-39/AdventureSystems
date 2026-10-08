@@ -1,4 +1,7 @@
 // Opt-in screenshots of unsaved editor drafts; never included in release JARs.
+// These client entry points run inside Minecraft, not through JUnit discovery.
+tasks.named('test', Test).configure { exclude 'dev/xyat/adventureguivalidation/**' }
+
 if (project.property('minecraft_version') == '1.21.1') {
     def metadata = layout.buildDirectory.dir('gui-long-text-validation')
     def writeMetadata = tasks.register('writeGuiValidationMetadata') {
