@@ -5,7 +5,6 @@ import dev.xyat.kineticcore.api.client.event.KineticClientEvents;
 import dev.xyat.kineticcore.api.client.gui.render.KineticGraphics;
 import dev.xyat.kineticcore.api.client.gui.text.KineticText;
 import dev.xyat.kineticcore.api.client.gui.theme.KineticTheme;
-import dev.xyat.adventuresystems.text.AdventureText;
 import net.minecraft.client.gui.screens.LevelLoadingScreen;
 import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.client.gui.screens.Screen;
@@ -41,12 +40,12 @@ public final class TipRenderer {
     private static void precomputeLayout(Screen screen) {
         List<FormattedCharSequence> lines = KineticText.wrap(currentTip.getText(), Math.max(1, Math.min(360, screen.width - 26)));
 
-        int maxW = KineticText.width(AdventureText.translatable("gui.adventuresystems.tips.tips.title"));
+        int maxW = 0;
         for (FormattedCharSequence line : lines) {
             maxW = Math.max(maxW, KineticText.width(line));
         }
 
-        int totalBoxH = 10 + 9 + 5 + (lines.size() * 11) + 5;
+        int totalBoxH = 16 + 9 + Math.max(0, lines.size() - 1) * 11;
         currentCache = new TipCache(lines, maxW, totalBoxH);
     }
 
@@ -66,15 +65,6 @@ public final class TipRenderer {
         KineticTheme.panel(graphics, margin, boxY, boxW, currentCache.totalBoxH);
 
         int curY = boxY + padding;
-        graphics.text(
-                AdventureText.translatable("gui.adventuresystems.tips.tips.title"),
-                margin + padding,
-                curY,
-                KineticTheme.current().text(),
-                true
-        );
-        curY += 13;
-
         for (FormattedCharSequence line : currentCache.lines) {
             graphics.text(line, margin + padding, curY, KineticTheme.current().text(), true);
             curY += 11;

@@ -38,6 +38,9 @@ public final class TipsRuntimeChecks {
                 }
                 Files.writeString(path,resource("legacy/"+legacy),StandardCharsets.UTF_8);
                 require(ConfigLoader.getRawEntriesForLanguage(language).size()==16,"untouched defaults migrate");
+                Files.writeString(path,resource("legacy/compact_v1/tips_"+language+".json"),StandardCharsets.UTF_8);
+                var compactMigrated=ConfigLoader.getRawEntriesForLanguage(language);
+                require(compactMigrated.size()==16 && compactMigrated.get(0).text.equals(entries.get(0).text),"untouched compact defaults migrate");
                 String migrated=Files.readString(path);
                 var invalid=new HelpTip.JsonModel.Entry();invalid.text="x".repeat(17);
                 require(!ConfigLoader.saveRawEntriesForLanguage(language,List.of(invalid)),"server rejects 17 characters");
@@ -90,11 +93,14 @@ public final class TipsRuntimeChecks {
         require(original.equals(probe.text),"repeated selection does not mutate text");
     }
     public static PauseScreen pause() throws Exception {
+        return pause(0);
+    }
+    public static PauseScreen pause(int tipIndex) throws Exception {
         var mc=Minecraft.getInstance();
         String language=mc.getLanguageManager().getSelected();
         var entries=ConfigLoader.fromJson(resource("defaults/tips_"+language+".json"));
         var screen=new PauseScreen(true);
-        TipCache.TIP_MANAGER.replaceServerEntries(List.of(entries.get(0)));
+        TipCache.TIP_MANAGER.replaceServerEntries(List.of(entries.get(tipIndex)));
         require(TipCache.TIP_MANAGER.getValidTip(screen)!=null,"pause general tip");
         var contextual=new HelpTip.JsonModel.Entry();contextual.stage="game";contextual.text="Context probe";
         contextual.conditions=new HelpTip.JsonModel.Conditions();
@@ -117,7 +123,7 @@ public final class TipsRuntimeChecks {
             require(TipCache.TIP_MANAGER.getValidTip(screen)==null,"nonmatching biome");
         } finally {
             TipCache.currentStructure=originalStructure;
-            TipCache.TIP_MANAGER.replaceServerEntries(List.of(entries.get(0)));
+            TipCache.TIP_MANAGER.replaceServerEntries(List.of(entries.get(tipIndex)));
         }
         mc.setScreen(screen);
         TipRenderer.refresh(screen);

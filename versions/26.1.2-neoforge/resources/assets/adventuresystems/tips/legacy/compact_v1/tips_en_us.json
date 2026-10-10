@@ -2,27 +2,27 @@
     "tips":  [
                  {
                      "stage":  "any",
-                     "text":  "§6小麦与胡萝卜§r隔行种植\n可避开同类密植减速",
+                     "text":  "§6Crop rows§r\nAlternate crops\nin adjacent rows",
                      "time":  7000
                  },
                  {
                      "stage":  "any",
-                     "text":  "§6铜块§r四步内有氧化更少的铜\n就无法继续氧化；涂蜡铜不算",
+                     "text":  "§6Water farming§r\nOne water block\nhydrates a 9x9",
                      "time":  7000
                  },
                  {
                      "stage":  "any",
-                     "text":  "§6带花粉的蜜蜂§r能催熟\n身下一两格内的作物",
+                     "text":  "§6Hay bales§r\nCut fall damage\nby 80 percent",
                      "time":  7000
                  },
                  {
                      "stage":  "any",
-                     "text":  "§6泥巴§r下隔一块放向下的滴水石锥\n能慢慢变成黏土",
+                     "text":  "§6Honey harvest§r\nDispensers keep\nbees peaceful",
                      "time":  7000
                  },
                  {
                      "stage":  "game",
-                     "text":  "§6烘干湿海绵§r时燃料槽放空桶\n会得到水桶；下界也能这样",
+                     "text":  "§6Wet sponges§r\nDry instantly\nin the Nether",
                      "time":  7000,
                      "conditions":  {
                                         "dimension":  "minecraft:the_nether"
@@ -30,7 +30,7 @@
                  },
                  {
                      "stage":  "game",
-                     "text":  "§6降雪§r时空炼药锅能收集细雪\n不需要精准采集",
+                     "text":  "§6Powder snow§r\nUse a cauldron\nwhen snow falls",
                      "time":  7000,
                      "conditions":  {
                                         "biome":  "minecraft:snowy_plains"
@@ -38,12 +38,12 @@
                  },
                  {
                      "stage":  "any",
-                     "text":  "§6堆肥桶§r刚满时比较器强度为7\n骨粉可取时才升到8",
+                     "text":  "§6Bookshelf gap§r\nEven a torch\nblocks the bonus",
                      "time":  7000
                  },
                  {
                      "stage":  "game",
-                     "text":  "§6村庄英雄§r不只获得交易折扣\n成年村民的赠礼取决于职业",
+                     "text":  "§6Trade restock§r\nNeeds the linked\njob-site block",
                      "time":  7000,
                      "conditions":  {
                                         "structure":  "minecraft:village_plains"
@@ -51,7 +51,7 @@
                  },
                  {
                      "stage":  "game",
-                     "text":  "§6沼泽地表史莱姆§r受月相影响\n满月更多；新月不会自然生成",
+                     "text":  "§6Surface slimes§r\nFull moon: more\nNew moon: none",
                      "time":  7000,
                      "conditions":  {
                                         "biome":  "minecraft:swamp"
@@ -59,37 +59,37 @@
                  },
                  {
                      "stage":  "any",
-                     "text":  "§6闪电§r能清除未涂蜡铜的氧化",
+                     "text":  "§bEdit tips§r\nF6 \u003e Adventure\nUse \\n to wrap",
                      "time":  7000
                  },
                  {
                      "stage":  "any",
-                     "text":  "§6漏斗取出产物§r不会领走熔炉经验\n手动拿一次产物可领累积经验",
+                     "text":  "§bLocation tips§r\nAdd a biome or\nstructure filter",
                      "time":  7000
                  },
                  {
                      "stage":  "any",
-                     "text":  "§6金镐§r挖石头比下界合金镐更快\n却挖不出铁矿石",
+                     "text":  "§bTip stages§r\nGame: pause menu\nLoading: startup",
                      "time":  7000
                  },
                  {
                      "stage":  "any",
-                     "text":  "§bF6§r→冒险系统→提示编辑\n正文输入\\n即可换行",
+                     "text":  "§bCore settings§r\nF6 opens config\nSearch by name",
                      "time":  7000
                  },
                  {
                      "stage":  "any",
-                     "text":  "§b提示条件§r可绑定群系或结构\n只在对应地点显示",
+                     "text":  "§bItem filters§r\n@mod: mod items\n#tag: item group",
                      "time":  7000
                  },
                  {
                      "stage":  "any",
-                     "text":  "§bF6配置中心§r支持中文和拼音搜索",
+                     "text":  "§bData-pack errors§r\nSkip bad packs\nfor one load",
                      "time":  7000
                  },
                  {
                      "stage":  "any",
-                     "text":  "§b物品条件§r在1.20.1使用NBT\n在提示编辑器选择物品即可",
+                     "text":  "§b26.1.2 items§r\nUse components\nRedo old NBT",
                      "time":  7000
                  }
              ]

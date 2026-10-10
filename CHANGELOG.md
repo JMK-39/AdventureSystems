@@ -4,15 +4,17 @@
 
 ### English
 
-- Replaced the default tips with 16 short vanilla facts and configuration guides, including alternating crop rows, farmland hydration, hay-bale fall protection, dispenser honey harvesting and enchantment bookshelf spacing.
-- Added environment-specific tips for wet sponges in the Nether, snowy cauldrons, village trade restocking and swamp slimes. Item-condition guidance differs between NBT and component versions.
+- Replaced the default tips with 12 lesser-known vanilla mechanics and four configuration guides, including crop crowding, nearby copper oxidation, bee crop growth, mud-to-clay conversion, sponge water buckets, composter signals and stored furnace experience.
+- Added environment-specific tips for sponge water buckets in the Nether, snowy cauldrons, village hero gifts and swamp slimes. Item-condition guidance differs between NBT and component versions.
+- Removed the separate Tip heading. Short text stays on one line; longer tips use only the lines they need, with no extra title row.
 - Tips now allow up to 16 visible characters per line and three lines. Enter \n in the editor to insert a new line; color codes do not count. Invalid text cannot be saved.
 - Untouched earlier defaults migrate automatically. Custom files are preserved, including old long entries that can be shortened in the editor before saving.
 
 ### 简体中文
 
-- 默认提示改为 16 条简短原版冷知识与配置教程，包含作物隔行轮作、耕地保湿、干草摔落减伤、发射器采蜜和附魔书架间隔。
-- 下界湿海绵、下雪时炼药锅收集细雪、村庄交易补货和沼泽史莱姆提示按环境筛选；物品条件教程按 NBT 与数据组件版本区分。
+- 默认提示改为 12 条原版机制冷知识与 4 条配置教程，包含作物密植减速、邻近铜块影响氧化、蜜蜂催熟作物、泥巴转黏土、湿海绵取得水桶、堆肥桶信号和熔炉累积经验。
+- 下界湿海绵取得水桶、下雪收集细雪、村庄英雄赠礼和沼泽史莱姆提示按环境筛选；物品条件教程按 NBT 与数据组件版本区分。
+- 移除单独的“提示”标题行，短文本保持一行，较长内容仅按需要换行，不再额外占用一行标题。
 - 每行最多 16 个可见字符，每条最多 3 行。编辑器输入 \n 换行，颜色代码不计入字数；超限内容无法保存。
 - 未修改的旧默认提示自动更新。自定义文件保持原样，旧的长文本可在编辑器中缩短后保存。
 

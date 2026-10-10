@@ -2,27 +2,27 @@
     "tips":  [
                  {
                      "stage":  "any",
-                     "text":  "§6Crop rows§r\nAlternate crops\nin adjacent rows",
+                     "text":  "§6Mix crop rows§r to\navoid same-crop\ngrowth penalties",
                      "time":  7000
                  },
                  {
                      "stage":  "any",
-                     "text":  "§6Water farming§r\nOne water block\nhydrates a 9x9",
+                     "text":  "§6Unwaxed copper:§r\nless-aged nearby\nhalts oxidation",
                      "time":  7000
                  },
                  {
                      "stage":  "any",
-                     "text":  "§6Hay bales§r\nCut fall damage\nby 80 percent",
+                     "text":  "§6Pollen bees§r grow\ncrops one or two\nblocks below",
                      "time":  7000
                  },
                  {
                      "stage":  "any",
-                     "text":  "§6Honey harvest§r\nDispensers keep\nbees peaceful",
+                     "text":  "§6Mud§r atop a block\nwith dripstone\nbelow turns clay",
                      "time":  7000
                  },
                  {
                      "stage":  "game",
-                     "text":  "§6Wet sponges§r\nDry instantly\nin the Nether",
+                     "text":  "§6Smelt wet sponge§r\nwith an empty\nbucket for water",
                      "time":  7000,
                      "conditions":  {
                                         "dimension":  "minecraft:the_nether"
@@ -30,7 +30,7 @@
                  },
                  {
                      "stage":  "game",
-                     "text":  "§6Powder snow§r\nUse a cauldron\nwhen snow falls",
+                     "text":  "§6Snowfall§r fills\nempty cauldrons\nwith powder snow",
                      "time":  7000,
                      "conditions":  {
                                         "biome":  "minecraft:snowy_plains"
@@ -38,12 +38,12 @@
                  },
                  {
                      "stage":  "any",
-                     "text":  "§6Bookshelf gap§r\nEven a torch\nblocks the bonus",
+                     "text":  "§6Compost signal:§r\n7 when full;\n8: bone meal set",
                      "time":  7000
                  },
                  {
                      "stage":  "game",
-                     "text":  "§6Trade restock§r\nNeeds the linked\njob-site block",
+                     "text":  "§6Hero gift items§r\ndepend on adult\nvillager jobs",
                      "time":  7000,
                      "conditions":  {
                                         "structure":  "minecraft:village_plains"
@@ -51,7 +51,7 @@
                  },
                  {
                      "stage":  "game",
-                     "text":  "§6Surface slimes§r\nFull moon: more\nNew moon: none",
+                     "text":  "§6Swamp slimes:§r\nfull moon: more;\nnew moon: none",
                      "time":  7000,
                      "conditions":  {
                                         "biome":  "minecraft:swamp"
@@ -59,37 +59,37 @@
                  },
                  {
                      "stage":  "any",
-                     "text":  "§bEdit tips§r\nF6 \u003e Adventure\nUse \\n to wrap",
+                     "text":  "§6Lightning§r cleans\nunwaxed copper",
                      "time":  7000
                  },
                  {
                      "stage":  "any",
-                     "text":  "§bLocation tips§r\nAdd a biome or\nstructure filter",
+                     "text":  "§6Hopper outputs§r\nstore furnace XP\nTake one by hand",
                      "time":  7000
                  },
                  {
                      "stage":  "any",
-                     "text":  "§bTip stages§r\nGame: pause menu\nLoading: startup",
+                     "text":  "§6Gold mines stone§r\nfaster than\nnetherite",
                      "time":  7000
                  },
                  {
                      "stage":  "any",
-                     "text":  "§bCore settings§r\nF6 opens config\nSearch by name",
+                     "text":  "§bF6 \u003e Adventure§r\nEdit tips; use\nliteral \\n",
                      "time":  7000
                  },
                  {
                      "stage":  "any",
-                     "text":  "§bItem filters§r\n@mod: mod items\n#tag: item group",
+                     "text":  "§bTip conditions:§r\nbiome/structure\nlimit locations",
                      "time":  7000
                  },
                  {
                      "stage":  "any",
-                     "text":  "§bData-pack errors§r\nSkip bad packs\nfor one load",
+                     "text":  "§bF6 opens config§r",
                      "time":  7000
                  },
                  {
                      "stage":  "any",
-                     "text":  "§bItem conditions§r\n1.20.1 uses NBT\nPick in editor",
+                     "text":  "§b1.20.1 item tips§r\nmatch NBT; pick\nitems in editor",
                      "time":  7000
                  }
              ]

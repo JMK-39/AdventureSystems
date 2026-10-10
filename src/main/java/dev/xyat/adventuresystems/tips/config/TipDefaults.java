@@ -19,7 +19,11 @@ final class TipDefaults {
             name="tips_zh_cn_nbt.json";
             //?}
         }
-        try{return JsonParser.parseString(raw).equals(JsonParser.parseString(resource("legacy/"+name)));}
+        try{
+            var parsed=JsonParser.parseString(raw);
+            return parsed.equals(JsonParser.parseString(resource("legacy/"+name)))
+                    || parsed.equals(JsonParser.parseString(resource("legacy/compact_v1/tips_"+language+".json")));
+        }
         catch(RuntimeException invalid){return false;}
     }
     private static String resource(String path) throws IOException {
