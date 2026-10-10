@@ -8,6 +8,7 @@ import dev.xyat.adventuresystems.tips.TipsNetwork;
 import dev.xyat.adventuresystems.tips.api.HelpTip;
 import dev.xyat.adventuresystems.tips.client.TipRenderer;
 import dev.xyat.adventuresystems.tips.config.ConfigLoader;
+import dev.xyat.adventuresystems.tips.config.TipTextLimits;
 import dev.xyat.adventuresystems.tips.config.TipsConfigGui;
 import dev.xyat.kineticcore.api.client.gui.input.MouseInput;
 import dev.xyat.kineticcore.api.client.gui.input.MouseDragInput;
@@ -158,15 +159,16 @@ public class TipEditorScreen extends KineticPage {
         this.textInput = ui.textField(editX, curY, editW)
                 .label(Component.empty())
                 .placeholder(AdventureText.translatable("gui.adventuresystems.tips.tips.content_hint_amp"))
-                .maxLength(512)
-                .value(selectedEntry != null && selectedEntry.text != null ? selectedEntry.text : "")
+                .tooltip(AdventureText.translatable("gui.adventuresystems.tips.tips.text_limits"))
+                .maxLength(65534)
+                .value(TipTextLimits.toEditor(selectedEntry==null?null:selectedEntry.text))
                 .onChange(value -> {
                     if (selectedEntry != null) {
-                        selectedEntry.text = value;
+                        selectedEntry.text = TipTextLimits.fromEditor(value);
                         refreshTipList(false);
                     }
                 }).firstShownTextAsDefault().build();
-        this.textInput.limitTextLength(512);
+        this.textInput.limitTextLength(65534);
         this.textInput.formatText((string, index) -> {
             Style activeStyle = getStyleAtPos(this.textInput.textValue(), index);
             return Component.literal(string).setStyle(activeStyle).getVisualOrderText();
@@ -618,7 +620,7 @@ public class TipEditorScreen extends KineticPage {
     private void select(HelpTip.JsonModel.Entry entry) {
         this.selectedEntry = entry;
         conditionScroll.reset();
-        if (textInput != null) textInput.setTextValue(entry.text != null ? entry.text : "");
+        if (textInput != null) textInput.setTextValue(TipTextLimits.toEditor(entry.text));
         if (leftList != null) {
             leftList.setSelectedIndex(selectedDisplayIndex());
             leftList.ensureSelectedVisible();
@@ -629,7 +631,8 @@ public class TipEditorScreen extends KineticPage {
     private Component stageText() {
         return AdventureText.translatable(
                 "gui.adventuresystems.tips.tips.stage",
-                selectedEntry != null ? selectedEntry.stage : "any"
+                AdventureText.translatable("gui.adventuresystems.tips.tips.stage."
+                        + (selectedEntry != null ? selectedEntry.stage : "any"))
         );
     }
 
@@ -677,7 +680,7 @@ public class TipEditorScreen extends KineticPage {
                 .map(entry -> new SelectionItem(
                         tipLabel(entry),
                         null,
-                        null,
+                        AdventureText.literal(TipTextLimits.normalizeLines(entry.text)),
                         true,
                         false
                 ))
@@ -688,11 +691,16 @@ public class TipEditorScreen extends KineticPage {
         if (entry == null || entry.text == null || entry.text.isEmpty()) {
             return AdventureText.translatable("gui.adventuresystems.tips.tips.unnamed");
         }
-        return AdventureText.literal(entry.text);
+        String firstLine=TipTextLimits.normalizeLines(entry.text).lines().filter(line->!line.isBlank()).findFirst().orElse("");
+        return AdventureText.literal(firstLine);
     }
 
     private void save() {
         if (savePending) return;
+        if(allEntries.stream().anyMatch(entry->entry==null||!TipTextLimits.isValid(entry.text))){
+            KineticOverlays.toast(AdventureText.translatable("gui.adventuresystems.tips.tips.text_limits"));
+            return;
+        }
         savePending = true;
         TipsNetwork.saveEditor(languageCode, allEntries);
     }

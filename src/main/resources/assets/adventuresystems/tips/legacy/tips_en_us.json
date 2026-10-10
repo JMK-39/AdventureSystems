@@ -1,0 +1,53 @@
+{
+          "tips":[
+            {
+              "stage": "any",
+              "text": "§e[Quick actions] §fEnter §bkt §fto view the quick actions provided by the core.",
+              "time": 6000
+            },
+            {
+              "stage": "any",
+              "text": "§a[Accessories] §fEquip accessories in the appropriate §bCurios slots§f to activate their effects.",
+              "time": 6000
+            },
+            {
+              "stage": "any",
+              "text": "§6[Wallet] §fStore your coins in a wallet to free up inventory slots.",
+              "time": 6000
+            },
+            {
+              "stage": "any",
+              "text": "§d[Quests] §fShop exchanges may require quests. Check the required tasks and materials first.",
+              "time": 6000
+            },
+            {
+              "stage": "any",
+              "text": "§b[Exploration] §fNote your base coordinates before leaving, and bring food and light sources.",
+              "time": 6000
+            },
+            {
+              "stage": "any",
+              "text": "§c[Safety] §fWatch for monsters at night and in caves. Keep areas lit and leave yourself an escape route.",
+              "time": 6000
+            },
+            {
+              "stage": "loading",
+              "text": "§e[Loading] §fThis tip is only visible while §bLoading the world§f. Useful for performance tips.",
+              "time": 4000
+            },
+            {
+              "stage": "game",
+              "text": "§a§l[Biome] §fYou are in Nether Wastes! Wear gold armor to stop Piglins from attacking.",
+              "conditions": {
+                "biome": "minecraft:nether_wastes"
+              }
+            },
+            {
+              "stage": "game",
+              "text": "§d§l[Item] §fYou found an Elytra! Use fireworks for infinite flight.",
+              "conditions": {
+                "items":[ { "id": "minecraft:elytra" } ]
+              }
+            }
+          ]
+        }

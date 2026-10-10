@@ -765,4 +765,9 @@
   "gui.adventuresystems.curios.wallet.shop_editor_icon_default": "§f当前：使用商品本身的图标",
   "gui.adventuresystems.curios.wallet.shop_editor_icon_custom": "§a当前：%s",
   "gui.adventuresystems.curios.wallet.shop_editor_icon_tip": "§6左键选择商店列表中显示的图标，右键恢复为商品本身的图标。"
+,
+  "gui.adventuresystems.tips.tips.text_limits": "每行最多 16 个字符，最多 3 行；颜色代码不计入字数。输入 \\n 换行；超限不能保存。",
+  "gui.adventuresystems.tips.tips.stage.any": "加载与暂停",
+  "gui.adventuresystems.tips.tips.stage.loading": "仅加载",
+  "gui.adventuresystems.tips.tips.stage.game": "仅暂停"
 }

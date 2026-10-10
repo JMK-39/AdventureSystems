@@ -178,13 +178,18 @@ public final class TipsNetwork {
     }
 
     private static String snapshotJson(String languageCode) {
-        return ConfigLoader.toJson(ConfigLoader.getRawEntriesForLanguage(languageCode));
+        return ConfigLoader.toEditorJson(ConfigLoader.getRawEntriesForLanguage(languageCode));
+    }
+
+    private static String runtimeSnapshotJson(String languageCode) {
+        return ConfigLoader.toJson(ConfigLoader.getRawEntriesForLanguage(languageCode).stream()
+                .filter(entry->dev.xyat.adventuresystems.tips.config.TipTextLimits.isValid(entry.text)).toList());
     }
 
     private static void sendRuntimeSnapshot(ServerPlayer player, String languageCode) {
         String language = ConfigLoader.normalizeLanguageCode(languageCode);
         CLIENT_LANGUAGES.put(player.getUUID(), language);
-        sendToPlayer(new SyncRuntimeTips(language, snapshotJson(language)), player);
+        sendToPlayer(new SyncRuntimeTips(language, runtimeSnapshotJson(language)), player);
     }
 
     private static void handleRequestStructure(RequestStructure packet, ServerPacketContext context) {
@@ -321,7 +326,7 @@ public final class TipsNetwork {
         }
 
         public static void handleOpenEditor(String languageCode, String json) {
-            List<HelpTip.JsonModel.Entry> entries = ConfigLoader.fromJson(json);
+            List<HelpTip.JsonModel.Entry> entries = ConfigLoader.fromEditorJson(json);
             if (entries == null) {
                 KineticOverlays.toast(AdventureText.translatable("msg.adventuresystems.tips.tips.save_failed"));
                 return;

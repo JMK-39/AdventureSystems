@@ -1,0 +1,96 @@
+{
+    "tips":  [
+                 {
+                     "stage":  "any",
+                     "text":  "§6Crop rows§r\nAlternate crops\nin adjacent rows",
+                     "time":  7000
+                 },
+                 {
+                     "stage":  "any",
+                     "text":  "§6Water farming§r\nOne water block\nhydrates a 9x9",
+                     "time":  7000
+                 },
+                 {
+                     "stage":  "any",
+                     "text":  "§6Hay bales§r\nCut fall damage\nby 80 percent",
+                     "time":  7000
+                 },
+                 {
+                     "stage":  "any",
+                     "text":  "§6Honey harvest§r\nDispensers keep\nbees peaceful",
+                     "time":  7000
+                 },
+                 {
+                     "stage":  "game",
+                     "text":  "§6Wet sponges§r\nDry instantly\nin the Nether",
+                     "time":  7000,
+                     "conditions":  {
+                                        "dimension":  "minecraft:the_nether"
+                                    }
+                 },
+                 {
+                     "stage":  "game",
+                     "text":  "§6Powder snow§r\nUse a cauldron\nwhen snow falls",
+                     "time":  7000,
+                     "conditions":  {
+                                        "biome":  "minecraft:snowy_plains"
+                                    }
+                 },
+                 {
+                     "stage":  "any",
+                     "text":  "§6Bookshelf gap§r\nEven a torch\nblocks the bonus",
+                     "time":  7000
+                 },
+                 {
+                     "stage":  "game",
+                     "text":  "§6Trade restock§r\nNeeds the linked\njob-site block",
+                     "time":  7000,
+                     "conditions":  {
+                                        "structure":  "minecraft:village_plains"
+                                    }
+                 },
+                 {
+                     "stage":  "game",
+                     "text":  "§6Surface slimes§r\nFull moon: more\nNew moon: none",
+                     "time":  7000,
+                     "conditions":  {
+                                        "biome":  "minecraft:swamp"
+                                    }
+                 },
+                 {
+                     "stage":  "any",
+                     "text":  "§bEdit tips§r\nF6 \u003e Adventure\nUse \\n to wrap",
+                     "time":  7000
+                 },
+                 {
+                     "stage":  "any",
+                     "text":  "§bLocation tips§r\nAdd a biome or\nstructure filter",
+                     "time":  7000
+                 },
+                 {
+                     "stage":  "any",
+                     "text":  "§bTip stages§r\nGame: pause menu\nLoading: startup",
+                     "time":  7000
+                 },
+                 {
+                     "stage":  "any",
+                     "text":  "§bCore settings§r\nF6 opens config\nSearch by name",
+                     "time":  7000
+                 },
+                 {
+                     "stage":  "any",
+                     "text":  "§bItem filters§r\n@mod: mod items\n#tag: item group",
+                     "time":  7000
+                 },
+                 {
+                     "stage":  "any",
+                     "text":  "§bData-pack errors§r\nSkip bad packs\nfor one load",
+                     "time":  7000
+                 },
+                 {
+                     "stage":  "any",
+                     "text":  "§bItem conditions§r\n1.21.1 uses\nitem components",
+                     "time":  7000
+                 }
+             ]
+}

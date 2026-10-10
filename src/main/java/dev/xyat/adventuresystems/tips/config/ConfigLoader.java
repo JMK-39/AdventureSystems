@@ -35,7 +35,7 @@ public class ConfigLoader {
         try {
             if (!KineticPaths.configFileExists(targetFile)) return new ArrayList<>();
             HelpTip.JsonModel model = GSON.fromJson(KineticPaths.readConfigText(targetFile), HelpTip.JsonModel.class);
-            if (model != null && areValidEntries(model.tips)) {
+            if (model != null && areValidEntries(model.tips, false)) {
                 return new ArrayList<>(model.tips);
             }
         } catch (Exception exception) {
@@ -45,9 +45,18 @@ public class ConfigLoader {
     }
 
     public static List<HelpTip.JsonModel.Entry> fromJson(String json) {
+        return parseJson(json, true);
+    }
+
+    /** Read-only editor snapshots also carry older long entries so players can repair them. */
+    public static List<HelpTip.JsonModel.Entry> fromEditorJson(String json) {
+        return parseJson(json, false);
+    }
+
+    private static List<HelpTip.JsonModel.Entry> parseJson(String json, boolean compactText) {
         try {
             HelpTip.JsonModel model = GSON.fromJson(json == null ? "" : json, HelpTip.JsonModel.class);
-            if (model == null || !areValidEntries(model.tips)) return null;
+            if (model == null || !areValidEntries(model.tips, compactText)) return null;
             return new ArrayList<>(model.tips);
         } catch (RuntimeException exception) {
             return null;
@@ -55,7 +64,15 @@ public class ConfigLoader {
     }
 
     public static String toJson(List<HelpTip.JsonModel.Entry> entries) {
-        if (!areValidEntries(entries)) throw new IllegalArgumentException("Invalid tip entries");
+        return serializeJson(entries, true);
+    }
+
+    public static String toEditorJson(List<HelpTip.JsonModel.Entry> entries) {
+        return serializeJson(entries, false);
+    }
+
+    private static String serializeJson(List<HelpTip.JsonModel.Entry> entries, boolean compactText) {
+        if (!areValidEntries(entries, compactText)) throw new IllegalArgumentException("Invalid tip entries");
         HelpTip.JsonModel model = new HelpTip.JsonModel();
         model.tips = new ArrayList<>(entries);
         return GSON.toJson(model);
@@ -78,9 +95,14 @@ public class ConfigLoader {
     }
 
     public static boolean areValidEntries(List<HelpTip.JsonModel.Entry> entries) {
+        return areValidEntries(entries, true);
+    }
+
+    private static boolean areValidEntries(List<HelpTip.JsonModel.Entry> entries, boolean compactText) {
         if (entries == null || entries.size() > 4096) return false;
         for (HelpTip.JsonModel.Entry entry : entries) {
-            if (entry == null || entry.text == null || entry.text.isBlank() || entry.text.length() > 32767) return false;
+            if (entry == null || entry.text == null || entry.text.isBlank() || entry.text.length() > 32767
+                    || compactText && !TipTextLimits.isValid(entry.text)) return false;
             if (!("any".equals(entry.stage) || "loading".equals(entry.stage) || "game".equals(entry.stage))) return false;
             if (entry.time < 250 || entry.time > 3_600_000) return false;
             if (hasInvalidConditions(entry.conditions)) return false;
@@ -148,9 +170,9 @@ public class ConfigLoader {
         List<HelpTip> result = new ArrayList<>();
         if (entries == null) return result;
         for (HelpTip.JsonModel.Entry entry : entries) {
-            if (entry == null || entry.text == null || entry.text.isEmpty()) continue;
+            if (entry == null || !TipTextLimits.isValid(entry.text)) continue;
 
-            HelpTip tip = new HelpTip(AdventureText.literal(entry.text), entry.time);
+            HelpTip tip = new HelpTip(AdventureText.literal(TipTextLimits.normalizeLines(entry.text)), entry.time);
             if ("loading".equalsIgnoreCase(entry.stage)) tip.stage = 1;
             else if ("game".equalsIgnoreCase(entry.stage)) tip.stage = 2;
             else tip.stage = 0;
@@ -242,241 +264,17 @@ public class ConfigLoader {
 
     private static void ensureDefaultFiles() {
         try {
-            String chinese = CONFIG_DIR + "tips_zh_cn.json";
-            String english = CONFIG_DIR + "tips_en_us.json";
-            if (!KineticPaths.configFileExists(chinese)) {
-                KineticPaths.writeConfigText(chinese, DEFAULT_JSON_CN);
-            }
-            if (!KineticPaths.configFileExists(english)) {
-                KineticPaths.writeConfigText(english, DEFAULT_JSON_EN);
+            for(String language:List.of("zh_cn","en_us")){
+                String path=CONFIG_DIR+"tips_"+language+".json";
+                if(!KineticPaths.configFileExists(path)||TipDefaults.isLegacy(KineticPaths.readConfigText(path),language)){
+                    String defaults=TipDefaults.read(language);
+                    if(fromJson(defaults)==null)throw new IOException("Invalid bundled tips: "+language);
+                    KineticPaths.writeConfigTextsAtomic(Map.of(path,defaults));
+                }
             }
         } catch (IOException exception) {
             TipsModule.LOGGER.error("TipsConfig: Failed to init default files", exception);
         }
     }
 
-    //? if >=1.21 {
-    /*private static final String DEFAULT_JSON_CN = """
-        {
-          "tips":[
-            {
-              "stage": "any",
-              "text": "§e[快捷功能] §f输入 §bkt §f可以查看核心提供的快捷功能。",
-              "time": 6000
-            },
-            {
-              "stage": "any",
-              "text": "§a[饰品] §f将饰品放入对应的 §bCurios 槽位§f，才能发挥装备效果。",
-              "time": 6000
-            },
-            {
-              "stage": "any",
-              "text": "§6[钱包] §f零钱可以集中存进钱包，减少背包中货币占用的格子。",
-              "time": 6000
-            },
-            {
-              "stage": "any",
-              "text": "§d[任务] §f商店兑换可能设有任务门槛，先查看所需任务与材料。",
-              "time": 6000
-            },
-            {
-              "stage": "any",
-              "text": "§b[探索] §f出发前记下基地坐标，并准备食物和照明用品。",
-              "time": 6000
-            },
-            {
-              "stage": "any",
-              "text": "§c[安全] §f夜晚和洞穴中更容易遭遇怪物，保持照明并留意退路。",
-              "time": 6000
-            },
-            {
-              "stage": "loading",
-              "text": "§e[阶段演示] §f这是一条仅在 §b游戏加载阶段 §f显示的提示。适合放背景故事或性能说明。",
-              "time": 4000
-            },
-            {
-              "stage": "game",
-              "text": "§a§l[群系演示] §f检测到你位于下界荒地！猪灵通常在附近出没，建议穿一件金装。",
-              "conditions": {
-                "biome": "minecraft:nether_wastes"
-              }
-            },
-            {
-              "stage": "game",
-              "text": "§b§l[结构演示] §f你发现了一座村庄。记得寻找铁匠铺，那里通常有不错的补给。",
-              "conditions": {
-                "structure": "minecraft:village_plains"
-              }
-            },
-            {
-              "stage": "game",
-              "text": "§d§l[物品演示] §f你拿到了鞘翅！配合烟花火箭可以实现跨维度长距离飞行。",
-              "conditions": {
-                "items":[ { "id": "minecraft:elytra" } ]
-              }
-            },
-            {
-              "stage": "game",
-              "text": "§c§l[组件演示] §f你正拿着一把 §6强力武器§f。小心操作，别掉进岩浆了！",
-              "conditions": {
-                "items":[ { "id": "minecraft:netherite_sword", "components": "[damage=0]", "componentMode": "WEAK" } ]
-              }
-            },
-            {
-              "stage": "game",
-              "text": "§e§l[饰品演示] §f检测到你装备了精美戒指,至少能加幸运值~",
-              "conditions": {
-                "curios":[ { "id": "enigmaticlegacy:golden_ring" } ]
-              }
-            },
-            {
-              "stage": "game",
-              "text": "§6§l[成就演示] §f恭喜完成工业时代！准备好迈向自动化生产了吗？",
-              "conditions": {
-                "advancement": "minecraft:story/enter_the_end"
-              }
-            }
-          ]
-        }""";
-
-    *///?} else {
-    private static final String DEFAULT_JSON_CN = """
-        {
-          "tips":[
-            {
-              "stage": "any",
-              "text": "§e[快捷功能] §f输入 §bkt §f可以查看核心提供的快捷功能。",
-              "time": 6000
-            },
-            {
-              "stage": "any",
-              "text": "§a[饰品] §f将饰品放入对应的 §bCurios 槽位§f，才能发挥装备效果。",
-              "time": 6000
-            },
-            {
-              "stage": "any",
-              "text": "§6[钱包] §f零钱可以集中存进钱包，减少背包中货币占用的格子。",
-              "time": 6000
-            },
-            {
-              "stage": "any",
-              "text": "§d[任务] §f商店兑换可能设有任务门槛，先查看所需任务与材料。",
-              "time": 6000
-            },
-            {
-              "stage": "any",
-              "text": "§b[探索] §f出发前记下基地坐标，并准备食物和照明用品。",
-              "time": 6000
-            },
-            {
-              "stage": "any",
-              "text": "§c[安全] §f夜晚和洞穴中更容易遭遇怪物，保持照明并留意退路。",
-              "time": 6000
-            },
-            {
-              "stage": "loading",
-              "text": "§e[阶段演示] §f这是一条仅在 §b游戏加载阶段 §f显示的提示。适合放背景故事或性能说明。",
-              "time": 4000
-            },
-            {
-              "stage": "game",
-              "text": "§a§l[群系演示] §f检测到你位于下界荒地！猪灵通常在附近出没，建议穿一件金装。",
-              "conditions": {
-                "biome": "minecraft:nether_wastes"
-              }
-            },
-            {
-              "stage": "game",
-              "text": "§b§l[结构演示] §f你发现了一座村庄。记得寻找铁匠铺，那里通常有不错的补给。",
-              "conditions": {
-                "structure": "minecraft:village_plains"
-              }
-            },
-            {
-              "stage": "game",
-              "text": "§d§l[物品演示] §f你拿到了鞘翅！配合烟花火箭可以实现跨维度长距离飞行。",
-              "conditions": {
-                "items":[ { "id": "minecraft:elytra" } ]
-              }
-            },
-            {
-              "stage": "game",
-              "text": "§c§l[NBT演示] §f你正拿着一把 §6强力武器§f。小心操作，别掉进岩浆了！",
-              "conditions": {
-                "items":[ { "id": "minecraft:netherite_sword", "nbt": "{Damage:0}" } ]
-              }
-            },
-            {
-              "stage": "game",
-              "text": "§e§l[饰品演示] §f检测到你装备了精美戒指,至少能加幸运值~",
-              "conditions": {
-                "curios":[ { "id": "enigmaticlegacy:golden_ring" } ]
-              }
-            },
-            {
-              "stage": "game",
-              "text": "§6§l[成就演示] §f恭喜完成工业时代！准备好迈向自动化生产了吗？",
-              "conditions": {
-                "advancement": "minecraft:story/enter_the_end"
-              }
-            }
-          ]
-        }""";
-
-    //?}
-
-    private static final String DEFAULT_JSON_EN = """
-        {
-          "tips":[
-            {
-              "stage": "any",
-              "text": "§e[Quick actions] §fEnter §bkt §fto view the quick actions provided by the core.",
-              "time": 6000
-            },
-            {
-              "stage": "any",
-              "text": "§a[Accessories] §fEquip accessories in the appropriate §bCurios slots§f to activate their effects.",
-              "time": 6000
-            },
-            {
-              "stage": "any",
-              "text": "§6[Wallet] §fStore your coins in a wallet to free up inventory slots.",
-              "time": 6000
-            },
-            {
-              "stage": "any",
-              "text": "§d[Quests] §fShop exchanges may require quests. Check the required tasks and materials first.",
-              "time": 6000
-            },
-            {
-              "stage": "any",
-              "text": "§b[Exploration] §fNote your base coordinates before leaving, and bring food and light sources.",
-              "time": 6000
-            },
-            {
-              "stage": "any",
-              "text": "§c[Safety] §fWatch for monsters at night and in caves. Keep areas lit and leave yourself an escape route.",
-              "time": 6000
-            },
-            {
-              "stage": "loading",
-              "text": "§e[Loading] §fThis tip is only visible while §bLoading the world§f. Useful for performance tips.",
-              "time": 4000
-            },
-            {
-              "stage": "game",
-              "text": "§a§l[Biome] §fYou are in Nether Wastes! Wear gold armor to stop Piglins from attacking.",
-              "conditions": {
-                "biome": "minecraft:nether_wastes"
-              }
-            },
-            {
-              "stage": "game",
-              "text": "§d§l[Item] §fYou found an Elytra! Use fireworks for infinite flight.",
-              "conditions": {
-                "items":[ { "id": "minecraft:elytra" } ]
-              }
-            }
-          ]
-        }""";
 }

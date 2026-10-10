@@ -1,0 +1,81 @@
+{
+          "tips":[
+            {
+              "stage": "any",
+              "text": "§e[快捷功能] §f输入 §bkt §f可以查看核心提供的快捷功能。",
+              "time": 6000
+            },
+            {
+              "stage": "any",
+              "text": "§a[饰品] §f将饰品放入对应的 §bCurios 槽位§f，才能发挥装备效果。",
+              "time": 6000
+            },
+            {
+              "stage": "any",
+              "text": "§6[钱包] §f零钱可以集中存进钱包，减少背包中货币占用的格子。",
+              "time": 6000
+            },
+            {
+              "stage": "any",
+              "text": "§d[任务] §f商店兑换可能设有任务门槛，先查看所需任务与材料。",
+              "time": 6000
+            },
+            {
+              "stage": "any",
+              "text": "§b[探索] §f出发前记下基地坐标，并准备食物和照明用品。",
+              "time": 6000
+            },
+            {
+              "stage": "any",
+              "text": "§c[安全] §f夜晚和洞穴中更容易遭遇怪物，保持照明并留意退路。",
+              "time": 6000
+            },
+            {
+              "stage": "loading",
+              "text": "§e[阶段演示] §f这是一条仅在 §b游戏加载阶段 §f显示的提示。适合放背景故事或性能说明。",
+              "time": 4000
+            },
+            {
+              "stage": "game",
+              "text": "§a§l[群系演示] §f检测到你位于下界荒地！猪灵通常在附近出没，建议穿一件金装。",
+              "conditions": {
+                "biome": "minecraft:nether_wastes"
+              }
+            },
+            {
+              "stage": "game",
+              "text": "§b§l[结构演示] §f你发现了一座村庄。记得寻找铁匠铺，那里通常有不错的补给。",
+              "conditions": {
+                "structure": "minecraft:village_plains"
+              }
+            },
+            {
+              "stage": "game",
+              "text": "§d§l[物品演示] §f你拿到了鞘翅！配合烟花火箭可以实现跨维度长距离飞行。",
+              "conditions": {
+                "items":[ { "id": "minecraft:elytra" } ]
+              }
+            },
+            {
+              "stage": "game",
+              "text": "§c§l[NBT演示] §f你正拿着一把 §6强力武器§f。小心操作，别掉进岩浆了！",
+              "conditions": {
+                "items":[ { "id": "minecraft:netherite_sword", "nbt": "{Damage:0}" } ]
+              }
+            },
+            {
+              "stage": "game",
+              "text": "§e§l[饰品演示] §f检测到你装备了精美戒指,至少能加幸运值~",
+              "conditions": {
+                "curios":[ { "id": "enigmaticlegacy:golden_ring" } ]
+              }
+            },
+            {
+              "stage": "game",
+              "text": "§6§l[成就演示] §f恭喜完成工业时代！准备好迈向自动化生产了吗？",
+              "conditions": {
+                "advancement": "minecraft:story/enter_the_end"
+              }
+            }
+          ]
+        }

@@ -19,7 +19,7 @@ public final class GuiCaptureValidation {
     private static final Logger LOG=LoggerFactory.getLogger(GuiCaptureValidation.class);
     private static final String ROOT=System.getProperty("adventuresystems.guiValidation.output","D:/IDEAWork/AdventureSystems/.gradle/gui-capture/");
     private static final String GUI="dev.xyat.adventuresystems.curios.wallet.client.gui.";
-    private static final String[] NAMES={"wallet","shop","shop-editor","shop-entry-editor","shop-commands","shop-reward-pool","shop-quests","shop-currency-picker","shop-command-picker","shop-quest-picker","ftb-binding-editor","ftb-blacklist","ftb-item-blacklist","tip-editor","tip-time","tip-structures","tip-biomes","tip-dimensions"};
+    private static final String[] NAMES={"wallet","shop","shop-editor","shop-entry-editor","shop-commands","shop-reward-pool","shop-quests","shop-currency-picker","shop-command-picker","shop-quest-picker","ftb-binding-editor","ftb-blacklist","ftb-item-blacklist","tip-editor","tip-time","tip-structures","tip-biomes","tip-dimensions","tip-pause"};
     private static boolean installed,started,screenshot,finished,originalFullscreen;
     private static String originalLanguage;
     private static int originalScale,originalWidth,originalHeight,phase=-1,page=-1,captures,failures;
@@ -38,6 +38,7 @@ public final class GuiCaptureValidation {
                 originalWidth=mc.getWindow().getWidth();originalHeight=mc.getWindow().getHeight();originalFullscreen=mc.getWindow().isFullscreen();
                 mc.options.guiScale().set(0);
                 if(originalFullscreen)mc.getWindow().toggleFullScreen();
+                TipsRuntimeChecks.verifyFiles();
                 nextPhase();
                 return;
             }
@@ -104,8 +105,9 @@ public final class GuiCaptureValidation {
             case 10 -> KineticGui.open(new dev.xyat.adventuresystems.ftb.client.gui.FTBItemBindingEditorScreen());
             case 11 -> KineticGui.open(new dev.xyat.adventuresystems.ftb.client.gui.FTBBlacklistScreen());
             case 12 -> KineticGui.open(new dev.xyat.adventuresystems.ftb.client.gui.ItemBlacklistScreenFTB());
-            case 13 -> KineticGui.open(new dev.xyat.adventuresystems.tips.client.gui.editor.TipEditorScreen("en_us",dev.xyat.adventuresystems.tips.config.ConfigLoader.getRawEntriesForLanguage("en_us")));
+            case 13 -> KineticGui.open(new dev.xyat.adventuresystems.tips.client.gui.editor.TipEditorScreen(mc.getLanguageManager().getSelected(),dev.xyat.adventuresystems.tips.config.ConfigLoader.getRawEntriesForLanguage(mc.getLanguageManager().getSelected())));
             case 14 -> KineticGui.open(new dev.xyat.adventuresystems.tips.client.gui.editor.TimeEditScreen(5000,value->{}));
+            case 18 -> TipsRuntimeChecks.pause();
             default -> KineticGui.open(new dev.xyat.adventuresystems.tips.client.gui.editor.TipSelectors.RegistrySelectorScreen(new String[]{"structures","biomes","dimensions"}[index-15],value->{}));
         }
     }
@@ -137,6 +139,7 @@ public final class GuiCaptureValidation {
         if(stressOriginal!=null){Language.inject(stressOriginal);stressOriginal=null;}
         mc.options.guiScale().set(originalScale);
         mc.getLanguageManager().setSelected(originalLanguage);mc.options.languageCode=originalLanguage;
+        dev.xyat.adventuresystems.tips.client.TipCache.TIP_MANAGER.reloadLocalFallback();
         mc.setScreen(null);
         mc.getWindow().setWindowed(originalWidth,originalHeight);
         if(originalFullscreen && !mc.getWindow().isFullscreen())mc.getWindow().toggleFullScreen();

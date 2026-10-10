@@ -11,6 +11,8 @@ Adventure Systems adds Curios accessories and progression, currency wallets and 
 - **FTB Quests:** item-linked navigation, favorites, filters and restricted repeatable-task submission.
 - **Tips:** multilingual messages selected by dimension, biome, structure, advancement and carried/equipped items.
 
+The default tips contain 16 short vanilla facts and Kinetic configuration guides, with item-condition instructions matched to each Minecraft version. Edit them through F6 → Adventure Systems → Tips. Each line permits 16 visible characters and each tip permits three lines; use \n in the editor for a new line. Color codes do not count. Oversized text is rejected when saving. Untouched older defaults update automatically; customized files are preserved and older long entries remain editable so you can shorten them.
+
 Supports Forge 1.20.1 with Java 17, NeoForge 1.21.1 with Java 21, and NeoForge 26.1.2 with Java 25. Requires KineticCore 26.10.7+ on Forge 1.20.1 (26.10.5+ on NeoForge), Curios and FTB Library / Quests / Teams; install matching versions on client and server. Optional integrations include JEI, Sophisticated Backpacks and Refined Storage.
 
 Detailed instructions belong in the [English Wiki](https://github.com/JMK-39/AdventureSystems/wiki/Tutorial); local Wiki pages are prepared and pending publication. Updates are in [CHANGELOG.md](CHANGELOG.md).
@@ -23,6 +25,8 @@ Adventure Systems 提供 Curios 饰品与成长、货币钱包和可配置商店
 - **钱包和商店：** 货币存取与兑换、材料买卖、任务门槛、物品奖励与管理员维护的指令奖励。
 - **FTB 任务：** 物品关联跳转、收藏、过滤及有限制的可重复任务提交。
 - **情境提示：** 按维度、群系、结构、进度与携带／装备物品筛选多语言提示。
+
+默认提供 16 条简短的原版冷知识与 Kinetic 配置教程，物品条件说明按游戏版本区分。通过 F6 → Adventure Systems → 提示编辑内容。每行最多 16 个可见字符，每条最多 3 行；在编辑器中输入 \n 换行，颜色代码不计入字数。超限内容无法保存。未修改的旧默认提示会自动更新；自定义文件保持原样，旧的长文本仍可打开编辑，缩短后再保存。
 
 支持 Forge 1.20.1（Java 17）、NeoForge 1.21.1（Java 21），以及 NeoForge 26.1.2（Java 25）。必需 KineticCore 26.10.7+（Forge 1.20.1；NeoForge 为 26.10.5+）、Curios 和 FTB Library / Quests / Teams，客户端与服务端安装对应版本。可选联动包括 JEI、精妙背包与 Refined Storage。
 

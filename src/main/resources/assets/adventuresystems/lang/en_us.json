@@ -765,4 +765,9 @@
   "gui.adventuresystems.curios.wallet.shop_editor_icon_default": "§fCurrent: the entry item's own icon",
   "gui.adventuresystems.curios.wallet.shop_editor_icon_custom": "§aCurrent: %s",
   "gui.adventuresystems.curios.wallet.shop_editor_icon_tip": "§6Left-click to choose the icon shown in the shop list; right-click to go back to the entry item's own icon."
+,
+  "gui.adventuresystems.tips.tips.text_limits": "At most 16 characters per line and 3 lines. Color codes do not count. Type \\n for a line break. Oversized tips cannot be saved.",
+  "gui.adventuresystems.tips.tips.stage.any": "Loading + pause",
+  "gui.adventuresystems.tips.tips.stage.loading": "Loading only",
+  "gui.adventuresystems.tips.tips.stage.game": "Pause only"
 }

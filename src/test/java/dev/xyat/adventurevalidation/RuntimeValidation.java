@@ -68,7 +68,7 @@ public final class RuntimeValidation {
                     var screen=new net.minecraft.client.gui.screens.PauseScreen(true);screen.width=640;screen.height=360;
                     var original=dev.xyat.adventuresystems.tips.config.ConfigLoader.getRawEntriesForLanguage(dev.xyat.kineticcore.api.runtime.KineticClientRuntime.selectedLanguage());
                     LOG.info("ADVENTURE_TIPS_ELIGIBILITY originalEntries={} eligible={} structure={}",original.size(),manager.getValidTip(screen)!=null,dev.xyat.adventuresystems.tips.client.TipCache.currentStructure);
-                    var entry=new dev.xyat.adventuresystems.tips.api.HelpTip.JsonModel.Entry();entry.stage="game";entry.text="§aPAUSE_TIP_RENDER_PROBE";
+                    var entry=new dev.xyat.adventuresystems.tips.api.HelpTip.JsonModel.Entry();entry.stage="game";entry.text="§aPAUSE_TIP_PROBE";
                     var probe=new ProbeGraphics();
                     var textCalls=probe.textCalls;
                     var graphics=dev.xyat.kineticcore.internal.client.gui.render.GuiGraphicsAdapter.wrap(probe);
@@ -76,7 +76,7 @@ public final class RuntimeValidation {
                         manager.replaceServerEntries(java.util.List.of(entry));dev.xyat.adventuresystems.tips.client.TipRenderer.refresh(screen);
                         var render=dev.xyat.adventuresystems.tips.client.TipRenderer.class.getDeclaredMethod("onScreenRender",net.minecraft.client.gui.screens.Screen.class,dev.xyat.kineticcore.api.client.gui.render.KineticGraphics.class,int.class,int.class,float.class);
                         render.setAccessible(true);render.invoke(null,screen,graphics,0,0,0f);
-                        require(textCalls.contains("PAUSE_TIP_RENDER_PROBE"),"eligible game tip produced visible lower-left text");
+                        require(textCalls.contains("PAUSE_TIP_PROBE"),"eligible game tip produced visible lower-left text");
                     } finally {manager.replaceServerEntries(original);dev.xyat.adventuresystems.tips.client.TipRenderer.refresh(screen);}
                 });
                 pauseOpenedAt=System.currentTimeMillis();

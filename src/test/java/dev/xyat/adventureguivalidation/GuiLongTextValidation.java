@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
 public final class GuiLongTextValidation {
     private static final Logger LOG=LoggerFactory.getLogger(GuiLongTextValidation.class);
     private static final String ROOT=System.getProperty("adventuresystems.guiValidation.output", "gui-validation");
-    private static final String[] NAMES={"shop-empty","shop-buy","shop-sell","shop-locked","shop-gacha","shop-choice-overlay","shop-quest-picker","shop-reward-picker","entry-buy","entry-sell","entry-gacha","entry-choice","commands-empty","commands","command-picker","currency-picker","wallet","quests-empty","quests","quest-picker","rewards-empty","rewards-gacha","rewards-choice","rewards-sell","ftb-binding-empty","ftb-binding","ftb-submit","ftb-select","ftb-item-blacklist","ftb-task-blacklist","tips-empty","tips","tip-time","tip-registry"};
+    private static final String[] NAMES={"shop-empty","shop-buy","shop-sell","shop-locked","shop-gacha","shop-choice-overlay","shop-quest-picker","shop-reward-picker","entry-buy","entry-sell","entry-gacha","entry-choice","commands-empty","commands","command-picker","currency-picker","wallet","quests-empty","quests","quest-picker","rewards-empty","rewards-gacha","rewards-choice","rewards-sell","ftb-binding-empty","ftb-binding","ftb-submit","ftb-select","ftb-item-blacklist","ftb-task-blacklist","tips-empty","tips","tip-time","tip-registry","tip-pause"};
     private static boolean installed,started,screenshot,finished,originalFullscreen;
     private static String originalLanguage;
     private static int originalScale,originalWidth,originalHeight,phase=-1,page=-1,captures,failures;
@@ -56,6 +56,7 @@ public final class GuiLongTextValidation {
                 originalWidth=mc.getWindow().getWidth();originalHeight=mc.getWindow().getHeight();originalFullscreen=mc.getWindow().isFullscreen();
                 mc.options.guiScale().set(0);
                 if(originalFullscreen)mc.getWindow().toggleFullScreen();
+                dev.xyat.adventurevalidation.TipsRuntimeChecks.verifyFiles();
                 nextPhase();
                 return;
             }
@@ -116,7 +117,7 @@ public final class GuiLongTextValidation {
         openPage(page);
         screenshot=false;due=System.currentTimeMillis()+1000;
         fixturePage=KineticGui.currentPage();suppressCachedMouse();
-        LOG.info("ADVENTURE_GUI_OPEN phase={} case={} page={}",phase,NAMES[page],KineticGui.currentPage().getClass().getName());
+        LOG.info("ADVENTURE_GUI_OPEN phase={} case={} page={}",phase,NAMES[page],KineticGui.currentPage()!=null?KineticGui.currentPage().getClass().getName():String.valueOf(Minecraft.getInstance().screen));
     }
     @SuppressWarnings("unchecked")
     private static void openPage(int index) throws Exception {
@@ -159,7 +160,9 @@ public final class GuiLongTextValidation {
             case 27 -> p=new SelectScreenFTB(namedStack(),refs());
             case 28 -> p=new ItemBlacklistScreenFTB();
             case 29 -> p=new FTBBlacklistScreen();
-            case 30,31 -> {var tip=new HelpTip.JsonModel.Entry();tip.text=LONG_NAME;tip.conditions=new HelpTip.JsonModel.Conditions();tip.conditions.biome="minecraft:plains";tip.conditions.structure="minecraft:village_plains";tip.conditions.dimension="minecraft:overworld";tip.conditions.advancement="minecraft:story/enter_the_nether";tip.conditions.curios=List.of();p=new TipEditorScreen("en_us",index==30?List.of():List.of(tip));}
+            case 31 -> {p=new TipEditorScreen(Minecraft.getInstance().getLanguageManager().getSelected(),dev.xyat.adventuresystems.tips.config.ConfigLoader.getRawEntriesForLanguage(Minecraft.getInstance().getLanguageManager().getSelected()));}
+            case 30 -> {var tip=new HelpTip.JsonModel.Entry();tip.text=phase==4?LONG_NAME:"§6作物轮作§r\n小麦与胡萝卜隔行种\n可避开同类密植减速";tip.conditions=new HelpTip.JsonModel.Conditions();tip.conditions.biome="minecraft:plains";tip.conditions.structure="minecraft:village_plains";tip.conditions.dimension="minecraft:overworld";tip.conditions.advancement="minecraft:story/enter_the_nether";tip.conditions.curios=List.of();p=new TipEditorScreen("en_us",index==30?List.of():List.of(tip));}
+            case 34 -> {dev.xyat.adventurevalidation.TipsRuntimeChecks.pause();return;}
             case 32 -> p=new TimeEditScreen(5000,(java.util.function.Consumer<Integer>)v->{});
             case 33 -> p=new TipSelectors.RegistrySelectorScreen("biomes",(java.util.function.Consumer<String>)v->{});
             default -> throw new IllegalArgumentException("Unknown fixture page "+index);

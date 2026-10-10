@@ -381,6 +381,7 @@ if (pMinecraft.startsWith('26.')) {
         include 'dev/xyat/adventurevalidation/GuiCaptureEntry.java'
         include 'dev/xyat/adventurevalidation/GuiCaptureValidation.java'
         include 'dev/xyat/adventurevalidation/WalletHoldingsCheck.java'
+        include 'dev/xyat/adventurevalidation/TipsRuntimeChecks.java'
     }
     ['test', 'verifyTextFormatting', 'verifyTipsComponents', 'verifyFTBItemComponents'].each { String name ->
         tasks.matching { it.name == name }.configureEach { enabled = false }
@@ -406,7 +407,7 @@ if (project.property('loader') == 'forge') {
     }
     def captureJar = tasks.register('guiCaptureValidationJar', Jar) {
         dependsOn 'testClasses', writeCaptureMetadata
-        from(sourceSets.test.output) { include 'dev/xyat/adventureguivalidation/GuiLongTextValidation*.class', 'dev/xyat/adventureguivalidation/GuiCaptureForgeEntry.class' }
+        from(sourceSets.test.output) { include 'dev/xyat/adventureguivalidation/GuiLongTextValidation*.class', 'dev/xyat/adventureguivalidation/GuiCaptureForgeEntry.class', 'dev/xyat/adventurevalidation/TipsRuntimeChecks.class' }
         from captureMetadata
         archiveFileName = 'adventuresystems-gui-capture.jar'
     }

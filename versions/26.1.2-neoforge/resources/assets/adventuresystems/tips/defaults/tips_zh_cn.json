@@ -1,0 +1,96 @@
+{
+    "tips":  [
+                 {
+                     "stage":  "any",
+                     "text":  "§6作物轮作§r\n小麦与胡萝卜隔行种\n可避开同类密植减速",
+                     "time":  7000
+                 },
+                 {
+                     "stage":  "any",
+                     "text":  "§6耕地保湿§r\n一格水能湿润周围四格耕地\n覆盖九乘九范围",
+                     "time":  7000
+                 },
+                 {
+                     "stage":  "any",
+                     "text":  "§6干草减伤§r\n落在干草块上\n摔落伤害减少八成",
+                     "time":  7000
+                 },
+                 {
+                     "stage":  "any",
+                     "text":  "§6蜂巢采蜜§r\n发射器使用瓶子或剪刀\n采蜜不会激怒蜜蜂",
+                     "time":  7000
+                 },
+                 {
+                     "stage":  "game",
+                     "text":  "§6湿海绵§r\n放进下界会立刻干燥\n不必等待熔炉",
+                     "time":  7000,
+                     "conditions":  {
+                                        "dimension":  "minecraft:the_nether"
+                                    }
+                 },
+                 {
+                     "stage":  "game",
+                     "text":  "§6积雪炼药锅§r\n降雪时空锅能收集细雪\n不用精准采集",
+                     "time":  7000,
+                     "conditions":  {
+                                        "biome":  "minecraft:snowy_plains"
+                                    }
+                 },
+                 {
+                     "stage":  "any",
+                     "text":  "§6附魔书架§r\n书架与附魔台之间\n放火把也会挡住加成",
+                     "time":  7000
+                 },
+                 {
+                     "stage":  "game",
+                     "text":  "§6村民补货§r\n补货需要接触自己的工作站\n搬床不能代替工作站",
+                     "time":  7000,
+                     "conditions":  {
+                                        "structure":  "minecraft:village_plains"
+                                    }
+                 },
+                 {
+                     "stage":  "game",
+                     "text":  "§6沼泽地表史莱姆§r\n满月生成更多\n新月不会自然生成",
+                     "time":  7000,
+                     "conditions":  {
+                                        "biome":  "minecraft:swamp"
+                                    }
+                 },
+                 {
+                     "stage":  "any",
+                     "text":  "§b提示编辑§r\nF6进入冒险系统的提示编辑器\n正文用\\n换行",
+                     "time":  7000
+                 },
+                 {
+                     "stage":  "any",
+                     "text":  "§b群系与结构§r\n在提示编辑器添加条件\n只在对应地点显示",
+                     "time":  7000
+                 },
+                 {
+                     "stage":  "any",
+                     "text":  "§b显示时机§r\n游戏类只在暂停界面显示\n加载类只在载入时显示",
+                     "time":  7000
+                 },
+                 {
+                     "stage":  "any",
+                     "text":  "§b核心配置§r\nF6打开配置中心\n搜索中文或拼音定位设置",
+                     "time":  7000
+                 },
+                 {
+                     "stage":  "any",
+                     "text":  "§b搜索物品§r\n@模组筛选来源\n#标签筛选同类物品",
+                     "time":  7000
+                 },
+                 {
+                     "stage":  "any",
+                     "text":  "§b数据包修复§r\n错误界面可临时跳过错误包\n下次载入仍需修复",
+                     "time":  7000
+                 },
+                 {
+                     "stage":  "any",
+                     "text":  "§b物品条件§r\n26.1.2用组件匹配\n旧NBT条件需重设",
+                     "time":  7000
+                 }
+             ]
+}
