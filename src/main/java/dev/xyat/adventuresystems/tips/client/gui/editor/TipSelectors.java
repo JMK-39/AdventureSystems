@@ -62,7 +62,7 @@ public class TipSelectors {
                         updateSearch(value);
                     }).firstShownTextAsDefault().build();
 
-            ui.button(width() - 70, 10, 60)
+            ui.button(10, 10, 60)
                     .text(AdventureText.translatable("gui.adventuresystems.tips.tips.cancel"))
                     .onClick(this::closeToParent).build();
 

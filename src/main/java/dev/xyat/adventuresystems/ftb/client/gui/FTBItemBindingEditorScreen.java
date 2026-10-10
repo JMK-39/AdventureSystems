@@ -128,7 +128,7 @@ public class FTBItemBindingEditorScreen extends KineticPage {
         int clearX = closeX - GAP - 80;
         int blacklistX = clearX - GAP - 70;
 
-        ui.textField(this.leftX, topY, 220)
+        ui.textField(this.leftX + buttonW + 2, topY, 220 - buttonW - 2)
                 .label(AdventureText.translatable("placeholder.adventuresystems.ftb.task.search"))
                 .placeholder(AdventureText.translatable("placeholder.adventuresystems.ftb.task.search"))
                 .value(searchText).maxLength(128)
@@ -141,7 +141,7 @@ public class FTBItemBindingEditorScreen extends KineticPage {
                 .onClick(() -> openChild(new FTBBlacklistScreen())).build();
         ui.button(clearX, topY, 80).text(AdventureText.translatable("button.adventuresystems.ftb.clear"))
                 .onClick(this::clearSelectedBinding).build();
-        ui.button(closeX, topY, buttonW).text(AdventureText.translatable("gui.done"))
+        ui.button(this.leftX, topY, buttonW).text(AdventureText.translatable("gui.done"))
                 .onClick(this::close).build();
 
         refreshLayoutValues();

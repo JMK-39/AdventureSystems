@@ -64,6 +64,8 @@ public final class GuiCaptureValidation {
     private static void nextPhase() {
         if(stressOriginal!=null){Language.inject(stressOriginal);stressOriginal=null;}
         phase++;page=-1;
+        String selectedPhases=System.getProperty("adventuresystems.guiValidation.phases", "");
+        while(phase<5 && !selectedPhases.isBlank() && !List.of(selectedPhases.split(",")).contains(String.valueOf(phase)))phase++;
         if(phase>=5){finish();return;}
         var mc=Minecraft.getInstance();
         mc.setScreen(null);

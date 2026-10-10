@@ -61,7 +61,7 @@ public class FTBSubmitCountScreen extends KineticPage {
         ui.button(left + MARGIN_X, buttonY, BUTTON_W)
                 .text(AdventureText.translatable("button.adventuresystems.ftb.submit.confirm"))
                 .onClick(this::submit).build();
-        ui.button(left + PANEL_W - MARGIN_X - BUTTON_W, buttonY, BUTTON_W)
+        ui.button(left + MARGIN_X, top + 10, BUTTON_W)
                 .text(AdventureText.translatable("gui.cancel"))
                 .onClick(this::close).build();
         refreshStats(true);
@@ -147,7 +147,10 @@ public class FTBSubmitCountScreen extends KineticPage {
         KineticTheme.shadow(graphics, width(), height());
         KineticTheme.canvasBackground(graphics, width(), height());
         KineticTheme.panel(graphics, left, top, PANEL_W, PANEL_H);
-        graphics.scrollingTextCentered(title(), left + PANEL_W / 2, top + 14, PANEL_W - MARGIN_X * 2, KineticTheme.current().text(), true);
+        int titleLeft = left + MARGIN_X + BUTTON_W + 2;
+        int titleRight = left + PANEL_W - MARGIN_X;
+        graphics.scrollingTextCentered(title(), (titleLeft + titleRight) / 2, top + 14,
+                titleRight - titleLeft, KineticTheme.current().text(), true);
         graphics.scrollingText(AdventureText.translatable("label.adventuresystems.ftb.submit.desc"), left + MARGIN_X, top + 34, PANEL_W - MARGIN_X * 2, KineticTheme.current().mutedText(), false);
     }
 

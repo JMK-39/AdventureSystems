@@ -52,7 +52,7 @@ public class SelectScreenFTB extends KineticPage {
                     searchText = value;
                     applySearch();
                 }).firstShownTextAsDefault().build();
-        ui.button(528, 329, 88).text(AdventureText.translatable("gui.done"))
+        ui.button(24, 18, 88).text(AdventureText.translatable("gui.done"))
                 .onClick(this::close).build();
         listWidget = ui.actionList(LIST_X, LIST_Y, LIST_W, LIST_H, listItems())
                 .selected(-1).scrollOffset(listScroll).actionWidth(116)
@@ -117,8 +117,8 @@ public class SelectScreenFTB extends KineticPage {
     protected void renderBackground(KineticGraphics graphics, int mouseX, int mouseY, float partialTick) {
         KineticTheme.shadow(graphics, width(), height());
         KineticTheme.panel(graphics, 10, 10, 620, 340);
-        graphics.scrollingText(AdventureText.translatable("screen.adventuresystems.ftb.select"), 24, 24, 170 - 24 - 4, KineticTheme.current().text(), false);
-        graphics.scrollingText(AdventureText.translatable("label.adventuresystems.ftb.select.subtitle"), 170, 25, 616 - 170, KineticTheme.current().mutedText(), false);
+        graphics.scrollingText(AdventureText.translatable("screen.adventuresystems.ftb.select"), 114, 24, 186, KineticTheme.current().text(), false);
+        graphics.scrollingText(AdventureText.translatable("label.adventuresystems.ftb.select.subtitle"), 304, 25, 616 - 304, KineticTheme.current().mutedText(), false);
         KineticTheme.itemSlot(graphics, 410, 48);
         KineticTheme.item(graphics, stack, 410, 48, 18, 0.75F, false);
         graphics.scrollingText(AdventureText.translatable("label.adventuresystems.ftb.item.name", stack.getHoverName().copy()), 435, 54, 616 - 435, KineticTheme.current().text(), false);

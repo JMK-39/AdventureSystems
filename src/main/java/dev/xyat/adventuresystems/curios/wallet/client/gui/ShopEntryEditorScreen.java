@@ -456,8 +456,8 @@ final class ShopEntryEditorScreen extends KineticPage {
     private int contentPreviewX() { return contentManageButtonX() + contentManageButtonWidth() + 12; }
     private int contentPreviewY() { return contentModeButtonY(); }
     private int actionButtonY() { return top + 8; }
-    private int cancelButtonX() { return left + panelWidth - 12 - actionButtonWidth(); }
-    private int saveButtonX() { return cancelButtonX() - 4 - actionButtonWidth(); }
+    private int cancelButtonX() { return left + 12; }
+    private int saveButtonX() { return left + panelWidth - 12 - actionButtonWidth() * 2 - 4; }
 
     private void openMainItemSelector() {
         KineticSelectors.openItemSelector(selection -> {
@@ -754,7 +754,10 @@ final class ShopEntryEditorScreen extends KineticPage {
     @Override
     protected void renderBackground(KineticGraphics graphics, int mouseX, int mouseY, float partialTick) {
         KineticTheme.panel(graphics, left, top, panelWidth, panelHeight);
-        graphics.scrollingTextCentered(title(), left + panelWidth / 2, top + 12, Math.max(0, (saveButtonX() - 4 - (left + panelWidth / 2)) * 2), KineticTheme.current().text(), false);
+        int titleLeft = cancelButtonX() + actionButtonWidth() + 2;
+        int titleRight = saveButtonX() - 4;
+        graphics.scrollingTextCentered(title(), (titleLeft + titleRight) / 2, top + 12,
+                Math.max(0, titleRight - titleLeft), KineticTheme.current().text(), false);
 
         renderSection(graphics, left + 12, basicSectionY(), BASIC_SECTION_HEIGHT, AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_editor_basic_info"));
         renderIconSlot(graphics, mouseX, mouseY);

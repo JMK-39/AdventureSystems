@@ -40,7 +40,7 @@ final class QuestManageScreen extends KineticPage {
                     if (id > 0 && !draft.questIds.contains(id)) draft.questIds.add(id);
                     refreshItems();
                 }))).build();
-        ui.button(362, buttonY, 80).text(AdventureText.translatable("gui.done"))
+        ui.button(38, top + 6, 80).text(AdventureText.translatable("gui.done"))
                 .onClick(this::navigateBack).build();
         list = ui.actionList(32, top + 60, 416, listHeight, listItems())
                 .actionWidth(70).scrollOffset(scrollOffset)
@@ -81,7 +81,8 @@ final class QuestManageScreen extends KineticPage {
     protected void renderBackground(KineticGraphics graphics, int mouseX, int mouseY, float partialTick) {
         KineticTheme.shadow(graphics, width(), height());
         KineticTheme.panel(graphics, 20, top, 440, listHeight + 104);
-        graphics.scrollingTextCentered(title(), 240, top + 8, 440 - 36, KineticTheme.current().text(), false);
+        int titleLeft = 38 + 80 + 2;
+        graphics.scrollingTextCentered(title(), (titleLeft + 442) / 2, top + 8, 442 - titleLeft, KineticTheme.current().text(), false);
         graphics.scrollingText(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_quest_manage_hint_top"), 38, top + 31, 440 - 36, KineticTheme.current().text(), true);
         if (draft.questIds.isEmpty()) {
             graphics.scrollingTextCentered(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_quest_manage_empty"), 240, top + 60 + (listHeight - 8) / 2, 440 - 36, KineticTheme.current().text(), false);

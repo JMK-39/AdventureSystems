@@ -3255,7 +3255,7 @@ public class ShopScreen extends KineticPage {
     }
 
     private int buyButtonX() {
-        return left + 8;
+        return backButtonX() + BACK_BUTTON_WIDTH + 2;
     }
 
     private int sellButtonX() {
@@ -3313,11 +3313,11 @@ public class ShopScreen extends KineticPage {
     }
 
     private int backButtonX() {
-        return closeButtonX() - 4 - BACK_BUTTON_WIDTH;
+        return left + 8;
     }
 
     private int backpackButtonX() {
-        return backButtonX() - 8 - sourceMenuButtonWidth();
+        return closeButtonX() - 4 - BACK_BUTTON_WIDTH - 8 - sourceMenuButtonWidth();
     }
 
     private int shopTitleX() {

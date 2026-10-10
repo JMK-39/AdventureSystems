@@ -55,7 +55,7 @@ final class RewardPoolScreen extends KineticPage {
                     selectedIndex = -1;
                     refreshList();
                 }).build();
-        ui.button(544, 54, 82).text(AdventureText.translatable("gui.done"))
+        ui.button(14, 4, 82).text(AdventureText.translatable("gui.done"))
                 .onClick(this::finish).build();
         list = ui.itemActionList(14, 82, 612, 208, listItems())
                 .selected(selectedIndex).scrollOffset(scrollOffset).actionWidth(66)
@@ -215,7 +215,8 @@ final class RewardPoolScreen extends KineticPage {
     protected void renderBackground(KineticGraphics graphics, int mouseX, int mouseY, float partialTick) {
         KineticTheme.shadow(graphics, width(), height());
         KineticTheme.panel(graphics, 0, 0, 640, 360);
-        graphics.scrollingTextCentered(title(), 320, 10, 608, KineticTheme.current().text(), false);
+        int titleLeft = 14 + 82 + 2;
+        graphics.scrollingTextCentered(title(), (titleLeft + 626) / 2, 10, 626 - titleLeft, KineticTheme.current().text(), false);
         graphics.scrollingText(AdventureText.translatable(primaryHintKey()), 14, 26, 612, KineticTheme.current().text(), true);
         graphics.scrollingText(AdventureText.translatable(secondaryHintKey()), 14, 38, 612, KineticTheme.current().text(), true);
         graphics.scrollingText(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_reward_column_count"), 14, 318, 96 - 14 - 4, KineticTheme.current().text(), true);

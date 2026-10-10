@@ -1,5 +1,17 @@
 # Changelog / 更新日志
 
+## 2026-10-10 — Editor navigation / 编辑器返回位置
+
+### English
+
+- Back, Cancel and Done controls that return to the previous editor now sit at the upper left in shops, shop entry and reward editors, quest and currency pickers, FTB binding/submission dialogs, and tip selectors. The tip editor uses the lower-left corner because its header already contains search and editing controls.
+- Header titles scroll within the space beside navigation buttons. Editor lists, item grids, fields, and save behavior retain their existing layout and actions.
+
+### 简体中文
+
+- 商店、商品与奖励编辑器、任务与货币选择器、FTB 关联与提交界面，以及提示选择器中用于回到上一界面的返回、取消和完成按钮，统一放在左上角。提示编辑器顶部已被搜索与编辑控件占用，因此使用左下角。
+- 标题在返回按钮旁的区域内滚动；编辑列表、物品网格、输入框以及保存操作保留既有布局与行为。
+
 ## 2026-10-08 — Item preview backgrounds / 物品预览背景
 
 ### English

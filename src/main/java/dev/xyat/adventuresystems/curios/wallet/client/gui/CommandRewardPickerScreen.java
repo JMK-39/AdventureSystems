@@ -38,7 +38,7 @@ final class CommandRewardPickerScreen extends KineticPage {
         int rows = Math.max(2, Math.min(6, (draft.commands.size() + GRID_COLUMNS - 1) / GRID_COLUMNS));
         gridHeight = 6 + rows * (26 + 6);
         top = Math.max(0, (height() - (56 + gridHeight + 14)) / 2);
-        ui.button(444, top + 14, 76)
+        ui.button(34, top + 14, 76)
                 .text(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_cancel"))
                 .onClick(this::navigateBack).build();
         List<ItemGridItem> items = new ArrayList<>(draft.commands.size());
@@ -60,8 +60,9 @@ final class CommandRewardPickerScreen extends KineticPage {
     protected void renderBackground(KineticGraphics graphics, int mouseX, int mouseY, float partialTick) {
         KineticTheme.shadow(graphics, width(), height());
         KineticTheme.panel(graphics, 20, top, 520, 56 + gridHeight + 14);
-        // Centred, and ending 4 px before the Cancel button on the right.
-        graphics.scrollingTextCentered(title(), 280, top + 8, 2 * (444 - 4 - 280), KineticTheme.current().text(), false);
+        int titleLeft = 34 + 76 + 2;
+        graphics.scrollingTextCentered(title(), (titleLeft + 526) / 2, top + 8,
+                526 - titleLeft, KineticTheme.current().text(), false);
         graphics.scrollingText(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_pick_hint"), 34, top + 38, 520 - 28, KineticTheme.current().text(), true);
         if (draft.commands.isEmpty()) {
             graphics.scrollingTextCentered(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_empty"), 280, top + 56 + (gridHeight - 8) / 2, 520 - 28, KineticTheme.current().text(), false);

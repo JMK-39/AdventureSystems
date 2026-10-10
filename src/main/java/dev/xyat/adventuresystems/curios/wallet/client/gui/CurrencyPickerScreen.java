@@ -26,7 +26,7 @@ final class CurrencyPickerScreen extends KineticPage {
     private static final int BOX_H = 24;
     private static final int MAX_ROWS = 5;
     private static final int GRID_W = PANEL_W - 20;
-    // Title above the grid, Cancel button below it, and the margins around both.
+    // Back and the title share the header; keep the grid and panel size stable.
     private static final int TITLE_SPACE = 24;
     private static final int CANCEL_SPACE = 6 + 20 + 10;
 
@@ -34,7 +34,7 @@ final class CurrencyPickerScreen extends KineticPage {
     private final List<CurrencyType> currencies;
     private int scrollRows;
     // The panel holds as many rows as there are currencies (up to MAX_ROWS) and sits in the middle of the canvas.
-    private int panelX, panelY, panelH, gridX, gridY, gridH, cancelY;
+    private int panelX, panelY, panelH, gridX, gridY, gridH;
 
     CurrencyPickerScreen(ShopGuiSupport.EditorDraft draft) {
         super(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_currency_picker_title"));
@@ -53,11 +53,10 @@ final class CurrencyPickerScreen extends KineticPage {
         panelY = Math.max(0, (height() - panelH) / 2);
         gridX = panelX + 10;
         gridY = panelY + TITLE_SPACE;
-        cancelY = gridY + gridH + 6;
         Component cancel = AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_cancel");
         // A fixed width in every language; the label scrolls when longer.
         int width = 80;
-        ui.button(panelX + (PANEL_W - width) / 2, cancelY, width).text(cancel).onClick(this::navigateBack).build();
+        ui.button(panelX + 10, panelY + 2, width).text(cancel).onClick(this::navigateBack).build();
     }
 
     private static int boxWidth() {
@@ -103,7 +102,10 @@ final class CurrencyPickerScreen extends KineticPage {
     protected void renderBackground(KineticGraphics graphics, int mouseX, int mouseY, float partialTick) {
         KineticTheme.shadow(graphics, width(), height());
         KineticTheme.panel(graphics, panelX, panelY, PANEL_W, panelH);
-        graphics.scrollingTextCentered(title(), panelX + PANEL_W / 2, panelY + 8, PANEL_W - 24, KineticTheme.current().text(), false);
+        int titleLeft = panelX + 10 + 80 + 2;
+        int titleRight = panelX + PANEL_W - 12;
+        graphics.scrollingTextCentered(title(), (titleLeft + titleRight) / 2, panelY + 8,
+                titleRight - titleLeft, KineticTheme.current().text(), false);
         if (currencies.isEmpty()) {
             graphics.scrollingTextCentered(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_currency_picker_empty"), panelX + PANEL_W / 2, gridY + (gridH - 8) / 2, PANEL_W - 24, KineticTheme.current().text(), false);
             return;

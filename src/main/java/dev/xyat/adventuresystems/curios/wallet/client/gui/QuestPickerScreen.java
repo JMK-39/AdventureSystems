@@ -44,7 +44,7 @@ final class QuestPickerScreen extends KineticPage {
                     scrollOffset = 0;
                     applySearch();
                 }).firstShownTextAsDefault().build();
-        ui.button(464, 42, 82).text(AdventureText.translatable("gui.done"))
+        ui.button(24, 16, 82).text(AdventureText.translatable("gui.done"))
                 .onClick(this::navigateBack).build();
         list = ui.actionList(24, 74, 532, 230, listItems())
                 .actionWidth(64).scrollOffset(scrollOffset)
@@ -102,7 +102,8 @@ final class QuestPickerScreen extends KineticPage {
     protected void renderBackground(KineticGraphics graphics, int mouseX, int mouseY, float partialTick) {
         KineticTheme.shadow(graphics, width(), height());
         KineticTheme.panel(graphics, 10, 10, 560, 316);
-        graphics.scrollingTextCentered(title(), 290, 20, 560 - 28, KineticTheme.current().text(), false);
+        int titleLeft = 24 + 82 + 2;
+        graphics.scrollingTextCentered(title(), (titleLeft + 556) / 2, 20, 556 - titleLeft, KineticTheme.current().text(), false);
         if (all.isEmpty()) {
             graphics.scrollingTextCentered(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_task_empty"), 290, 166, 560 - 28, KineticTheme.current().text(), false);
         }

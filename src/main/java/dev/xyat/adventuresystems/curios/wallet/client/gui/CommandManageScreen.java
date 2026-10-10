@@ -65,7 +65,7 @@ final class CommandManageScreen extends KineticPage {
         ui.button(NEW_X, 40, ACTION_W).text(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_new"))
                 .tooltip(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_clear_tooltip"))
                 .onClick(this::clearEditor).build();
-        ui.button(NEW_X, 8, ACTION_W).text(AdventureText.translatable("gui.done"))
+        ui.button(18, 8, ACTION_W).text(AdventureText.translatable("gui.done"))
                 .tooltip(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_done_tooltip"))
                 .onClick(this::navigateBack).build();
         commandBox = ui.textField(84, 332, 536)
@@ -192,7 +192,8 @@ final class CommandManageScreen extends KineticPage {
     protected void renderBackground(KineticGraphics graphics, int mouseX, int mouseY, float partialTick) {
         KineticTheme.shadow(graphics, width(), height());
         KineticTheme.panel(graphics, 0, 0, 640, 360);
-        graphics.scrollingTextCentered(title(), 320, 10, Math.max(0, (NEW_X - 4 - 320) * 2), KineticTheme.current().text(), false);
+        int titleLeft = 18 + ACTION_W + 2;
+        graphics.scrollingTextCentered(title(), (titleLeft + 622) / 2, 10, 622 - titleLeft, KineticTheme.current().text(), false);
         graphics.scrollingText(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_icon_preview"), 18, 46, ICON_X - 18 - 4, KineticTheme.current().text(), true);
         boolean iconHovered = KineticTheme.hovering(mouseX, mouseY, ICON_X, ICON_Y, ICON_SIZE, ICON_SIZE);
         KineticTheme.itemSlot(graphics, ICON_X, ICON_Y, ICON_SIZE, ICON_SIZE, 4, false, iconHovered, false);

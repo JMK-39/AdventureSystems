@@ -211,13 +211,14 @@ public class TipEditorScreen extends KineticPage {
                 .onClick(() -> openRegistrySelector("dimensions")).build();
 
         this.dynamicCondY = curY + KineticPage.CONTROL_HEIGHT + 15;
-        ui.button(x0 + 10, y0 + guiH - 30, 75)
+        // The header contains search and editing controls, so Back uses the lower-left fallback.
+        ui.button(x0 + 10 + 75 + 2, y0 + guiH - 30, 75)
                 .text(AdventureText.translatable("gui.adventuresystems.tips.tips.new"))
                 .onClick(this::addNew).build();
-        ui.button(x0 + guiW - 170, y0 + guiH - 30, 75)
+        ui.button(x0 + guiW - 85, y0 + guiH - 30, 75)
                 .text(AdventureText.translatable("gui.adventuresystems.tips.tips.save"))
                 .onClick(this::save).build();
-        ui.button(x0 + guiW - 85, y0 + guiH - 30, 75)
+        ui.button(x0 + 10, y0 + guiH - 30, 75)
                 .text(AdventureText.translatable("gui.adventuresystems.tips.tips.back"))
                 .onClick(this::close).build();
         updateUI();

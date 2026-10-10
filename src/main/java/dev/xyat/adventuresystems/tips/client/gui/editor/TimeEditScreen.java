@@ -37,7 +37,7 @@ public class TimeEditScreen extends KineticPage {
         ui.button(centerX - 105, centerY + 20, 100)
                 .text(AdventureText.translatable("gui.adventuresystems.tips.tips.save"))
                 .onClick(this::save).build();
-        ui.button(centerX + 5, centerY + 20, 100)
+        ui.button(centerX - 110, centerY - 42, 100)
                 .text(AdventureText.translatable("gui.adventuresystems.tips.tips.cancel"))
                 .onClick(this::closeToParent).build();
     }
@@ -60,7 +60,10 @@ public class TimeEditScreen extends KineticPage {
         int py = (height() - h) / 2;
         KineticTheme.panel(graphics, px, py, w, h);
 
-        graphics.scrollingTextCentered(title(), width() / 2, py + 15, w - 24, KineticTheme.current().text(), true);
+        int titleLeft = px + 10 + 100 + 2;
+        int titleRight = px + w - 12;
+        graphics.scrollingTextCentered(title(), (titleLeft + titleRight) / 2, py + 15,
+                titleRight - titleLeft, KineticTheme.current().text(), true);
         graphics.scrollingTextCentered(AdventureText.translatable("gui.adventuresystems.tips.tips.hint"), width() / 2, py + 30, w - 24, KineticTheme.current().text(), true);
     }
 
