@@ -8,6 +8,9 @@ public final class GuiCaptureForgeEntry {
         if (Boolean.getBoolean("adventuresystems.guiValidation")) {
             dev.xyat.kineticcore.api.runtime.KineticPlatform.runOnClient(() -> GuiLongTextValidation::install);
         }
+        if (Boolean.getBoolean("adventuresystemswings.guiValidation")) {
+            dev.xyat.kineticcore.api.runtime.KineticPlatform.runOnClient(() -> dev.xyat.adventurevalidation.WingsRuntimeValidation::install);
+        }
     }
 }
 //?}

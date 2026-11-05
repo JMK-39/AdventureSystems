@@ -39,7 +39,8 @@ public class TipSelectors {
         private int lastListSize;
 
         public RegistrySelectorScreen(String type, Consumer<String> onSelect) {
-            super(AdventureText.translatable("gui.adventuresystems.tips.tips.setstitle", type), PageLayout.NATIVE);
+            super(AdventureText.translatable("gui.adventuresystems.tips.tips.setstitle", type));
+            useCanvas(640, 360, 4);
             this.type = type;
             this.onSelect = onSelect;
         }
@@ -53,7 +54,7 @@ public class TipSelectors {
             }
             loadData();
             updateSearch(searchText);
-            ui.textField(20, 36, width() - 40)
+            ui.textField(48, 4, width() - 52)
                     .label(Component.empty())
                     .placeholder(AdventureText.translatable("gui.adventuresystems.tips.tips.search"))
                     .value(searchText)
@@ -62,11 +63,11 @@ public class TipSelectors {
                         updateSearch(value);
                     }).firstShownTextAsDefault().build();
 
-            ui.button(10, 10, 60)
+            ui.button(4, 4, 40)
                     .text(AdventureText.translatable("gui.adventuresystems.tips.tips.cancel"))
                     .onClick(this::closeToParent).build();
 
-            this.listWidget = ui.selectionList(20, 66, width() - 40, height() - 76,
+            this.listWidget = ui.selectionList(4, 28, width() - 8, height() - 32,
                     selectionItems())
                     .textRows()
                     .selected(-1).scrollOffset(listScroll)
@@ -172,7 +173,8 @@ public class TipSelectors {
 
         @Override
         protected void renderBackground(KineticGraphics graphics, int mouseX, int mouseY, float partialTick) {
-            graphics.scrollingTextCentered(title(), width() / 2, 15, Math.max(0, width() - 148), KineticTheme.current().text(), true);
+            // The selector sits on the standard dark panel; the world behind never shows through the list.
+            KineticTheme.panel(graphics, 0, 0, width(), height());
         }
 
         @Override

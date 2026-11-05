@@ -18,10 +18,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SelectScreenFTB extends KineticPage {
-    private static final int LIST_X = 24;
-    private static final int LIST_Y = 82;
-    private static final int LIST_W = 592;
-    private static final int LIST_H = 238;
+    private static final int LIST_X = 4;
+    private static final int LIST_Y = 28;
+    private static final int LIST_W = 632;
+    private static final int LIST_H = 328;
 
     private final ItemStack stack;
     private final List<RefFTB> allRefs;
@@ -35,7 +35,7 @@ public class SelectScreenFTB extends KineticPage {
         this.stack = stack;
         this.allRefs = new ArrayList<>(refs);
         this.filtered.addAll(refs);
-        useCanvas(640, 360, 6);
+        useCanvas(640, 360, 4);
     }
 
     @Override
@@ -43,7 +43,7 @@ public class SelectScreenFTB extends KineticPage {
         if (listWidget != null) listScroll = listWidget.scrollOffset();
         listWidget = null;
         applySearch();
-        ui.textField(LIST_X, 48, 360)
+        ui.textField(48, 4, 400)
                 .label(AdventureText.translatable("gui.adventuresystems.ftb.search"))
                 .placeholder(AdventureText.translatable("placeholder.adventuresystems.ftb.select.search"))
                 .tooltip(AdventureText.translatable("tip.adventuresystems.ftb.search.desc"))
@@ -52,7 +52,7 @@ public class SelectScreenFTB extends KineticPage {
                     searchText = value;
                     applySearch();
                 }).firstShownTextAsDefault().build();
-        ui.button(24, 18, 88).text(AdventureText.translatable("gui.done"))
+        ui.button(4, 4, 40).text(AdventureText.translatable("gui.back"))
                 .onClick(this::close).build();
         listWidget = ui.actionList(LIST_X, LIST_Y, LIST_W, LIST_H, listItems())
                 .selected(-1).scrollOffset(listScroll).actionWidth(116)
@@ -116,12 +116,15 @@ public class SelectScreenFTB extends KineticPage {
     @Override
     protected void renderBackground(KineticGraphics graphics, int mouseX, int mouseY, float partialTick) {
         KineticTheme.shadow(graphics, width(), height());
-        KineticTheme.panel(graphics, 10, 10, 620, 340);
-        graphics.scrollingText(AdventureText.translatable("screen.adventuresystems.ftb.select"), 114, 24, 186, KineticTheme.current().text(), false);
-        graphics.scrollingText(AdventureText.translatable("label.adventuresystems.ftb.select.subtitle"), 304, 25, 616 - 304, KineticTheme.current().mutedText(), false);
-        KineticTheme.itemSlot(graphics, 410, 48);
-        KineticTheme.item(graphics, stack, 410, 48, 18, 0.75F, false);
-        graphics.scrollingText(AdventureText.translatable("label.adventuresystems.ftb.item.name", stack.getHoverName().copy()), 435, 54, 616 - 435, KineticTheme.current().text(), false);
+        KineticTheme.panel(graphics, 0, 0, width(), height());
+        KineticTheme.itemSlot(graphics, 452, 4);
+        KineticTheme.item(graphics, stack, 452, 4, 18, 0.75F, false);
+        graphics.scrollingText(AdventureText.translatable("label.adventuresystems.ftb.item.name", stack.getHoverName().copy()), 474, 8, 636 - 474, KineticTheme.current().text(), false);
+    }
+
+    @Override
+    protected void renderTooltips(int mouseX, int mouseY) {
+        if (!stack.isEmpty() && KineticTheme.hovering(mouseX, mouseY, 452, 4, 18, 18)) showItemTooltip(stack);
     }
 
     @Override

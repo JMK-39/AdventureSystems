@@ -93,7 +93,11 @@ public final class TipsNetwork {
     }
 
     public static void requestEditor() {
-        KineticPlatform.runOnClient(() -> () -> sendToServer(new RequestOpenEditor(ClientProxy.selectedLanguage())));
+        KineticPlatform.runOnClient(() -> () -> {
+            // The editor opens when the server answers; Back and Esc then return to the screen it was opened from.
+            ClientProxy.pendingEditorParent = dev.xyat.kineticcore.api.client.gui.KineticGui.captureNavigationParent();
+            sendToServer(new RequestOpenEditor(ClientProxy.selectedLanguage()));
+        });
     }
 
     public static void requestRuntimeTips() {
@@ -325,13 +329,17 @@ public final class TipsNetwork {
             }
         }
 
+        static KineticGui.NavigationParent pendingEditorParent;
+
         public static void handleOpenEditor(String languageCode, String json) {
             List<HelpTip.JsonModel.Entry> entries = ConfigLoader.fromEditorJson(json);
             if (entries == null) {
                 KineticOverlays.toast(AdventureText.translatable("msg.adventuresystems.tips.tips.save_failed"));
                 return;
             }
-            KineticGui.openChild(new TipEditorScreen(languageCode, entries));
+            var parent = pendingEditorParent;
+            pendingEditorParent = null;
+            KineticGui.openChild(new TipEditorScreen(languageCode, entries), parent);
         }
 
         public static void handleEditorDenied() {

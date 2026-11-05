@@ -24,7 +24,7 @@ public final class CreativeTabs {
                     .displayItems((parameters, output) -> {
                         if (CuriosConfig.enableHeartOfSteel) output.accept(Items.HEART_OF_STEEL.get());
                         if (CuriosConfig.enableParadiseLost) output.accept(Items.PARADISE_LOST.get());
-                        if (CuriosConfig.enableLevitationBackpack) output.accept(Items.LEVITATION_BACKPACK.get());
+                        if (CuriosConfig.enableLevitationBackpack) output.accept(Items.LEVITATION_BACKPACK.get()); if (CuriosConfig.enableWindThunderWings) output.accept(Items.WIND_THUNDER_WINGS.get());
                         if (CuriosConfig.enableCurrencyWallet) {
                             output.accept(Items.CURRENCY_WALLET.get(), CreativeModeTab.TabVisibility.PARENT_AND_SEARCH_TABS);
                         }

@@ -28,10 +28,12 @@ public class FTBBlacklistScreen extends KineticPage {
     private final List<String> allEntries = new ArrayList<>();
     private KineticItemGrid itemGrid;
     private int gridScroll;
+    private String selectedRule;
 
     public FTBBlacklistScreen() {
         super(AdventureText.translatable("screen.adventuresystems.ftb.blacklist"));
-        useCanvas(500, 320, 6);
+        useCanvas(640, 360, 4);
+        bindDeleteAction(() -> selectedRule != null && allEntries.contains(selectedRule), () -> removeRule(selectedRule));
         configureStandaloneDraft(BlacklistStoreFTB::getAll, BlacklistStoreFTB::replaceAll);
     }
 
@@ -40,12 +42,13 @@ public class FTBBlacklistScreen extends KineticPage {
         if (itemGrid != null) gridScroll = itemGrid.scrollOffset();
         itemGrid = null;
         reloadEntries();
-        ui.button(14, 10, 100).text(AdventureText.translatable("button.adventuresystems.ftb.blacklist.add"))
+        ui.button(48, 4, 56).text(AdventureText.translatable("button.adventuresystems.ftb.blacklist.add"))
                 .onClick(this::openSelector).build();
-        ui.button(width() - 74, 10, 60).text(AdventureText.translatable("button.adventuresystems.ftb.save"))
+        ui.button(width() - 44, 4, 40).text(AdventureText.translatable("button.adventuresystems.ftb.save"))
                 .onClick(this::save).build();
-        itemGrid = ui.itemGrid(14, 36, width() - 28, height() - 50, ItemGridDensity.STANDARD, gridItems())
-                .scrollOffset(gridScroll).onClick(ignored -> { }).build();
+        ui.button(4, 4, 40).text(AdventureText.translatable("gui.back")).onClick(this::close).build();
+        itemGrid = ui.itemGrid(4, 28, width() - 8, height() - 32, ItemGridDensity.COMPACT, gridItems())
+                .scrollOffset(gridScroll).onClick(index -> selectedRule = allEntries.get(index)).build();
     }
 
     private void reloadEntries() {
@@ -96,11 +99,11 @@ public class FTBBlacklistScreen extends KineticPage {
     @Override
     protected void renderBackground(KineticGraphics graphics, int mouseX, int mouseY, float partialTick) {
         KineticTheme.shadow(graphics, width(), height());
-        KineticTheme.canvasBackground(graphics, width(), height());
+        KineticTheme.panel(graphics, 0, 0, width(), height());
         graphics.scrollingText(AdventureText.translatable(
                         "label.adventuresystems.ftb.blacklist.count",
                         Component.literal(String.valueOf(allEntries.size()))
-                ), 122, 16, Math.max(0, width() - 74 - 4 - 122), KineticTheme.current().text(), false);
+                ), 108, 8, Math.max(0, width() - 44 - 4 - 108), KineticTheme.current().text(), false);
     }
 
     @Override
@@ -116,7 +119,8 @@ public class FTBBlacklistScreen extends KineticPage {
         else tips.add(icon.getHoverName());
         tips.add(AdventureText.translatable("tip.adventuresystems.ftb.blacklist.rule_value", entry));
         tips.add(AdventureText.translatable("tip.adventuresystems.ftb.blacklist.remove"));
-        showTooltip(tips);
+        if (entry.startsWith("@") || entry.startsWith("#") || icon.isEmpty()) showTooltip(tips);
+        else showItemTooltip(icon, tips.subList(1, tips.size()));
     }
 
     @Override
@@ -124,13 +128,18 @@ public class FTBBlacklistScreen extends KineticPage {
         if (input.isRight() && itemGrid != null) {
             int index = itemGrid.itemAt(input.x(), input.y());
             if (index >= 0 && index < allEntries.size()) {
-                BlacklistStoreFTB.remove(allEntries.get(index));
-                reloadEntries();
-                FTBToastUtil.show("adventuresystems_blacklist_removed", AdventureText.translatable("msg.adventuresystems.ftb.blacklist.removed"));
+                removeRule(allEntries.get(index));
                 return true;
             }
         }
         return false;
+    }
+
+    private void removeRule(String rule) {
+        if (rule == null || !allEntries.contains(rule)) return;
+        BlacklistStoreFTB.remove(rule);
+        selectedRule = null;reloadEntries();
+        FTBToastUtil.show("adventuresystems_blacklist_removed", AdventureText.translatable("msg.adventuresystems.ftb.blacklist.removed"));
     }
 
     private ItemStack getIconForRule(String rule) {

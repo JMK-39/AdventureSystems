@@ -93,8 +93,21 @@ public final class BridgeFTB {
     }
 
     private static String safeTitle(QuestObjectBase object) {
-        String title = object.getRawTitle();
-        return title == null || title.isBlank() ? "未命名任务" : title;
+        String title = parsedTitle(object);
+        return title.isBlank()
+                ? dev.xyat.adventuresystems.text.AdventureText.translatable("label.adventuresystems.ftb.task.unnamed").getString()
+                : title;
+    }
+
+    // FTB titles may hold & formatting codes and {translation} keys; the parsed title is the text FTB shows.
+    private static String parsedTitle(QuestObjectBase object) {
+        try {
+            String title = object.getTitle().getString();
+            if (title != null && !title.isBlank()) return title;
+        } catch (Throwable ignored) {
+        }
+        String raw = object.getRawTitle();
+        return raw == null ? "" : raw;
     }
 
     private static String safeChapterTitle(Quest quest) {
@@ -104,8 +117,7 @@ public final class BridgeFTB {
                 return "";
             }
 
-            String title = chapter.getRawTitle();
-            return title == null ? "" : title;
+            return parsedTitle(chapter);
         } catch (Throwable ignored) {
             return "";
         }

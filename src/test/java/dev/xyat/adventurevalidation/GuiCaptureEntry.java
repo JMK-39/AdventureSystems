@@ -11,6 +11,9 @@ public final class GuiCaptureEntry {
         if (Boolean.getBoolean("adventuresystems.walletHoldingsCheck")) {
             dev.xyat.kineticcore.api.runtime.KineticPlatform.runOnClient(() -> WalletHoldingsCheck::install);
         }
+        if (Boolean.getBoolean("adventuresystemswings.guiValidation")) {
+            dev.xyat.kineticcore.api.runtime.KineticPlatform.runOnClient(() -> WingsRuntimeValidation::install);
+        }
     }
 }
 *///?}

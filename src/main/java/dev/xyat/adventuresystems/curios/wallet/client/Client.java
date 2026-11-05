@@ -206,9 +206,6 @@ public final class Client {
                     Component.literal(formatExact(amount))
             ));
         }
-        tooltip.add(AdventureText.translatable(Data.isMagnetDisabled(walletStack)
-                ? "tip.adventuresystems.curios.wallet.magnet_disabled"
-                : "tip.adventuresystems.curios.wallet.magnet_enabled"));
         tooltip.add(AdventureText.translatable("tip.adventuresystems.curios.wallet.right_click_controls"));
         appendRsTooltip(walletStack, tooltip);
     }

@@ -249,13 +249,7 @@ public final class Shop {
         remaining -= fromInventory;
         long fromWallet = 0L;
         if (remaining > 0L && currencyPayment) {
-            long directWallet = Data.extractDirectForAutomaticPayment(player, paymentId, remaining, false);
-            fromWallet += directWallet;
-            remaining -= directWallet;
-        }
-        if (remaining > 0L && currencyPayment) {
-            long convertedWallet = Data.extractForAutomaticPayment(player, paymentId, remaining, false);
-            fromWallet += convertedWallet;
+            fromWallet = Data.extractDirect(player, paymentId, remaining, false);
         }
         return new PaymentConsumeResult(fromInventory, fromWallet, fromBackpack, fromRs);
     }

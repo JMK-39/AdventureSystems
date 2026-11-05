@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "LNL",
+    "FEF",
+    "PDP"
+  ],
+  "key": {
+    "L": "minecraft:lightning_rod",
+    "N": "minecraft:nether_star",
+    "F": "minecraft:feather",
+    "E": "minecraft:elytra",
+    "P": "minecraft:phantom_membrane",
+    "D": "minecraft:diamond_block"
+  },
+  "result": {
+    "id": "adventuresystems:wind_thunder_wings",
+    "count": 1
+  }
+}

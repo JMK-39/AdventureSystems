@@ -39,6 +39,14 @@ public final class CuriosModule {
                 .booleanValue("enable_paradise_lost", () -> CuriosConfig.enableParadiseLost, value -> CuriosConfig.enableParadiseLost = value)
                 .booleanValue("enable_levitation_backpack", () -> CuriosConfig.enableLevitationBackpack, value -> CuriosConfig.enableLevitationBackpack = value)
                 .booleanValue("enable_currency_wallet", () -> CuriosConfig.enableCurrencyWallet, value -> CuriosConfig.enableCurrencyWallet = value)
+                .booleanValue("enable_wind_thunder_wings", () -> CuriosConfig.enableWindThunderWings, value -> CuriosConfig.enableWindThunderWings = value)
+                .doubleValue("wtw_normal_speed", () -> CuriosConfig.wtwNormalSpeed, value -> CuriosConfig.wtwNormalSpeed = value, 1.0D, 100.0D)
+                .doubleValue("wtw_boost_speed", () -> CuriosConfig.wtwBoostSpeed, value -> CuriosConfig.wtwBoostSpeed = value, 1.0D, 100.0D)
+                .doubleValue("wtw_burn_speed", () -> CuriosConfig.wtwBurnSpeed, value -> CuriosConfig.wtwBurnSpeed = value, 1.0D, 100.0D)
+                .intValue("wtw_burn_seconds", () -> CuriosConfig.wtwBurnSeconds, value -> CuriosConfig.wtwBurnSeconds = value, 1, 600)
+                .doubleValue("wtw_burn_health_cost", () -> CuriosConfig.wtwBurnHealthCost, value -> CuriosConfig.wtwBurnHealthCost = value, 0.0D, 1.0D)
+                .doubleValue("wtw_burn_min_health", () -> CuriosConfig.wtwBurnMinHealth, value -> CuriosConfig.wtwBurnMinHealth = value, 0.0D, 1.0D)
+                .intValue("wtw_burn_cooldown", () -> CuriosConfig.wtwBurnCooldown, value -> CuriosConfig.wtwBurnCooldown = value, 0, 3600)
                 .booleanValue("levitation_knockback_immunity", () -> CuriosConfig.levitationKnockbackImmunity, value -> CuriosConfig.levitationKnockbackImmunity = value)
                 .intValue("hos_growth_interval", () -> CuriosConfig.hosGrowthInterval, value -> CuriosConfig.hosGrowthInterval = value, Integer.MIN_VALUE, Integer.MAX_VALUE)
                 .doubleValue("hos_damage_cap", () -> CuriosConfig.hosDamageCap, value -> CuriosConfig.hosDamageCap = value, -Double.MAX_VALUE, Double.MAX_VALUE)
@@ -59,12 +67,7 @@ public final class CuriosModule {
                 .doubleValue("pl_curve_power", () -> CuriosConfig.plCurvePower, value -> CuriosConfig.plCurvePower = value, 0.000001D, Double.MAX_VALUE)
                 .stringList("pl_conflicts", () -> CuriosConfig.plConflicts, value -> CuriosConfig.plConflicts = value)
                 .intValue("wallet_extra_belt_slots", () -> CuriosConfig.walletExtraBeltSlots, value -> CuriosConfig.walletExtraBeltSlots = value, Integer.MIN_VALUE, Integer.MAX_VALUE)
-                .intValue("wallet_max_currency_types", () -> CuriosConfig.walletMaxCurrencyTypes, CuriosConfig::setWalletMaxCurrencyTypes, Integer.MIN_VALUE, Integer.MAX_VALUE)
-                .doubleValue("wallet_magnet_range", () -> CuriosConfig.walletMagnetRange, value -> CuriosConfig.walletMagnetRange = value, -Double.MAX_VALUE, Double.MAX_VALUE)
-                .intValue("wallet_magnet_interval", () -> CuriosConfig.walletMagnetIntervalTicks, value -> CuriosConfig.walletMagnetIntervalTicks = value, Integer.MIN_VALUE, Integer.MAX_VALUE)
                 .stringList("wallet_currency_definitions", () -> CuriosConfig.walletCurrencyDefinitions, CuriosConfig::setWalletCurrencyDefinitions)
-                .stringList("wallet_exchange_rules", () -> CuriosConfig.walletExchangeRules, CuriosConfig::setWalletExchangeRules)
-                .stringList("wallet_manual_only", () -> CuriosConfig.walletManualExchangeOnlyCurrencies, CuriosConfig::setWalletManualExchangeOnlyCurrencies)
                 .onSave(CuriosConfig::saveServerSettings)
                 .build());
         KTServerConfigApi.registerActionPage("adventuresystems:shop_editor");
@@ -82,12 +85,15 @@ public final class CuriosModule {
         KnockbackImmunityHandler.install();
         ParadiseLostModule.install();
         WalletModule.install();
+        dev.xyat.adventuresystems.curios.windthunderwings.WingsServer.install();
+        dev.xyat.adventuresystems.curios.wallet.WalletCommandExtension.install();
         FTBCompat.install();
         KineticPlatform.runOnClient(() -> () -> {
             CuriosConfigGui.load();
             TooltipEventHandler.install();
             Client.install();
             Hud.install();
+            dev.xyat.adventuresystems.curios.windthunderwings.client.WingsClient.install();
             KineticSelectors.registerInventorySource((player, sink) ->
                     CuriosApi.getCuriosInventory(player).ifPresent(inventory ->
                             inventory.getCurios().values().forEach(handler -> {

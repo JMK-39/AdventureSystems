@@ -62,7 +62,9 @@ public final class TipRenderer {
         int boxW = currentCache.totalW + padding * 2;
         int boxY = screen.height - currentCache.totalBoxH - margin;
 
-        KineticTheme.panel(graphics, margin, boxY, boxW, currentCache.totalBoxH);
+        // This loading/pause overlay keeps its existing border independently of editor canvas frames.
+        KineticTheme.surface(graphics, margin, boxY, boxW, currentCache.totalBoxH, KineticTheme.Surface.PANEL);
+        graphics.outline(margin, boxY, boxW, currentCache.totalBoxH, KineticTheme.current().border());
 
         int curY = boxY + padding;
         for (FormattedCharSequence line : currentCache.lines) {

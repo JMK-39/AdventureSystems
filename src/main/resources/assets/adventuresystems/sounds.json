@@ -1,7 +1,91 @@
 {
   "heart_of_steel": {
-    "sounds":[
+    "sounds": [
       "adventuresystems:heart_of_steel"
+    ]
+  },
+  "wings.flap": {
+    "subtitle": "subtitles.adventuresystems.wings.flap",
+    "sounds": [
+      {
+        "name": "adventuresystems:wings/flap1"
+      },
+      {
+        "name": "adventuresystems:wings/flap2"
+      },
+      {
+        "name": "adventuresystems:wings/flap3"
+      }
+    ]
+  },
+  "wings.crackle": {
+    "subtitle": "subtitles.adventuresystems.wings.crackle",
+    "sounds": [
+      {
+        "name": "adventuresystems:wings/crackle1"
+      },
+      {
+        "name": "adventuresystems:wings/crackle2"
+      },
+      {
+        "name": "adventuresystems:wings/crackle3"
+      }
+    ]
+  },
+  "wings.unfold": {
+    "subtitle": "subtitles.adventuresystems.wings.unfold",
+    "sounds": [
+      {
+        "name": "adventuresystems:wings/unfold"
+      }
+    ]
+  },
+  "wings.escape": {
+    "subtitle": "subtitles.adventuresystems.wings.escape",
+    "sounds": [
+      {
+        "name": "adventuresystems:wings/escape"
+      }
+    ]
+  },
+  "wings.escape_loop": {
+    "subtitle": "subtitles.adventuresystems.wings.escape_loop",
+    "sounds": [
+      {
+        "name": "adventuresystems:wings/escape_loop"
+      }
+    ]
+  },
+  "wings.escape_end": {
+    "subtitle": "subtitles.adventuresystems.wings.escape_end",
+    "sounds": [
+      {
+        "name": "adventuresystems:wings/escape_end"
+      }
+    ]
+  },
+  "wings.burn": {
+    "subtitle": "subtitles.adventuresystems.wings.burn",
+    "sounds": [
+      {
+        "name": "adventuresystems:wings/burn"
+      }
+    ]
+  },
+  "wings.burn_end": {
+    "subtitle": "subtitles.adventuresystems.wings.burn_end",
+    "sounds": [
+      {
+        "name": "adventuresystems:wings/burn_end"
+      }
+    ]
+  },
+  "wings.ready": {
+    "subtitle": "subtitles.adventuresystems.wings.ready",
+    "sounds": [
+      {
+        "name": "adventuresystems:wings/ready"
+      }
     ]
   }
 }

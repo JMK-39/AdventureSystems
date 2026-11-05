@@ -13,6 +13,7 @@ import net.minecraft.world.item.*;
 import net.minecraft.nbt.*;
 import java.lang.reflect.Field;
 import dev.xyat.adventuresystems.curios.wallet.shop.Shop;
+import dev.xyat.adventuresystems.curios.wallet.client.gui.MainScreen;
 import dev.xyat.adventuresystems.curios.wallet.client.gui.ShopScreen;
 import dev.xyat.adventuresystems.ftb.data.RefFTB;
 import dev.xyat.adventuresystems.ftb.client.gui.*;
@@ -31,10 +32,12 @@ import org.slf4j.LoggerFactory;
 public final class GuiLongTextValidation {
     private static final Logger LOG=LoggerFactory.getLogger(GuiLongTextValidation.class);
     private static final String ROOT=System.getProperty("adventuresystems.guiValidation.output", "gui-validation");
-    private static final String[] NAMES={"shop-empty","shop-buy","shop-sell","shop-locked","shop-gacha","shop-choice-overlay","shop-quest-picker","shop-reward-picker","entry-buy","entry-sell","entry-gacha","entry-choice","commands-empty","commands","command-picker","currency-picker","wallet","quests-empty","quests","quest-picker","rewards-empty","rewards-gacha","rewards-choice","rewards-sell","ftb-binding-empty","ftb-binding","ftb-submit","ftb-select","ftb-item-blacklist","ftb-task-blacklist","tips-empty","tips","tip-time","tip-registry","tip-pause","tip-short"};
+    private static final String[] NAMES={"shop-empty","shop-buy","shop-sell","shop-locked","shop-gacha","shop-choice-overlay","shop-quest-picker","shop-reward-picker","entry-buy","entry-sell","entry-gacha","entry-choice","commands-empty","commands","command-picker","currency-picker","wallet","quests-empty","quests","quest-picker","rewards-empty","rewards-gacha","rewards-choice","rewards-sell","ftb-binding-empty","ftb-binding","ftb-submit","ftb-select","ftb-item-blacklist","ftb-task-blacklist","tips-empty","tips","tip-time","tip-registry","tip-pause","tip-short","wallet-hud"};
     private static boolean installed,started,screenshot,finished,originalFullscreen;
     private static String originalLanguage;
     private static int originalScale,originalWidth,originalHeight,phase=-1,page=-1,captures,failures;
+    private static int walletStage;
+    private static long walletDeadline;
     private static long due;
     private static CompletableFuture<Void> reload;
     private static Language stressOriginal;
@@ -51,12 +54,14 @@ public final class GuiLongTextValidation {
             var mc=Minecraft.getInstance();
             if(fixturePage!=null && KineticGui.currentPage()==fixturePage)suppressCachedMouse();
             if(!started) {
-                if(mc.player==null || mc.level==null || mc.getSingleplayerServer()==null)return;
+                boolean menuOnly=Boolean.getBoolean("adventuresystems.guiValidation.menuOnly");
+                if(!menuOnly && (mc.player==null || mc.level==null || mc.getSingleplayerServer()==null))return;
+                if(menuOnly && ((mc.screen==null && mc.player==null) || mc.getOverlay()!=null))return;
                 started=true;originalLanguage=mc.getLanguageManager().getSelected();originalScale=mc.options.guiScale().get();
                 originalWidth=mc.getWindow().getWidth();originalHeight=mc.getWindow().getHeight();originalFullscreen=mc.getWindow().isFullscreen();
                 mc.options.guiScale().set(0);
                 if(originalFullscreen)mc.getWindow().toggleFullScreen();
-                dev.xyat.adventurevalidation.TipsRuntimeChecks.verifyFiles();
+                if(!menuOnly)dev.xyat.adventurevalidation.TipsRuntimeChecks.verifyFiles();
                 nextPhase();
                 return;
             }
@@ -70,9 +75,23 @@ public final class GuiLongTextValidation {
                 nextPage();return;
             }
             long now=System.currentTimeMillis();
+            if(mc.getOverlay()!=null){due=now+300;return;}
             if(!screenshot && now>=due) {
+                if(page==7)verifyRewardPickerClip();
+                if(page==36)verifyWalletHud();
+                if (page == 16 && walletStage == -1) {
+                    verifyWalletExpansion();
+                    walletStage=0;due=now+350;return;
+                }
                 capture("start");
-                if (phase == 4 && page == 31) {
+                if (page == 16) {
+                    var list = (dev.xyat.kineticcore.api.client.gui.widget.list.KineticRowList<?>) field(fixturePage, "list");
+                    if (list.items().size() <= list.visibleRows()) throw new IllegalStateException("Wallet fixture needs an overflowing coin list");
+                    invoke(list, "onMouseScroll", new dev.xyat.kineticcore.api.client.gui.input.ScrollInput(list.controlX()+4,list.controlY()+4,0,-10000));
+                    walletStage = 1;
+                    walletDeadline = now + 20_000;
+                }
+                if ((phase == 4 || Boolean.getBoolean("adventuresystems.guiValidation.tipsLayout")) && page == 31) {
                     int x=(Integer)field(fixturePage,"editX"), y=(Integer)invoke(fixturePage,"conditionTop");
                     Object scroller=field(fixturePage,"conditionScroll");
                     if ((Integer)invoke(scroller,"maxOffset") <= 0) throw new IllegalStateException("Expected overflowing conditions");
@@ -83,7 +102,31 @@ public final class GuiLongTextValidation {
                 screenshot=true;due=now+(phase==4?3400:550);return;
             }
             if(screenshot && now>=due) {
-                if(phase==4)capture("scroll");
+                if (page == 16) {
+                    var walletList=(dev.xyat.kineticcore.api.client.gui.widget.list.KineticRowList<?>)field(fixturePage,"list");
+                    if (walletList.rowTop(walletList.items().size()-1)+walletList.rowHeight()!=walletList.controlY()+walletList.controlHeight()
+                            && now < walletDeadline) { due=now+150;return; }
+                    validateWalletEnd();
+                    capture(walletStage == 1 ? "wheel-bottom" : "drag-bottom");
+                    if (walletStage == 1) {
+                        var list = (dev.xyat.kineticcore.api.client.gui.widget.list.KineticRowList<?>) field(fixturePage,"list");
+                        list.setScrollOffset(0);
+                        int x=list.controlX()+list.controlWidth()-2, y=list.controlY();
+                        var left=dev.xyat.kineticcore.api.client.gui.input.MouseButton.LEFT;
+                        if (!Boolean.TRUE.equals(invoke(list,"onMouseClick",new dev.xyat.kineticcore.api.client.gui.input.MouseInput(x,y+2,left,0,0)))) throw new IllegalStateException("Wallet scrollbar thumb is not clickable");
+                        if (!Boolean.TRUE.equals(invoke(list,"onMouseDrag",new dev.xyat.kineticcore.api.client.gui.input.MouseDragInput(x,y+list.controlHeight(),left,0,0,list.controlHeight())))) throw new IllegalStateException("Wallet scrollbar thumb did not drag");
+                        invoke(list,"onMouseRelease",new dev.xyat.kineticcore.api.client.gui.input.MouseInput(x,y+list.controlHeight(),left,0,0));
+                        walletStage=2;due=now+650;walletDeadline=now+20_000;return;
+                    }
+                }
+                if(phase==4 || Boolean.getBoolean("adventuresystems.guiValidation.tipsLayout"))capture("scroll");
+                if(page==31 && Boolean.getBoolean("adventuresystems.guiValidation.tipsLayout"))validateScrolledTipActions();
+                if(page==32) {
+                    Object timePage=fixturePage;
+                    invoke(timePage,"save");
+                    if(KineticGui.currentPage()==timePage)throw new AssertionError("Time dialog Save did not return to its parent");
+                    LOG.info("ADVENTURE_TIME_SAVE_PASS returnedToParent=true");
+                }
                 nextPage();
             }
         } catch(Throwable error) {
@@ -91,10 +134,40 @@ public final class GuiLongTextValidation {
             finish();
         }
     }
+    private static void validateWalletEnd() throws Exception {
+        requireFixturePage("wallet end validation");
+        var list=(dev.xyat.kineticcore.api.client.gui.widget.list.KineticRowList<?>)field(fixturePage,"list");
+        int last=list.items().size()-1;
+        if (list.rowTop(last)+list.rowHeight()!=list.controlY()+list.controlHeight()) throw new IllegalStateException("Wallet final row is clipped or leaves blank space: last="+list.rowTop(last)+" height="+list.rowHeight()+" bottom="+(list.controlY()+list.controlHeight())+" offset="+list.scrollOffset()+" rows="+list.items().size());
+        int offset=list.scrollOffset();
+        invoke(list,"onMouseScroll",new dev.xyat.kineticcore.api.client.gui.input.ScrollInput(list.controlX()+4,list.controlY()+4,0,-10000));
+        if (offset!=list.scrollOffset()) throw new IllegalStateException("Wallet scrolls beyond its final row");
+    }
+    private static void validateScrolledTipActions() throws Exception {
+        int top=(Integer)invoke(fixturePage,"conditionTop"), bottom=(Integer)invoke(fixturePage,"conditionBottom");
+        int offset=(Integer)field(fixturePage,"renderedConditionOffset");
+        Object layout=invoke(fixturePage,"conditionLayout");
+        for(Object cell:(List<?>)invoke(layout,"cells")) {
+            int x=(Integer)invoke(cell,"x"), y=top+(Integer)invoke(cell,"y")-offset;
+            if(y<top || y+18>bottom)continue;
+            List<?> source=(List<?>)invoke(cell,"source");
+            Object check=invoke(cell,"check");int count=source.size();
+            // The lower/right two pixels used to highlight but reject both actions.
+            int px=x+17, py=y+17;
+            if(((ItemStack)invoke(fixturePage,"hoveredConditionStack",px,py)).isEmpty())throw new IllegalStateException("Scrolled cell tooltip did not match its drawn slot");
+            var left=new dev.xyat.kineticcore.api.client.gui.input.MouseInput(px,py,dev.xyat.kineticcore.api.client.gui.input.MouseButton.LEFT,0,0);
+            if(!Boolean.TRUE.equals(invoke(fixturePage,"onMouseClick",left)) || !"WEAK".equals(field(check,"nbtMode")))throw new IllegalStateException("Scrolled cell left click missed its drawn edge");
+            var right=new dev.xyat.kineticcore.api.client.gui.input.MouseInput(px,py,dev.xyat.kineticcore.api.client.gui.input.MouseButton.RIGHT,1,0);
+            if(!Boolean.TRUE.equals(invoke(fixturePage,"onMouseClick",right)) || source.size()!=count-1 || source.contains(check))throw new IllegalStateException("Scrolled cell removed a different condition");
+            LOG.info("ADVENTURE_GUI_CONDITION_ACTIONS tooltip=true left=true right=true offset={}",offset);
+            return;
+        }
+        throw new IllegalStateException("No fully visible condition after scrolling");
+    }
     private static void nextPhase() {
         if(stressOriginal!=null){Language.inject(stressOriginal);stressOriginal=null;}
         phase++;page=-1;
-        String selectedPhases=System.getProperty("adventuresystems.guiValidation.phases", "");
+        String selectedPhases=System.getProperty("adventuresystems.guiValidation.phases", "1");
         while(phase<5 && !selectedPhases.isBlank() && !List.of(selectedPhases.split(",")).contains(String.valueOf(phase)))phase++;
         if(phase>=5){finish();return;}
         var mc=Minecraft.getInstance();
@@ -147,9 +220,18 @@ public final class GuiLongTextValidation {
             case 12,13 -> p=(KineticPage)construct(WALLET+"CommandManageScreen",draft);
             case 14 -> p=(KineticPage)construct(WALLET+"CommandRewardPickerScreen",draft,false);
             case 15 -> p=(KineticPage)construct(WALLET+"CurrencyPickerScreen",draft);
-            case 16 -> p=(KineticPage)construct(WALLET+"MainScreen",balances(),true);
+            case 16 -> {
+                // Ten coin items with holdings, so the coin list overflows and scrolls.
+                dev.xyat.adventuresystems.curios.wallet.client.Client.handleSync(false,true,true,walletWithCoins());
+                p=new MainScreen(balances(),true) {
+                    // This unsaved fixture has synthetic balances, not a server-equipped wallet.
+                    @Override protected void onTick() { }
+                };
+                walletStage=-1;
+            }
             case 17,18 -> p=(KineticPage)construct(WALLET+"QuestManageScreen",draft);
-            case 19 -> p=(KineticPage)construct(WALLET+"QuestPickerScreen",(java.util.function.Consumer<Long>)v->{});
+            // The quest picker is part of the quest page since 2026-10-26.
+            case 19 -> p=(KineticPage)construct(WALLET+"QuestManageScreen",draft);
             case 20,21,22,23 -> p=(KineticPage)construct(WALLET+"RewardPoolScreen",draft);
             case 24,25 -> p=new FTBItemBindingEditorScreen();
             case 26 -> {
@@ -160,18 +242,25 @@ public final class GuiLongTextValidation {
             case 27 -> p=new SelectScreenFTB(namedStack(),refs());
             case 28 -> p=new ItemBlacklistScreenFTB();
             case 29 -> p=new FTBBlacklistScreen();
-            case 31 -> {p=new TipEditorScreen(Minecraft.getInstance().getLanguageManager().getSelected(),dev.xyat.adventuresystems.tips.config.ConfigLoader.getRawEntriesForLanguage(Minecraft.getInstance().getLanguageManager().getSelected()));}
+            case 31 -> p=Boolean.getBoolean("adventuresystems.guiValidation.tipsLayout")?tipLayoutSample():phase==4?overflowingTipEditor():new TipEditorScreen(Minecraft.getInstance().getLanguageManager().getSelected(),dev.xyat.adventuresystems.tips.config.ConfigLoader.getRawEntriesForLanguage(Minecraft.getInstance().getLanguageManager().getSelected()));
             case 30 -> {var tip=new HelpTip.JsonModel.Entry();tip.text=phase==4?LONG_NAME:"§6作物轮作§r\n小麦与胡萝卜隔行种\n可避开同类密植减速";tip.conditions=new HelpTip.JsonModel.Conditions();tip.conditions.biome="minecraft:plains";tip.conditions.structure="minecraft:village_plains";tip.conditions.dimension="minecraft:overworld";tip.conditions.advancement="minecraft:story/enter_the_nether";tip.conditions.curios=List.of();p=new TipEditorScreen("en_us",index==30?List.of():List.of(tip));}
             case 34 -> {dev.xyat.adventurevalidation.TipsRuntimeChecks.pause();return;}
             case 35 -> {dev.xyat.adventurevalidation.TipsRuntimeChecks.pause(14);return;}
             case 32 -> p=new TimeEditScreen(5000,(java.util.function.Consumer<Integer>)v->{});
             case 33 -> p=new TipSelectors.RegistrySelectorScreen("biomes",(java.util.function.Consumer<String>)v->{});
+            case 36 -> p=new dev.xyat.adventuresystems.curios.wallet.client.hud.WalletHudEditorScreen();
             default -> throw new IllegalArgumentException("Unknown fixture page "+index);
         }
         KineticGui.open(p);
         if(index==13){setField(p,"selectedIndex",0);invoke(p,"selectCommand",0);}
         if(index==21 || index==22 || index==23)invoke(p,"selectReward",0);
-        if(index==25){((List<RefFTB>)field(p,"visibleTasks")).addAll(refs());((List<RefFTB>)field(p,"allTasks")).addAll(refs());((List<RefFTB>)field(p,"boundTasks")).addAll(refs());setField(p,"selectedStack",namedStack());setField(p,"dirty",true);}
+        if(index==25){((List<RefFTB>)field(p,"visibleTasks")).addAll(refs());((List<RefFTB>)field(p,"allTasks")).addAll(refs());((List<RefFTB>)field(p,"boundTasks")).addAll(refs());for(RefFTB r:refs())((java.util.Set<Long>)field(p,"selectedQuestIds")).add(r.id());setField(p,"selectedStack",namedStack());setField(p,"dirty",true);var bound=(List<dev.xyat.adventuresystems.ftb.data.ItemBindingEntryFTB>)field(p,"explicitEntries");for(String id:new String[]{"minecraft:diamond_sword","minecraft:iron_pickaxe","minecraft:bread","minecraft:emerald","minecraft:bow","minecraft:shield","minecraft:golden_apple","minecraft:compass","minecraft:map","minecraft:book","minecraft:torch","minecraft:oak_log","minecraft:stone","minecraft:diamond","minecraft:iron_ingot","minecraft:gold_ingot","minecraft:apple","minecraft:carrot","minecraft:potato","minecraft:wheat","minecraft:arrow","minecraft:string","minecraft:feather","minecraft:leather","minecraft:bone","minecraft:coal"})bound.add(new dev.xyat.adventuresystems.ftb.data.ItemBindingEntryFTB(id));invoke(p,"updateItemScroll");invoke(p,"refreshRows");invoke(p,"updateSaveButton");}
+    }
+    private static CompoundTag walletWithCoins(){
+        var tag=balances();var storage=new CompoundTag();
+        String[] ids={"minecraft:gold_nugget","minecraft:gold_ingot","minecraft:gold_block","minecraft:diamond","minecraft:diamond_block","minecraft:emerald","minecraft:emerald_block","minecraft:netherite_scrap","minecraft:netherite_ingot","minecraft:netherite_block"};
+        for(int i=0;i<ids.length;i++){var entry=new CompoundTag();entry.putLong("value",(long)Math.pow(10,i));entry.putLong("inventory",64L*i+3);entry.putIntArray("stacks",new int[]{64,64,i+3});storage.put(ids[i],entry);}
+        tag.put(dev.xyat.adventuresystems.curios.wallet.network.Network.STORAGE_KEY,storage);return tag;
     }
     private static CompoundTag balances(){var tag=new CompoundTag();for(var currency:dev.xyat.adventuresystems.curios.wallet.data.Data.currencies())tag.putLong(currency.itemId(),123456789L);return tag;}
     //? if >=1.21 {
@@ -184,9 +273,41 @@ public final class GuiLongTextValidation {
     *///?} else {
     private static ItemStack namedStack(){var stack=new ItemStack(Items.DIAMOND_SWORD);stack.setHoverName(dev.xyat.adventuresystems.text.AdventureText.literal(LONG_NAME));return stack;}
     //?}
+    /** A tip with every condition type, so the stress pass can always scroll the conditions area. */
+    private static KineticPage overflowingTipEditor(){var tip=new HelpTip.JsonModel.Entry();tip.text=LONG_NAME;tip.conditions=new HelpTip.JsonModel.Conditions();tip.conditions.biome="minecraft:plains";tip.conditions.structure="minecraft:village_plains";tip.conditions.dimension="minecraft:overworld";tip.conditions.advancement="minecraft:story/enter_the_nether";var item=new HelpTip.JsonModel.ItemCheck();item.id="minecraft:emerald";tip.conditions.items=List.of(item);tip.conditions.curios=List.of();return new TipEditorScreen("en_us",List.of(tip));}
+    private static KineticPage tipLayoutSample() throws Exception {
+        var codec=Class.forName("dev.xyat.textstudio.font.client.parser.CompactTagCodec");
+        var encode=codec.getMethod("encodePreset",int.class,String.class);
+        var entries=new ArrayList<HelpTip.JsonModel.Entry>();
+        for(int i=0;i<32;i++) {
+            var tip=new HelpTip.JsonModel.Entry();
+            tip.text=(String)encode.invoke(null,1+i%8,"§b炫彩预览 §l"+(i+1));
+            entries.add(tip);
+        }
+        var conditions=new HelpTip.JsonModel.Conditions();
+        conditions.structure="minecraft:village_plains";
+        conditions.biome="minecraft:plains";
+        conditions.dimension="minecraft:overworld";
+        conditions.advancement="minecraft:story/enter_the_nether";
+        conditions.items=new ArrayList<>();conditions.curios=new ArrayList<>();
+        for(int i=0;i<128;i++) {
+            var item=new HelpTip.JsonModel.ItemCheck();item.id=i%2==0?"minecraft:emerald":"minecraft:diamond";
+            conditions.items.add(item);
+        }
+        for(int i=0;i<96;i++) {
+            var item=new HelpTip.JsonModel.ItemCheck();item.id="minecraft:iron_ingot";
+            conditions.curios.add(item);
+        }
+        entries.get(0).conditions=conditions;
+        return new TipEditorScreen("zh_cn",entries);
+    }
     private static List<RefFTB> refs(){return List.of(new RefFTB(1,"0000000000000001",LONG_NAME,LONG_NAME,"local",LONG_NAME),new RefFTB(2,"0000000000000002","Short task","Short chapter","local","Short task"));}
     private static Shop.Entry entry(Shop.Mode mode,boolean gacha,boolean choice,boolean locked){
-        var rewards=List.of(new Shop.Reward(namedStack(),10,50.0D,LONG_NAME,""),new Shop.Reward(new ItemStack(Items.EMERALD),10,50.0D,"Short reward",""));
+        var firstReward=namedStack();
+        var secondReward=new ItemStack(Items.EMERALD);
+        int rewardCount=Integer.getInteger("adventuresystems.guiValidation.rewardCount",1);
+        firstReward.setCount(rewardCount);secondReward.setCount(rewardCount);
+        var rewards=List.of(new Shop.Reward(firstReward,10,50.0D,LONG_NAME,""),new Shop.Reward(secondReward,10,50.0D,"Short reward",""));
         return new Shop.Entry(mode,0,"validation",namedStack(),"minecraft:emerald",1500L,1800,100,LONG_NAME,LONG_NAME,LONG_NAME,"",1,0,List.of(),1L,LONG_NAME,List.of(1L,2L),List.of(LONG_NAME,"Short quest"),!locked,gacha,choice,rewards,0,2,120L,64L,3000L,64L,64L,true,true,true,"READY",3L,ItemStack.EMPTY);
     }
     private static void suppressCachedMouse() throws Exception {
@@ -241,9 +362,67 @@ public final class GuiLongTextValidation {
         return true;
     }
     private static void capture(String frame)throws Exception {
+        requireFixturePage("capture "+frame);
         var mc=Minecraft.getInstance();Path path=Path.of(ROOT,String.format("%d-%02d-%s-%s.png",phase,page,NAMES[page],frame));Files.createDirectories(path.getParent());
         try(var image=Screenshot.takeScreenshot(mc.getMainRenderTarget())){image.writeToFile(path);}
         captures++;LOG.info("ADVENTURE_GUI_CAPTURE phase={} case={} image={}x{}",phase,NAMES[page],mc.getWindow().getWidth(),mc.getWindow().getHeight());
+    }
+    private static void verifyRewardPickerClip() throws Exception {
+        requireFixturePage("reward picker clipping");
+        int x=(int)invoke(fixturePage,"rewardPickerX"),y=(int)invoke(fixturePage,"rewardPickerY");
+        int width=(int)invoke(fixturePage,"rewardPickerWidth");
+        for(int[] point:new int[][]{{x+4,y+4},{x,y+20},{x+width-1,y+20}}) {
+            if((int)invoke(fixturePage,"rewardPickerIndexAt",point[0],point[1])!=-1)
+                throw new AssertionError("Reward picker title/border resolved a reward");
+            if(!((ItemStack)invoke(fixturePage,"hoveredRewardPickerItem",point[0],point[1])).isEmpty())
+                throw new AssertionError("Clipped reward picker area returned an item tooltip");
+        }
+        if((int)invoke(fixturePage,"rewardPickerIndexAt",x+2,y+18)!=0)
+            throw new AssertionError("First visible reward pixel is not selectable");
+        LOG.info("ADVENTURE_REWARD_PICKER_CLIP_PASS titleSafe=true borderSafe=true firstRow=true");
+    }
+    private static void verifyWalletHud() throws Exception {
+        requireFixturePage("wallet HUD preview");
+        var hud=fixturePage;
+        int savedX=dev.xyat.adventuresystems.curios.config.CuriosConfig.walletHudOffsetX;
+        int savedY=dev.xyat.adventuresystems.curios.config.CuriosConfig.walletHudOffsetY;
+        double savedScale=dev.xyat.adventuresystems.curios.config.CuriosConfig.walletHudScale;
+        Object editor=field(hud,"editor"), snapshot=invoke(editor,"snapshot");
+        var left=dev.xyat.kineticcore.api.client.gui.input.MouseButton.LEFT;
+        try {
+            if(hud.layout()!=dev.xyat.kineticcore.api.client.gui.page.PageLayout.NATIVE)throw new AssertionError("Wallet HUD must use native coordinates");
+            invoke(hud,"resetLayout");
+            var initial=(dev.xyat.kineticcore.api.client.gui.selector.KineticHudEditorPage.HudLayout)invoke(hud,"currentLayout");
+            if(!Boolean.TRUE.equals(invoke(hud,"onMouseClickCapture",new dev.xyat.kineticcore.api.client.gui.input.MouseInput(initial.x()+1,initial.y()+1,left,0,0))))throw new AssertionError("Synthetic HUD drag did not start");
+            if(!Boolean.TRUE.equals(invoke(hud,"onMouseDrag",new dev.xyat.kineticcore.api.client.gui.input.MouseDragInput(hud.width()+64,hud.height()+64,left,0,64,64))))throw new AssertionError("Synthetic HUD drag was not handled");
+            invoke(hud,"onMouseRelease",new dev.xyat.kineticcore.api.client.gui.input.MouseInput(hud.width()+64,hud.height()+64,left,0,0));
+            var moved=(dev.xyat.kineticcore.api.client.gui.selector.KineticHudEditorPage.HudLayout)invoke(hud,"currentLayout");
+            if(moved.x()!=Math.max(0,hud.width()-(int)invoke(hud,"scaledElementWidth")) || moved.y()!=Math.max(0,hud.height()-(int)invoke(hud,"scaledElementHeight")))throw new AssertionError("Wallet HUD drag exceeded the screen");
+            for(int i=0;i<20;i++) {
+                var current=(dev.xyat.kineticcore.api.client.gui.selector.KineticHudEditorPage.HudLayout)invoke(hud,"currentLayout");
+                if(!Boolean.TRUE.equals(invoke(hud,"onMouseScroll",new dev.xyat.kineticcore.api.client.gui.input.ScrollInput(current.x()+1,current.y()+1,0,-1))))throw new AssertionError("Wallet HUD scale wheel was not handled");
+            }
+            var minimum=(dev.xyat.kineticcore.api.client.gui.selector.KineticHudEditorPage.HudLayout)invoke(hud,"currentLayout");
+            if(minimum.scale()!=0.1D)throw new AssertionError("Wallet HUD did not retain its ten-percent minimum scale");
+            invoke(hud,"resetLayout");
+            var reset=(dev.xyat.kineticcore.api.client.gui.selector.KineticHudEditorPage.HudLayout)invoke(hud,"currentLayout");
+            if(reset.scale()!=0.75D || reset.x()!=0 || reset.y()!=Math.max(0,hud.height()-(int)invoke(hud,"scaledElementHeight")))throw new AssertionError("Wallet HUD reset lost its default bottom-left layout");
+            if(savedX!=dev.xyat.adventuresystems.curios.config.CuriosConfig.walletHudOffsetX || savedY!=dev.xyat.adventuresystems.curios.config.CuriosConfig.walletHudOffsetY || savedScale!=dev.xyat.adventuresystems.curios.config.CuriosConfig.walletHudScale)throw new AssertionError("HUD preview actions saved configuration");
+            LOG.info("ADVENTURE_WALLET_HUD_PASS syntheticInput=true dragClamped=true minimumScale=true reset=true savedConfiguration=false osCursorMoved=false");
+        } finally {
+            invoke(editor,"restore",snapshot);
+        }
+    }
+    private static void verifyWalletExpansion() throws Exception {
+        requireFixturePage("wallet coin list");
+        var list=(dev.xyat.kineticcore.api.client.gui.widget.list.KineticRowList<?>)field(fixturePage,"list");
+        int coins=dev.xyat.adventuresystems.data.Nbt.keys(dev.xyat.adventuresystems.curios.wallet.client.Client.holdings()).size();
+        if(list.items().size()!=coins)throw new IllegalStateException("Wallet must list every coin item it takes: rows="+list.items().size()+" coins="+coins);
+        capture("balance");
+    }
+    private static void requireFixturePage(String operation) {
+        if (KineticGui.currentPage()!=fixturePage) throw new IllegalStateException("Fixture page is no longer displayed during "+operation
+                +": phase="+phase+" case="+NAMES[page]+" expected="+fixturePage+" actual="+KineticGui.currentPage()+" screen="+Minecraft.getInstance().screen);
     }
     private static void finish() {
         finished=true;
@@ -256,6 +435,27 @@ public final class GuiLongTextValidation {
         mc.getWindow().setWindowed(originalWidth,originalHeight);
         if(originalFullscreen && !mc.getWindow().isFullscreen())mc.getWindow().toggleFullScreen();
         LOG.info("ADVENTURE_GUI_{} pages={} captures={} failures={} userSettingsRestored=true",failures==0?"PASS":"FAIL",NAMES.length,captures,failures);
+        try {
+            var output=Path.of(ROOT);Files.createDirectories(output);
+            Files.writeString(output.resolve("result.txt"),(failures==0?"PASS":"FAIL")+" captures="+captures+" failures="+failures+System.lineSeparator());
+        } catch(java.io.IOException error) { LOG.error("ADVENTURE_GUI_RESULT_FAIL",error); }
+        if(failures==0 && Boolean.getBoolean("adventuresystems.guiValidation.thenTooltip")) {
+            try {
+                Class.forName("dev.xyat.contentstudiovalidation.TooltipNavigationValidation").getMethod("install").invoke(null);
+                return;
+            } catch(ReflectiveOperationException error) {
+                LOG.error("ADVENTURE_GUI_CHAIN_FAIL",error);
+            }
+        }
+        String nextValidation=System.getProperty("adventuresystems.guiValidation.thenValidation", "");
+        if(failures==0 && !nextValidation.isBlank()) {
+            try {
+                Class.forName(nextValidation).getMethod("install").invoke(null);
+                return;
+            } catch(ReflectiveOperationException error) {
+                LOG.error("ADVENTURE_GUI_CHAIN_FAIL",error);
+            }
+        }
         dev.xyat.kineticcore.api.runtime.KineticClientRuntime.stopClient();
     }
     private static final class StressLanguage extends Language {

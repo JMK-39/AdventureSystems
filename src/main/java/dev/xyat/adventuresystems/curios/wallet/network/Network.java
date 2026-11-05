@@ -151,20 +151,21 @@ public final class Network {
         send(player, true, Data.isHudVisible(player), true, withStorage(player, Data.snapshot(player)));
     }
 
-    /** Key of the per-currency holdings outside the wallet; not an item ID, so it never reads as a balance. */
+    /** Key of the coin items held outside the wallet; not an item ID, so it never reads as a balance. */
     public static final String STORAGE_KEY = "$storage";
 
     /**
-     * Adds what the player holds of each currency outside the wallet (inventory stacks, Sophisticated Backpacks and
-     * the bound RS network), so the wallet tooltip can show where the money is. Sent only to this player.
+     * Adds each coin item the wallet takes in, with its value in wallet coins and what the player holds of it outside
+     * the wallet (inventory stacks, Sophisticated Backpacks and the bound RS network). Sent only to this player.
      */
     private static CompoundTag withStorage(ServerPlayer player, CompoundTag balances) {
         CompoundTag storage = new CompoundTag();
-        for (var currency : Data.currencies()) {
-            if (!currency.hasItem()) continue;
+        for (var currency : Data.coinMap().values()) {
+            if (!currency.hasItem() || Data.VIRTUAL_ID.equals(currency.itemId())) continue;
             var stack = new net.minecraft.world.item.ItemStack(currency.item());
             var held = dev.xyat.adventuresystems.curios.wallet.storage.MaterialStorage.snapshot(player, stack);
             CompoundTag entry = new CompoundTag();
+            entry.putLong("value", currency.value());
             entry.putLong("inventory", held.inventoryCount());
             entry.putIntArray("stacks", dev.xyat.adventuresystems.curios.wallet.storage.MaterialStorage.inventoryStacks(player.getInventory(), stack));
             entry.putBoolean("backpack_shown", held.backpackLoaded() && held.hasBackpack());
@@ -223,20 +224,8 @@ public final class Network {
         CHANNEL.sendToServer(new ServerboundAction(0, "", ""));
     }
 
-    public static void sendWithdraw(String currencyId) {
-        CHANNEL.sendToServer(new ServerboundAction(1, currencyId, ""));
-    }
-
-    public static void sendConvertAll(String from, String to) {
-        CHANNEL.sendToServer(new ServerboundAction(2, from, to));
-    }
-
     public static void sendOpen() {
         CHANNEL.sendToServer(new ServerboundAction(3, "", ""));
-    }
-
-    public static void sendConvertOne(String from, String to) {
-        CHANNEL.sendToServer(new ServerboundAction(4, from, to));
     }
 
     public static void sendToggleHudCurrency() {
@@ -328,14 +317,12 @@ public final class Network {
 
     private static void handleAction(ServerboundAction packet, ServerPacketContext context) {
         ServerPlayer player = context.sender();
+        // 1, 2 and 4 were withdraw and the two exchanges: the wallet holds one currency now, so they do nothing.
         if (packet.action() == 0) Data.depositInventory(player);
-        else if (packet.action() == 1) Data.withdraw(player, packet.from());
-        else if (packet.action() == 2) Data.convertAll(player, packet.from(), packet.to());
         else if (packet.action() == 3) {
             open(player);
             return;
-        } else if (packet.action() == 4) Data.convertOne(player, packet.from(), packet.to());
-        else if (packet.action() == 5) {
+        } else if (packet.action() == 5) {
             boolean hidden = Data.toggleHudHidden(player);
             toast(player, hidden ? "msg.adventuresystems.curios.wallet.hud_off" : "msg.adventuresystems.curios.wallet.hud_on");
         } else if (packet.action() == 6) {

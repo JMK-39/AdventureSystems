@@ -29,46 +29,53 @@ final class RewardPoolScreen extends KineticPage {
     RewardPoolScreen(ShopGuiSupport.EditorDraft draft) {
         super(AdventureText.translatable(titleKey(draft)));
         this.draft = draft;
-        useCanvas(640, 360, 6);
+        useCanvas(640, 360, 4);
+        bindDeleteAction(() -> selectedIndex >= 0 && selectedIndex < draft.rewards.size(), () -> deleteReward(selectedIndex));
     }
+
+    private static final int ROW_Y = 28, WEIGHT_X = 636 - 80, COUNT_X = WEIGHT_X - 4 - 44 - 4 - 60;
 
     @Override
     protected void build(KineticUi ui) {
         if (list != null) scrollOffset = list.scrollOffset();
-        ui.button(14, 54, 104).text(AdventureText.translatable(addItemButtonKey()))
+        // One row under the header: the add / clear buttons (each as wide as its label) at the left, the selected
+        // reward's count and weight at the right; the list fills everything below.
+        ui.button(4, ROW_Y, 64).text(AdventureText.translatable(addItemButtonKey()))
                 .tooltip(AdventureText.translatable(addItemTooltipKey()))
                 .onClick(this::openItemSelector).build();
         if (!sellMode()) {
-            ui.button(124, 54, 112)
+            ui.button(72, ROW_Y, 64)
                     .text(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_add_reward"))
                     .onClick(this::openCommandRewardPicker).build();
         }
         if (gachaMode()) {
-            ui.button(242, 54, 96).text(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_reward_add_empty"))
+            ui.button(140, ROW_Y, 48).text(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_reward_add_empty"))
+                    .tooltip(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_reward_add_empty.tooltip"))
                     .onClick(this::addEmptyReward).build();
         }
-        int clearX = gachaMode() ? 344 : sellMode() ? 124 : 242;
-        ui.button(clearX, 54, 78).text(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_reward_clear"))
+        int clearX = gachaMode() ? 192 : sellMode() ? 72 : 140;
+        ui.button(clearX, ROW_Y, 56).text(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_reward_clear"))
                 .tooltip(AdventureText.translatable(clearTooltipKey()))
                 .onClick(() -> {
                     draft.rewards.clear();
                     selectedIndex = -1;
                     refreshList();
                 }).build();
-        ui.button(14, 4, 82).text(AdventureText.translatable("gui.done"))
+        ui.button(4, 4, 40).text(AdventureText.translatable("gui.back"))
+                .tooltip(AdventureText.translatable(primaryHintKey()).append("\n").append(AdventureText.translatable(secondaryHintKey())))
                 .onClick(this::finish).build();
-        list = ui.itemActionList(14, 82, 612, 208, listItems())
-                .selected(selectedIndex).scrollOffset(scrollOffset).actionWidth(66)
+        list = ui.itemActionList(4, ROW_Y + 20, 632, 356 - ROW_Y - 20, listItems())
+                .selected(selectedIndex).scrollOffset(scrollOffset).actionWidth(40)
                 .onSelect(this::selectReward).onAction(this::deleteReward).build();
         int selectedCount = selectedIndex >= 0 && selectedIndex < draft.rewards.size()
                 ? Math.max(1, draft.rewards.get(selectedIndex).count()) : 1;
         int selectedWeight = selectedIndex >= 0 && selectedIndex < draft.rewards.size()
                 ? Math.max(1, draft.rewards.get(selectedIndex).weight()) : 1;
-        countBox = ui.numberField(96, 314, 70, NumberType.INT)
+        countBox = ui.numberField(COUNT_X, ROW_Y, 60, NumberType.INT)
                 .label(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_reward_column_count"))
                 .allowNegative(false).range(1, 64).value(selectedCount)
                 .onChange(value -> updateSelectedCount()).firstShownTextAsDefault().build();
-        weightBox = ui.numberField(256, 314, 80, NumberType.INT)
+        weightBox = ui.numberField(WEIGHT_X, ROW_Y, 80, NumberType.INT)
                 .label(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_reward_column_weight"))
                 .allowNegative(false).range(1, 999999999).value(selectedWeight)
                 .onChange(value -> updateSelectedWeight()).firstShownTextAsDefault().build();
@@ -215,12 +222,10 @@ final class RewardPoolScreen extends KineticPage {
     protected void renderBackground(KineticGraphics graphics, int mouseX, int mouseY, float partialTick) {
         KineticTheme.shadow(graphics, width(), height());
         KineticTheme.panel(graphics, 0, 0, 640, 360);
-        int titleLeft = 14 + 82 + 2;
-        graphics.scrollingTextCentered(title(), (titleLeft + 626) / 2, 10, 626 - titleLeft, KineticTheme.current().text(), false);
-        graphics.scrollingText(AdventureText.translatable(primaryHintKey()), 14, 26, 612, KineticTheme.current().text(), true);
-        graphics.scrollingText(AdventureText.translatable(secondaryHintKey()), 14, 38, 612, KineticTheme.current().text(), true);
-        graphics.scrollingText(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_reward_column_count"), 14, 318, 96 - 14 - 4, KineticTheme.current().text(), true);
-        if (gachaMode()) graphics.scrollingText(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_reward_column_weight"), 182, 318, 256 - 182 - 4, KineticTheme.current().text(), true);
+        int titleLeft = 48;
+        graphics.scrollingTextCentered(title(), (titleLeft + 636) / 2, 8, 636 - titleLeft, KineticTheme.current().text(), false);
+        graphics.scrollingText(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_reward_column_count"), COUNT_X - 44, ROW_Y + 4, 40, KineticTheme.current().text(), true);
+        if (gachaMode()) graphics.scrollingText(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_reward_column_weight"), WEIGHT_X - 44, ROW_Y + 4, 40, KineticTheme.current().text(), true);
         if (draft.rewards.isEmpty()) graphics.scrollingTextCentered(AdventureText.translatable(emptyListKey()), 320, 180, 608, KineticTheme.current().text(), false);
     }
 

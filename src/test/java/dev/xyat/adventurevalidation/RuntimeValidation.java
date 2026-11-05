@@ -15,6 +15,7 @@ public final class RuntimeValidation {
     public RuntimeValidation(){
         if(Boolean.getBoolean("adventuresystems.guiValidation")){dev.xyat.kineticcore.api.runtime.KineticPlatform.runOnClient(() -> GuiCaptureValidation::install);return;}
         if(Boolean.getBoolean("adventuresystems.walletHoldingsCheck")){dev.xyat.kineticcore.api.runtime.KineticPlatform.runOnClient(() -> WalletHoldingsCheck::install);return;}
+        if(Boolean.getBoolean("adventuresystemswings.guiValidation")){dev.xyat.kineticcore.api.runtime.KineticPlatform.runOnClient(() -> WingsRuntimeValidation::install);return;}
         net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(this::login);
         dev.xyat.kineticcore.api.runtime.KineticPlatform.runOnClient(() -> () -> {
             dev.xyat.kineticcore.api.client.event.KineticClientEvents.onTick(dev.xyat.kineticcore.api.client.event.KineticClientEvents.TickPhase.END, () -> {
@@ -107,20 +108,18 @@ public final class RuntimeValidation {
         run("ftb-native-component-bindings",FTBItemComponentsTest::verify);
         run("ftb-submission-permission-gates",FTBSubmitPermissionTest::run);
         run("tips-native-component-matching-and-schema",TipsComponentTest::verify);
-        run("wallet-balance-identity-magnet-binding-native-save",()->{
+        run("wallet-balance-identity-binding-native-save",()->{
             var wallet=new net.minecraft.world.item.ItemStack(dev.xyat.adventuresystems.curios.init.Items.CURRENCY_WALLET.get());
             var pos=player.blockPosition();
             dev.xyat.adventuresystems.curios.wallet.data.Data.ensureWalletIdentity(wallet);
             var identity=dev.xyat.adventuresystems.data.AdventureItemData.customData(wallet).getUUID("WalletId");
-            require(dev.xyat.adventuresystems.curios.wallet.data.Data.add(wallet,"minecraft:emerald",Long.MAX_VALUE)==Long.MAX_VALUE,"full long balance accepted");
-            require(dev.xyat.adventuresystems.curios.wallet.data.Data.add(wallet,"minecraft:emerald",1)==0,"balance overflow prevented");
-            var copy=wallet.copy();dev.xyat.adventuresystems.curios.wallet.data.Data.remove(copy,"minecraft:emerald",5);
-            require(dev.xyat.adventuresystems.curios.wallet.data.Data.amount(wallet,"minecraft:emerald")==Long.MAX_VALUE,"wallet copy independent");
-            require(dev.xyat.adventuresystems.curios.wallet.data.Data.toggleMagnetDisabled(wallet),"magnet toggle");
+            require(dev.xyat.adventuresystems.curios.wallet.data.Data.add(wallet,dev.xyat.adventuresystems.curios.wallet.data.Data.VIRTUAL_ID,Long.MAX_VALUE)==Long.MAX_VALUE,"full long balance accepted");
+            require(dev.xyat.adventuresystems.curios.wallet.data.Data.add(wallet,dev.xyat.adventuresystems.curios.wallet.data.Data.VIRTUAL_ID,1)==0,"balance overflow prevented");
+            var copy=wallet.copy();dev.xyat.adventuresystems.curios.wallet.data.Data.remove(copy,dev.xyat.adventuresystems.curios.wallet.data.Data.VIRTUAL_ID,5);
+            require(dev.xyat.adventuresystems.curios.wallet.data.Data.amount(wallet,dev.xyat.adventuresystems.curios.wallet.data.Data.VIRTUAL_ID)==Long.MAX_VALUE,"wallet copy independent");
             dev.xyat.adventuresystems.curios.wallet.data.Data.bindRsController(wallet,player.serverLevel(),pos);
             var loaded=net.minecraft.world.item.ItemStack.parseOptional(player.registryAccess(),(net.minecraft.nbt.CompoundTag)wallet.save(player.registryAccess()));
-            require(dev.xyat.adventuresystems.curios.wallet.data.Data.amount(loaded,"minecraft:emerald")==Long.MAX_VALUE,"native balance saved");
-            require(dev.xyat.adventuresystems.curios.wallet.data.Data.isMagnetDisabled(loaded),"native magnet saved");
+            require(dev.xyat.adventuresystems.curios.wallet.data.Data.amount(loaded,dev.xyat.adventuresystems.curios.wallet.data.Data.VIRTUAL_ID)==Long.MAX_VALUE,"native balance saved");
             require(dev.xyat.adventuresystems.curios.wallet.data.Data.rsBinding(loaded).pos().equals(pos),"native binding saved");
             require(dev.xyat.adventuresystems.data.AdventureItemData.customData(loaded).getUUID("WalletId").equals(identity),"wallet identity preserved");
         });

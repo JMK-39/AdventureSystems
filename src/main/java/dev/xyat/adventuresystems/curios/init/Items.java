@@ -7,6 +7,7 @@ import dev.xyat.adventuresystems.curios.heartofsteel.item.HeartOfSteelItem;
 import dev.xyat.adventuresystems.curios.levitationbackpack.item.LevitationBackpackItem;
 import dev.xyat.adventuresystems.curios.paradiselost.item.ParadiseLostItem;
 import dev.xyat.adventuresystems.curios.wallet.item.WalletItem;
+import dev.xyat.adventuresystems.curios.windthunderwings.item.WindThunderWingsItem;
 import dev.xyat.kineticcore.api.registry.KineticItems;
 import dev.xyat.kineticcore.api.registry.KineticRegistryHandle;
 import dev.xyat.kineticcore.api.resource.KineticResourceIds;
@@ -28,10 +29,23 @@ public final class Items {
             () -> CuriosConfig.enableLevitationBackpack ? new LevitationBackpackItem() : new DisabledCurioItem(ItemProperties.of("levitation_backpack"))
     );
 
+    public static final KineticRegistryHandle<Item> WIND_THUNDER_WINGS = KineticItems.register(
+            KineticResourceIds.of(CuriosModule.MODID, "wind_thunder_wings"),
+            () -> CuriosConfig.enableWindThunderWings ? new WindThunderWingsItem() : new DisabledCurioItem(ItemProperties.of("wind_thunder_wings"))
+    );
+
     public static final KineticRegistryHandle<Item> CURRENCY_WALLET = KineticItems.register(
             KineticResourceIds.of(CuriosModule.MODID, "currency_wallet"),
             () -> CuriosConfig.enableCurrencyWallet ? new WalletItem() : new DisabledCurioItem(ItemProperties.of("currency_wallet"))
     );
+
+    /**
+     * The wallet coin: the wallet's one currency, kept as a number in the wallet. The item gives it its icon and name;
+     * it is not in the creative tab, and one that turns up anyway is taken in by the quick deposit.
+     */
+    public static final KineticRegistryHandle<Item> ADVENTURE_COIN = KineticItems.register(
+            KineticResourceIds.of(CuriosModule.MODID, "adventure_coin"),
+            () -> new Item(ItemProperties.of("adventure_coin").stacksTo(64)));
 
     private Items() {
     }

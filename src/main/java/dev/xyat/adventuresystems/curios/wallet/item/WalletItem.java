@@ -68,15 +68,8 @@ public class WalletItem extends Item implements ICurioItem {
         if (!CuriosConfig.enableCurrencyWallet) return InteractionResultHolder.pass(stack);
         if (player.isShiftKeyDown()) return InteractionResultHolder.pass(stack);
 
-        Data.ensureWalletIdentity(stack);
-        boolean disabled = Data.toggleMagnetDisabled(stack);
-
-        if (!level.isClientSide() && player instanceof ServerPlayer serverPlayer) {
-            Network.toast(serverPlayer, disabled ? "msg.adventuresystems.curios.wallet.magnet_disabled" : "msg.adventuresystems.curios.wallet.magnet_enabled");
-            Network.sync(serverPlayer);
-        }
-
-        return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
+        // The wallet has no magnet any more: coins go in by its quick deposit, so right-click does nothing.
+        return InteractionResultHolder.pass(stack);
     }
 
     @Override
@@ -96,7 +89,6 @@ public class WalletItem extends Item implements ICurioItem {
         tooltip.add(AdventureText.translatable("tip.adventuresystems.curios.wallet.title"));
         tooltip.add(AdventureText.translatable("tip.adventuresystems.curios.wallet.desc1", openKeyName(level)));
         tooltip.add(AdventureText.translatable("tip.adventuresystems.curios.wallet.desc2"));
-        tooltip.add(AdventureText.translatable("tip.adventuresystems.curios.wallet.desc3", Long.toString(Math.round(CuriosConfig.walletMagnetRange))));
         appendClientAmounts(stack, level, tooltip);
         //? if >=26.1
         /*tooltip.forEach(lines);*/

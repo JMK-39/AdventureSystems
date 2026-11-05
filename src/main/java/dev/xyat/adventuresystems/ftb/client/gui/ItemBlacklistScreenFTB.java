@@ -19,14 +19,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ItemBlacklistScreenFTB extends KineticPage {
-    private static final int PANEL_X = 10;
-    private static final int PANEL_Y = 10;
-    private static final int PANEL_W = 600;
-    private static final int PANEL_H = 340;
-    private static final int LIST_X = 24;
-    private static final int LIST_Y = 88;
-    private static final int LIST_W = 572;
-    private static final int LIST_H = 240;
+    private static final int PANEL_X = 0;
+    private static final int PANEL_Y = 0;
+    private static final int PANEL_W = 640;
+    private static final int PANEL_H = 360;
+    private static final int LIST_X = 4;
+    private static final int LIST_Y = 28;
+    private static final int LIST_W = 632;
+    private static final int LIST_H = 328;
 
     private final List<String> allEntries = new ArrayList<>();
     private final List<String> filtered = new ArrayList<>();
@@ -36,7 +36,8 @@ public class ItemBlacklistScreenFTB extends KineticPage {
 
     public ItemBlacklistScreenFTB() {
         super(AdventureText.translatable("screen.adventuresystems.ftb_item.blacklist"));
-        useCanvas(620, 360, 6);
+        useCanvas(640, 360, 4);
+        bindDeleteAction(() -> listWidget != null && listWidget.selectedIndex() >= 0, () -> removeEntry(listWidget.selectedIndex()));
         configureStandaloneDraft(BlacklistStoreFTB::getAll, BlacklistStoreFTB::replaceAll);
     }
 
@@ -45,7 +46,9 @@ public class ItemBlacklistScreenFTB extends KineticPage {
         if (listWidget != null) listScroll = listWidget.scrollOffset();
         listWidget = null;
         reloadEntries();
-        ui.textField(LIST_X + 110, 54, 350)
+        ui.button(4, 4, 40).text(AdventureText.translatable("gui.back")).onClick(this::navigateBack).build();
+        // Header: Back, search, Add (as wide as its label), the count, and Save at the top right.
+        ui.textField(48, 4, 300)
                 .label(AdventureText.translatable("gui.adventuresystems.ftb.search"))
                 .placeholder(AdventureText.translatable("placeholder.adventuresystems.ftb_item.binding_search"))
                 .value(searchText)
@@ -53,12 +56,12 @@ public class ItemBlacklistScreenFTB extends KineticPage {
                     searchText = value;
                     applySearch();
                 }).firstShownTextAsDefault().build();
-        ui.button(LIST_X, 54, 100).text(AdventureText.translatable("button.adventuresystems.ftb_item.add_blacklist"))
+        ui.button(352, 4, 56).text(AdventureText.translatable("button.adventuresystems.ftb_item.add_blacklist"))
                 .onClick(this::openSelector).build();
-        ui.button(LIST_X + 470, 54, 100).text(AdventureText.translatable("button.adventuresystems.ftb.save"))
+        ui.button(596, 4, 40).text(AdventureText.translatable("button.adventuresystems.ftb.save"))
                 .onClick(this::save).build();
         listWidget = ui.itemActionList(LIST_X, LIST_Y, LIST_W, LIST_H, listItems())
-                .selected(-1).scrollOffset(listScroll).actionWidth(72)
+                .selected(-1).scrollOffset(listScroll).actionWidth(40)
                 .onSelect(ignored -> { }).onAction(this::removeEntry).build();
     }
 
@@ -120,12 +123,8 @@ public class ItemBlacklistScreenFTB extends KineticPage {
     protected void renderBackground(KineticGraphics graphics, int mouseX, int mouseY, float partialTick) {
         KineticTheme.shadow(graphics, width(), height());
         KineticTheme.panel(graphics, PANEL_X, PANEL_Y, PANEL_W, PANEL_H);
-        graphics.scrollingText(AdventureText.translatable("screen.adventuresystems.ftb_item.blacklist"), 24, 24, 150 - 24 - 4, KineticTheme.current().text(), false);
-        graphics.scrollingText(AdventureText.translatable("label.adventuresystems.ftb_item.blacklist_desc"), 150, 25, 480 - 150 - 4, KineticTheme.current().mutedText(), false);
-        graphics.scrollingText(AdventureText.translatable(
-                        "label.adventuresystems.ftb_item.blacklist_count",
-                        Component.literal(String.valueOf(filtered.size()))
-                ), 480, 25, PANEL_X + PANEL_W - 14 - 480, KineticTheme.current().text(), false);
+        graphics.scrollingText(AdventureText.translatable("label.adventuresystems.ftb_item.blacklist_count",
+                Component.literal(String.valueOf(filtered.size()))), 412, 8, 596 - 4 - 412, KineticTheme.current().text(), false);
     }
 
     private void save() {

@@ -1,0 +1,15 @@
+Wind-Thunder Wings sounds: mixed for Adventure Systems from these CC0 (public domain) recordings on OpenGameArt.org.
+No attribution is required; the authors are listed with thanks.
+
+- Large Wings Flap - AntumDeluge - https://opengameart.org/content/large-wings-flap
+- Dragon Flap - VishwaJai - https://opengameart.org/node/129587
+- 100 CC0 SFX #2 (thunder) - rubberduck - https://opengameart.org/content/100-cc0-sfx-2
+- Battle at Sea (cannon fire) - thimras - https://opengameart.org/content/battle-at-sea
+- Electricity Game Sound Pack (snap loop, charge) - faxcorp - https://opengameart.org/content/electricity-game-sound-pack
+- Electricity Sound Effects (sparks) - bmaczero - https://opengameart.org/content/electricity-sound-effects-0
+- Air Whoosh - pyranostudios - https://opengameart.org/content/air-whoosh
+- Heartbeat Sounds - bart - https://opengameart.org/content/heartbeat-sounds
+- 100 CC0 SFX (bell, gong) - rubberduck - https://opengameart.org/content/100-cc0-sfx
+- Swishes Sound Pack - artisticdude - https://opengameart.org/content/swishes-sound-pack
+
+Resource packs can replace any of them: put an .ogg with the same name in assets/adventuresystems/sounds/wings/.

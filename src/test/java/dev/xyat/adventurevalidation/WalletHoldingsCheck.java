@@ -50,7 +50,10 @@ public final class WalletHoldingsCheck {
                         top.theillusivec4.curios.api.CuriosApi.getCuriosInventory(player).flatMap(handler -> handler.getStacksHandler("belt"))
                                 .ifPresent(belt -> belt.getStacks().setStackInSlot(0, new ItemStack(Items.CURRENCY_WALLET.get())));
                     }
-                    var currency = Data.currencies().stream().filter(c -> c.hasItem()).findFirst().orElseThrow();
+                    // A coin item the wallet takes in; the dev run has no KubeJS coins, so gold nuggets stand in.
+                    if (Data.coinMap().values().stream().noneMatch(c -> c.hasItem() && !Data.VIRTUAL_ID.equals(c.itemId())))
+                        dev.xyat.adventuresystems.curios.config.CuriosConfig.setWalletCurrencyDefinitions(List.of("minecraft:gold_nugget|1"));
+                    var currency = Data.coinMap().values().stream().filter(c -> c.hasItem() && !Data.VIRTUAL_ID.equals(c.itemId())).findFirst().orElseThrow();
                     currencyId = currency.itemId();
                     for (int count : new int[] {64, 64, 12}) player.getInventory().add(new ItemStack(currency.item(), count));
                     LOG.info("WALLET_HOLDINGS_PREPARED currency={} wallet={}", currencyId, Data.hasWallet(player));

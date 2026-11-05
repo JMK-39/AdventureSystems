@@ -65,7 +65,7 @@ public final class GuiCaptureValidation {
     private static void nextPhase() {
         if(stressOriginal!=null){Language.inject(stressOriginal);stressOriginal=null;}
         phase++;page=-1;
-        String selectedPhases=System.getProperty("adventuresystems.guiValidation.phases", "");
+        String selectedPhases=System.getProperty("adventuresystems.guiValidation.phases", "1");
         while(phase<5 && !selectedPhases.isBlank() && !List.of(selectedPhases.split(",")).contains(String.valueOf(phase)))phase++;
         if(phase>=5){finish();return;}
         var mc=Minecraft.getInstance();
@@ -101,7 +101,7 @@ public final class GuiCaptureValidation {
             case 6 -> KineticGui.open((KineticPage)construct(GUI+"QuestManageScreen",draft()));
             case 7 -> KineticGui.open((KineticPage)construct(GUI+"CurrencyPickerScreen",draft()));
             case 8 -> KineticGui.open((KineticPage)construct(GUI+"CommandRewardPickerScreen",draft(),false));
-            case 9 -> KineticGui.open((KineticPage)construct(GUI+"QuestPickerScreen",(java.util.function.Consumer<Long>)id->{}));
+            case 9 -> KineticGui.open((KineticPage)construct(GUI+"QuestManageScreen",draft()));
             case 10 -> KineticGui.open(new dev.xyat.adventuresystems.ftb.client.gui.FTBItemBindingEditorScreen());
             case 11 -> KineticGui.open(new dev.xyat.adventuresystems.ftb.client.gui.FTBBlacklistScreen());
             case 12 -> KineticGui.open(new dev.xyat.adventuresystems.ftb.client.gui.ItemBlacklistScreenFTB());

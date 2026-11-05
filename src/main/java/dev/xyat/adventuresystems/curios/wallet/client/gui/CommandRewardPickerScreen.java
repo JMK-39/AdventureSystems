@@ -29,16 +29,15 @@ final class CommandRewardPickerScreen extends KineticPage {
         super(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_pick_title"));
         this.draft = draft;
         this.gacha = gacha;
-        useCanvas(560, 300, 6);
+        useCanvas(640, 360, 4);
     }
 
     @Override
     protected void build(KineticUi ui) {
         if (grid != null) scrollOffset = grid.scrollOffset();
-        int rows = Math.max(2, Math.min(6, (draft.commands.size() + GRID_COLUMNS - 1) / GRID_COLUMNS));
-        gridHeight = 6 + rows * (26 + 6);
-        top = Math.max(0, (height() - (56 + gridHeight + 14)) / 2);
-        ui.button(34, top + 14, 76)
+        gridHeight = height() - 32;
+        top = 0;
+        ui.button(4, 4, 40)
                 .text(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_cancel"))
                 .onClick(this::navigateBack).build();
         List<ItemGridItem> items = new ArrayList<>(draft.commands.size());
@@ -46,10 +45,15 @@ final class CommandRewardPickerScreen extends KineticPage {
             items.add(new ItemGridItem(ShopGuiSupport.stack(command.iconId()), null,
                     true, false, false, ItemGridOutline.NONE));
         }
-        grid = ui.itemGrid(34, top + 56, 492, gridHeight, ItemGridDensity.LARGE, items)
+        grid = ui.itemGrid(4, 28, 632, gridHeight, ItemGridDensity.COMPACT, items)
                 .scrollOffset(scrollOffset).onClick(this::selectCommand).build();
     }
 
+
+    // Header line (Cancel and title), the hint, then the grid with a small bottom margin.
+    private int panelHeight() {
+        return 42 + gridHeight + 8;
+    }
     private void selectCommand(int index) {
         if (index < 0 || index >= draft.commands.size()) return;
         draft.rewards.add(draft.commands.get(index).toRewardDraft(gacha ? 10 : 1));
@@ -59,13 +63,12 @@ final class CommandRewardPickerScreen extends KineticPage {
     @Override
     protected void renderBackground(KineticGraphics graphics, int mouseX, int mouseY, float partialTick) {
         KineticTheme.shadow(graphics, width(), height());
-        KineticTheme.panel(graphics, 20, top, 520, 56 + gridHeight + 14);
-        int titleLeft = 34 + 76 + 2;
-        graphics.scrollingTextCentered(title(), (titleLeft + 526) / 2, top + 8,
-                526 - titleLeft, KineticTheme.current().text(), false);
-        graphics.scrollingText(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_pick_hint"), 34, top + 38, 520 - 28, KineticTheme.current().text(), true);
+        KineticTheme.panel(graphics, 0, 0, width(), height());
+        int titleLeft = 48;
+        graphics.scrollingTextCentered(title(), (titleLeft + 636) / 2, 8,
+                636 - titleLeft, KineticTheme.current().text(), false);
         if (draft.commands.isEmpty()) {
-            graphics.scrollingTextCentered(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_empty"), 280, top + 56 + (gridHeight - 8) / 2, 520 - 28, KineticTheme.current().text(), false);
+            graphics.scrollingTextCentered(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_empty"), 320, 28 + (gridHeight - 8) / 2, 632, KineticTheme.current().text(), false);
         }
     }
 
@@ -78,11 +81,14 @@ final class CommandRewardPickerScreen extends KineticPage {
         Component name = command.displayName() == null || command.displayName().isBlank()
                 ? AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_empty_name")
                 : AdventureText.literal(command.displayName());
-        showTooltip(List.of(
+        List<Component> tooltip = List.of(
                 AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_tooltip_name", name),
                 AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_text_tooltip",
                         command.command() == null ? "" : command.command()),
                 AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_pick_tooltip_hint")
-        ), 280);
+        );
+        var stack = ShopGuiSupport.stack(command.iconId());
+        if (stack.isEmpty()) showTooltip(tooltip, 280);
+        else showItemTooltip(stack, tooltip);
     }
 }

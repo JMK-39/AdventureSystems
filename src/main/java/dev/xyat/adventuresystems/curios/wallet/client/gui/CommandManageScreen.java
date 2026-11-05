@@ -25,13 +25,14 @@ import java.util.Locale;
 
 final class CommandManageScreen extends KineticPage {
     // 图标格：只显示物品格，点击格子打开物品选择器更换图标。
-    private static final int ICON_X = 76;
-    private static final int ICON_Y = 40;
+    private static final int ICON_X = 62;
+    private static final int ICON_Y = 28;
     private static final int ICON_SIZE = 20;
-    // “添加/更新”“新建”和右上角“完成”三个按钮同宽，右缘对齐。
-    private static final int ACTION_W = 56;
-    private static final int NEW_X = 622 - ACTION_W;
-    private static final int SAVE_X = NEW_X - 4 - ACTION_W;
+    // Short actions use 40; the longer update label keeps its existing space.
+    private static final int ACTION_W = 40;
+    private static final int UPDATE_W = 56;
+    private static final int NEW_X = 636 - ACTION_W;
+    private static final int SAVE_X = NEW_X - 4 - UPDATE_W;
     private final ShopGuiSupport.EditorDraft draft;
     private int selectedIndex = -1;
     private String iconId = "";
@@ -47,7 +48,8 @@ final class CommandManageScreen extends KineticPage {
     CommandManageScreen(ShopGuiSupport.EditorDraft draft) {
         super(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_manage_title"));
         this.draft = draft;
-        useCanvas(640, 360, 6);
+        useCanvas(640, 360, 4);
+        bindDeleteAction(() -> selectedIndex >= 0 && selectedIndex < draft.commands.size(), () -> deleteCommand(selectedIndex));
     }
 
     @Override
@@ -56,25 +58,25 @@ final class CommandManageScreen extends KineticPage {
         if (commandBox != null) commandText = commandBox.textValue();
         if (grid != null) gridScroll = grid.scrollOffset();
         if (iconId.isBlank()) iconId = fallbackIconId();
-        nameBox = ui.textField(188, 41, 306)
+        nameBox = ui.textField(174, 29, 358)
                 .label(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_name"))
                 .placeholder(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_name"))
                 .tooltip(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_name_tooltip"))
                 .maxLength(64).value(nameText).onChange(value -> nameText = value).firstShownTextAsDefault().build();
-        saveButton = ui.button(SAVE_X, 40, ACTION_W).text(saveButtonText()).onClick(this::saveCommand).build();
-        ui.button(NEW_X, 40, ACTION_W).text(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_new"))
+        saveButton = ui.button(SAVE_X, 28, saveButtonWidth()).text(saveButtonText()).onClick(this::saveCommand).build();
+        ui.button(NEW_X, 28, ACTION_W).text(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_new"))
                 .tooltip(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_clear_tooltip"))
                 .onClick(this::clearEditor).build();
-        ui.button(18, 8, ACTION_W).text(AdventureText.translatable("gui.done"))
+        ui.button(4, 4, ACTION_W).text(AdventureText.translatable("gui.back"))
                 .tooltip(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_done_tooltip"))
                 .onClick(this::navigateBack).build();
-        commandBox = ui.textField(84, 332, 536)
+        commandBox = ui.textField(74, 340, 562)
                 .label(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_text"))
                 .placeholder(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_text"))
                 .maxLength(2048).value(commandText).firstShownTextAsDefault().build();
         assist = KineticCommandAssist.attach(commandBox, width(), height(), false, 8,
                 value -> commandText = value);
-        grid = ui.itemGrid(16, 78, 608, 238, ItemGridDensity.STANDARD, gridItems())
+        grid = ui.itemGrid(4, 64, 632, 268, ItemGridDensity.COMPACT, gridItems())
                 .scrollOffset(gridScroll).onClick(this::selectCommand).build();
     }
 
@@ -86,6 +88,10 @@ final class CommandManageScreen extends KineticPage {
         return AdventureText.translatable(selectedIndex >= 0
                 ? "gui.adventuresystems.curios.wallet.shop_command_update"
                 : "gui.adventuresystems.curios.wallet.shop_command_add");
+    }
+
+    private int saveButtonWidth() {
+        return selectedIndex >= 0 ? UPDATE_W : ACTION_W;
     }
 
     private void openIconSelector() {
@@ -143,7 +149,10 @@ final class CommandManageScreen extends KineticPage {
         commandText = "";
         if (nameBox != null) nameBox.setTextValue("");
         if (commandBox != null) commandBox.setTextValue("");
-        if (saveButton != null) saveButton.setText(saveButtonText());
+        if (saveButton != null) {
+            saveButton.setText(saveButtonText());
+            saveButton.resizeControlWidth(saveButtonWidth());
+        }
         refreshGrid();
     }
 
@@ -158,6 +167,7 @@ final class CommandManageScreen extends KineticPage {
         commandBox.setTextValue(commandText);
         focus(commandBox);
         saveButton.setText(saveButtonText());
+        saveButton.resizeControlWidth(saveButtonWidth());
         refreshGrid();
     }
 
@@ -192,18 +202,18 @@ final class CommandManageScreen extends KineticPage {
     protected void renderBackground(KineticGraphics graphics, int mouseX, int mouseY, float partialTick) {
         KineticTheme.shadow(graphics, width(), height());
         KineticTheme.panel(graphics, 0, 0, 640, 360);
-        int titleLeft = 18 + ACTION_W + 2;
-        graphics.scrollingTextCentered(title(), (titleLeft + 622) / 2, 10, 622 - titleLeft, KineticTheme.current().text(), false);
-        graphics.scrollingText(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_icon_preview"), 18, 46, ICON_X - 18 - 4, KineticTheme.current().text(), true);
+        int titleLeft = 48;
+        graphics.scrollingTextCentered(title(), (titleLeft + 636) / 2, 8, 636 - titleLeft, KineticTheme.current().text(), false);
+        graphics.scrollingText(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_icon_preview"), 4, 34, ICON_X - 4 - 4, KineticTheme.current().text(), true);
         boolean iconHovered = KineticTheme.hovering(mouseX, mouseY, ICON_X, ICON_Y, ICON_SIZE, ICON_SIZE);
         KineticTheme.itemSlot(graphics, ICON_X, ICON_Y, ICON_SIZE, ICON_SIZE, 4, false, iconHovered, false);
         KineticTheme.item(graphics, ShopGuiSupport.stack(iconId), ICON_X, ICON_Y, ICON_SIZE, 0.875F, false);
-        graphics.scrollingText(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_name"), 120, 46, 188 - 120 - 4, KineticTheme.current().text(), true);
-        graphics.scrollingText(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_list"), 16, 64, 608, KineticTheme.current().text(), true);
+        graphics.scrollingText(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_name"), 106, 34, 174 - 106 - 4, KineticTheme.current().text(), true);
+        graphics.scrollingText(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_list"), 4, 52, 632, KineticTheme.current().text(), true);
         if (draft.commands.isEmpty()) {
             graphics.scrollingTextCentered(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_empty"), 320, 196, 608, KineticTheme.current().text(), false);
         }
-        graphics.scrollingText(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_text"), 18, 337, 84 - 18 - 4, KineticTheme.current().text(), true);
+        graphics.scrollingText(AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_text"), 4, 344, 74 - 4 - 4, KineticTheme.current().text(), true);
     }
 
     @Override
@@ -214,8 +224,10 @@ final class CommandManageScreen extends KineticPage {
     @Override
     protected void renderTooltips(int mouseX, int mouseY) {
         if (KineticTheme.hovering(mouseX, mouseY, ICON_X, ICON_Y, ICON_SIZE, ICON_SIZE)) {
-            showTooltip(List.of(ShopGuiSupport.stack(iconId).getHoverName(),
-                    AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_icon_tooltip")));
+            var stack = ShopGuiSupport.stack(iconId);
+            Component hint = AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_icon_tooltip");
+            if (stack.isEmpty()) showTooltip(List.of(stack.getHoverName(), hint));
+            else showItemTooltip(stack, List.of(hint));
             return;
         }
         if (grid == null) return;
@@ -225,10 +237,13 @@ final class CommandManageScreen extends KineticPage {
         Component name = command.displayName() == null || command.displayName().isBlank()
                 ? AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_empty_name")
                 : AdventureText.literal(command.displayName());
-        showTooltip(List.of(
+        List<Component> tooltip = List.of(
                 AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_tooltip_name", name),
                 AdventureText.translatable("gui.adventuresystems.curios.wallet.shop_command_tooltip_command",
-                        commandInputText(command.command()))), 280);
+                        commandInputText(command.command())));
+        var stack = ShopGuiSupport.stack(command.iconId());
+        if (stack.isEmpty()) showTooltip(tooltip, 280);
+        else showItemTooltip(stack, tooltip);
     }
 
     @Override
@@ -241,6 +256,14 @@ final class CommandManageScreen extends KineticPage {
         return assist != null && assist.mouseClick(input);
     }
 
+    private void deleteCommand(int index) {
+        if (index < 0 || index >= draft.commands.size()) return;
+        draft.commands.remove(index);
+        if (selectedIndex == index) clearEditor();
+        else if (selectedIndex > index) selectedIndex--;
+        refreshGrid();
+    }
+
     @Override
     protected boolean onMouseClick(MouseInput input) {
         if (input.isLeft() && input.inside(ICON_X, ICON_Y, ICON_SIZE, ICON_SIZE)) {
@@ -250,10 +273,7 @@ final class CommandManageScreen extends KineticPage {
         if (!input.isRight() || grid == null) return false;
         int index = grid.itemAt(input.x(), input.y());
         if (index < 0 || index >= draft.commands.size()) return false;
-        draft.commands.remove(index);
-        if (selectedIndex == index) clearEditor();
-        else if (selectedIndex > index) selectedIndex--;
-        refreshGrid();
+        deleteCommand(index);
         return true;
     }
 

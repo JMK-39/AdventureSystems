@@ -18,10 +18,12 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 
 public class FTBSubmitCountScreen extends KineticPage {
-    private static final int PANEL_W = 420;
-    private static final int PANEL_H = 230;
-    private static final int MARGIN_X = 24;
-    private static final int BUTTON_W = 150;
+    // Compact dialog: Back, the title and Exchange on one row, the count field, then the material lines.
+    private static final int PANEL_W = 280;
+    private static final int PANEL_H = 120;
+    private static final int MARGIN_X = 6;
+    private static final int FIELD_W = 80;
+    private static final int LINE_H = 12;
     private static final long STATS_REFRESH_MS = 250L;
 
     private final ItemTask task;
@@ -50,19 +52,19 @@ public class FTBSubmitCountScreen extends KineticPage {
     protected void build(KineticUi ui) {
         left = (width() - PANEL_W) / 2;
         top = (height() - PANEL_H) / 2;
-        countBox = ui.numberField(left + MARGIN_X, top + 52, PANEL_W - MARGIN_X * 2, NumberType.INT)
+        countBox = ui.numberField(left + MARGIN_X + 48, top + 30, FIELD_W, NumberType.INT)
                 .label(AdventureText.translatable("placeholder.adventuresystems.ftb.submit.count"))
+                .tooltip(AdventureText.translatable("label.adventuresystems.ftb.submit.desc"))
                 .allowNegative(false)
                 .range(1, 1_000_000)
                 .onChange(value -> countValue = value)
                 .firstShownTextAsDefault().build();
         countBox.setTextValue(countValue);
-        int buttonY = top + PANEL_H - 38;
-        ui.button(left + MARGIN_X, buttonY, BUTTON_W)
+        ui.button(left + PANEL_W - 4 - 48, top + 4, 48)
                 .text(AdventureText.translatable("button.adventuresystems.ftb.submit.confirm"))
                 .onClick(this::submit).build();
-        ui.button(left + MARGIN_X, top + 10, BUTTON_W)
-                .text(AdventureText.translatable("gui.cancel"))
+        ui.button(left + 4, top + 4, 40)
+                .text(AdventureText.translatable("gui.back"))
                 .onClick(this::close).build();
         refreshStats(true);
         focus(countBox);
@@ -147,20 +149,16 @@ public class FTBSubmitCountScreen extends KineticPage {
         KineticTheme.shadow(graphics, width(), height());
         KineticTheme.canvasBackground(graphics, width(), height());
         KineticTheme.panel(graphics, left, top, PANEL_W, PANEL_H);
-        int titleLeft = left + MARGIN_X + BUTTON_W + 2;
-        int titleRight = left + PANEL_W - MARGIN_X;
-        graphics.scrollingTextCentered(title(), (titleLeft + titleRight) / 2, top + 14,
-                titleRight - titleLeft, KineticTheme.current().text(), true);
-        graphics.scrollingText(AdventureText.translatable("label.adventuresystems.ftb.submit.desc"), left + MARGIN_X, top + 34, PANEL_W - MARGIN_X * 2, KineticTheme.current().mutedText(), false);
+        graphics.scrollingTextCentered(title(), left + PANEL_W / 2, top + 8, PANEL_W - 2 * 56, KineticTheme.current().text(), false);
+        KineticTheme.separator(graphics, left + 4, top + 24, PANEL_W - 8);
+        graphics.scrollingText(AdventureText.translatable("label.adventuresystems.ftb.submit.count_label"), left + MARGIN_X, top + 34, 44, KineticTheme.current().text(), false);
     }
 
     @Override
     protected void renderForeground(KineticGraphics graphics, int mouseX, int mouseY, float partialTick) {
         int lineX = left + MARGIN_X;
-        int y = top + 86;
-        int gap = 18;
-        drawLine(graphics, AdventureText.translatable("label.adventuresystems.ftb.submit.exchanges", number(cachedCount)), lineX, y);
-        y += gap;
+        int y = top + 52;
+        int gap = LINE_H;
         drawLine(graphics, AdventureText.translatable("label.adventuresystems.ftb.submit.required", number(cachedRequiredItems)), lineX, y);
         y += gap;
         drawLine(graphics, AdventureText.translatable("label.adventuresystems.ftb.submit.inventory", number(cachedInventoryItems)), lineX, y);

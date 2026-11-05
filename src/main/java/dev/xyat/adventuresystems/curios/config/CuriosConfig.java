@@ -18,32 +18,19 @@ public class CuriosConfig {
     private static final Path CONFIG_PATH = KineticPaths.configFile(CONFIG_FILE);
     private static CommentedFileConfig configData;
 
+    // Coin items the wallet takes in, with how many wallet coins each is worth. The wallet itself holds one virtual
+    // balance (adventuresystems:adventure_coin); coins are turned into it by the wallet's quick deposit.
     public static final List<String> DEFAULT_WALLET_CURRENCY_DEFINITIONS = Arrays.asList(
             "kubejs:gold_coin|1",
             "kubejs:diamond_coin|100",
-            "kubejs:netherite_coin|1000",
-            "kubejs:monster_coin|10000"
-    );
-
-    public static final List<String> DEFAULT_WALLET_EXCHANGE_RULES = Arrays.asList(
-            "kubejs:gold_coin->kubejs:diamond_coin",
-            "kubejs:diamond_coin->kubejs:gold_coin",
-            "kubejs:diamond_coin->kubejs:netherite_coin",
-            "kubejs:netherite_coin->kubejs:diamond_coin",
-            "kubejs:netherite_coin->kubejs:gold_coin",
-            "kubejs:monster_coin->kubejs:netherite_coin",
-            "kubejs:monster_coin->kubejs:diamond_coin",
-            "kubejs:monster_coin->kubejs:gold_coin"
-    );
-
-    public static final List<String> DEFAULT_WALLET_MANUAL_EXCHANGE_ONLY_CURRENCIES = Arrays.asList(
-            "kubejs:monster_coin"
+            "kubejs:netherite_coin|1000"
     );
 
     public static boolean enableHeartOfSteel = true;
     public static boolean enableParadiseLost = true;
     public static boolean enableLevitationBackpack = true;
     public static boolean enableCurrencyWallet = true;
+    public static boolean enableWindThunderWings = true;
     public static boolean levitationKnockbackImmunity = true;
 
     public static int hosGrowthInterval = 3;
@@ -67,15 +54,29 @@ public class CuriosConfig {
     public static List<String> plConflicts = Arrays.asList("enigmaticlegacy:cursed_ring");
 
     public static int walletExtraBeltSlots = 1;
-    public static int walletMaxCurrencyTypes = 10;
-    public static double walletMagnetRange = 6.0;
-    public static int walletMagnetIntervalTicks = 10;
     public static int walletHudOffsetX = 0;
     public static int walletHudOffsetY = 0;
     public static double walletHudScale = 0.75;
     public static List<String> walletCurrencyDefinitions = DEFAULT_WALLET_CURRENCY_DEFINITIONS;
-    public static List<String> walletExchangeRules = DEFAULT_WALLET_EXCHANGE_RULES;
-    public static List<String> walletManualExchangeOnlyCurrencies = DEFAULT_WALLET_MANUAL_EXCHANGE_ONLY_CURRENCIES;
+
+    // 风雷翅：飞行倍率相对创造模式飞行速度；燃血按最大生命值的比例。
+    public static double wtwNormalSpeed = 2.0;
+    public static double wtwBoostSpeed = 6.0;
+    public static double wtwBurnSpeed = 20.0;
+    public static int wtwBurnSeconds = 10;
+    public static double wtwBurnHealthCost = 0.30;
+    public static double wtwBurnMinHealth = 0.30;
+    public static int wtwBurnCooldown = 15;
+    // 风雷翅外观（只影响本客户端）。
+    public static int wtwWingColor = 0x2FA3AE;
+    public static int wtwThunderColor = 0xD6ECFF;
+    public static int wtwBoostColor = 0x3CFF8A;
+    public static int wtwBurnColor = 0xD8101C;
+    public static double wtwTrailSeconds = 0.8;
+    public static double wtwTrailWidth = 1.0;
+    public static boolean wtwShowWings = true;
+    public static boolean wtwSparks = true;
+    public static boolean wtwSounds = true;
 
     static {
         load();
@@ -131,6 +132,10 @@ public class CuriosConfig {
         define(old, "general.enable_currency_wallet", true, """
                 启用 钱包袋子 饰品
                 Enable the Currency Wallet accessory""");
+
+        define(old, "general.enable_wind_thunder_wings", true, """
+                是否注册风雷翅饰品 (修改后需重启)
+                Whether the Wind-Thunder Wings accessory is registered (restart required)""");
 
         define(old, "levitation_backpack.knockbackImmunity", true, """
                 悬浮背包在玩家处于飞行状态时是否提供击退免疫。
@@ -244,18 +249,6 @@ public class CuriosConfig {
                 佩戴钱包袋子时，为玩家额外提供的腰带 (Belt) 饰品栏位数量。
                 Extra Curios belt slots provided when the wallet is equipped.""");
 
-        define(old, "currency_wallet.maxCurrencyTypes", 10, """
-                系统支持的最大货币种类数量。数值越大，钱包界面需要显示的货币项目越多。
-                Maximum supported currency types. Higher values allow more currencies to appear in the wallet UI.""");
-
-        define(old, "currency_wallet.magnetRange", 6.0, """
-                佩戴钱包时，自动收集周围货币掉落物的半径（单位：格子）。
-                Radius (in blocks) to automatically collect currency items while equipped.""");
-
-        define(old, "currency_wallet.magnetIntervalTicks", 10, """
-                自动收集的检查间隔（单位：Tick）。数值越大越节省服务器性能，但收集会有延迟。
-                Interval (Ticks) for automatic collection checks. Higher = better server performance but slower collection.""");
-
         define(old, "currency_wallet.hudOffsetX", 0, """
                 钱包货币实时显示界面距离屏幕左侧的像素偏移量（负数按 0 处理）。
                 Currency HUD pixel offset from the left side of the screen (negative values are treated as 0).""");
@@ -269,22 +262,36 @@ public class CuriosConfig {
                 UI scale for the currency display overlay (minimum effective value 0.1, default 0.75).""");
 
         define(old, "currency_wallet.currencyDefinitions", DEFAULT_WALLET_CURRENCY_DEFINITIONS, """
-                定义哪些物品是货币及其基础价值。格式：'物品ID|价值'。价值必须大于0。
-                Defines valid currencies and their base values. Format: 'item_id|value'. Value must be > 0.
-                示例: ["kubejs:gold_coin|1", "kubejs:diamond_coin|100"]
-                Example: ["kubejs:gold_coin|1", "kubejs:diamond_coin|100"]""");
+                可存入钱包的货币物品，以及每个值多少冒险币。格式：'物品ID|冒险币'，数值必须大于0。
+                钱包里只有一种冒险币；钱包界面的“快速存入”把背包里的这些物品按面值换成冒险币，村民交易要这些物品时从钱包扣对应的冒险币。
+                Coin items the wallet takes in and how many Adventure Coins each is worth. Format: 'item_id|coins', coins > 0.
+                The wallet holds one balance of Adventure Coins; its Quick deposit turns these items into Adventure Coins at their value,
+                and villager trades that cost these items pay their value from the wallet.
+                示例 / Example: ["kubejs:gold_coin|1", "kubejs:diamond_coin|100"]""");
 
-        define(old, "currency_wallet.exchangeRules", DEFAULT_WALLET_EXCHANGE_RULES, """
-                定义货币之间的单向转换规则，用于找零或自动升级。格式：'来源物品ID->目标物品ID'。
-                Defines allowed one-way currency conversions. Format: 'source_id->target_id'.
-                示例: ["kubejs:gold_coin->kubejs:diamond_coin"] (允许金币向钻石币兑换)
-                Example: ["kubejs:gold_coin->kubejs:diamond_coin"] (Allows converting Gold to Diamond coin)""");
+        setupWings(old);
+    }
 
-        define(old, "currency_wallet.manualExchangeOnlyCurrencies", DEFAULT_WALLET_MANUAL_EXCHANGE_ONLY_CURRENCIES, """
-                受保护货币列表。这些货币只允许玩家在钱包界面手动兑换，不会被村民交易、钱包商店或FTB虚拟扣款自动消耗，也不会被自动拆成低级货币。
-                Protected currency list. These currencies can only be converted manually in the wallet screen. Villager trades, wallet shop, and FTB virtual payments will not auto-consume or auto-split them.
-                示例: ["kubejs:monster_coin"]
-                Example: ["kubejs:monster_coin"]""");
+    private static void setupWings(Config old) {
+        configData.setComment("wind_thunder_wings", """
+                风雷翅：佩戴后可以飞行；遁光加速时化作遁光、人物不可见；燃血消耗生命换取短时间的极速。
+                Wind-Thunder Wings: flight while worn; boost turns the wearer into a streak of light; blood burn trades health for a short burst of top speed.""");
+        define(old, "wind_thunder_wings.normalSpeed", 2.0, "普通飞行速度倍率（相对创造模式飞行）\nNormal flight speed, times creative flight speed");
+        define(old, "wind_thunder_wings.boostSpeed", 6.0, "遁光加速的速度倍率\nBoost speed, times creative flight speed");
+        define(old, "wind_thunder_wings.burnSpeed", 20.0, "燃血期间的速度倍率\nBlood burn speed, times creative flight speed");
+        define(old, "wind_thunder_wings.burnSeconds", 10, "燃血持续秒数\nBlood burn duration in seconds");
+        define(old, "wind_thunder_wings.burnHealthCost", 0.30, "燃血扣除的生命，占最大生命值的比例\nHealth taken by blood burn, as a share of max health");
+        define(old, "wind_thunder_wings.burnMinHealth", 0.30, "生命低于最大生命值的这个比例时无法燃血\nBlood burn is refused below this share of max health");
+        define(old, "wind_thunder_wings.burnCooldown", 15, "燃血冷却秒数\nBlood burn cooldown in seconds");
+        define(old, "wind_thunder_wings.wingColor", 0x2FA3AE, "翅膀颜色（客户端）\nWing colour (client)");
+        define(old, "wind_thunder_wings.thunderColor", 0xD6ECFF, "雷光颜色（客户端）\nThunder colour (client)");
+        define(old, "wind_thunder_wings.boostColor", 0x3CFF8A, "遁光颜色（客户端）\nBoost light colour (client)");
+        define(old, "wind_thunder_wings.burnColor", 0xD8101C, "燃血遁光颜色（客户端）\nBlood burn light colour (client)");
+        define(old, "wind_thunder_wings.trailSeconds", 0.8, "尾迹停留秒数（客户端）\nHow long the trail lingers in seconds (client)");
+        define(old, "wind_thunder_wings.trailWidth", 1.0, "尾迹宽度倍率（客户端）\nTrail width multiplier (client)");
+        define(old, "wind_thunder_wings.showWings", true, "普通飞行时显示翅膀（客户端）\nShow the wings in normal flight (client)");
+        define(old, "wind_thunder_wings.sparks", true, "显示雷光电弧（客户端）\nShow thunder sparks (client)");
+        define(old, "wind_thunder_wings.sounds", true, "播放风雷翅音效（客户端）\nPlay the wing sounds (client)");
     }
 
     public static void save() {
@@ -322,12 +329,16 @@ public class CuriosConfig {
         configData.set("paradise_lost.conflicts", plConflicts);
 
         configData.set("currency_wallet.extraBeltSlots", walletExtraBeltSlots);
-        configData.set("currency_wallet.maxCurrencyTypes", walletMaxCurrencyTypes);
-        configData.set("currency_wallet.magnetRange", walletMagnetRange);
-        configData.set("currency_wallet.magnetIntervalTicks", walletMagnetIntervalTicks);
         configData.set("currency_wallet.currencyDefinitions", walletCurrencyDefinitions);
-        configData.set("currency_wallet.exchangeRules", walletExchangeRules);
-        configData.set("currency_wallet.manualExchangeOnlyCurrencies", walletManualExchangeOnlyCurrencies);
+
+        configData.set("general.enable_wind_thunder_wings", enableWindThunderWings);
+        configData.set("wind_thunder_wings.normalSpeed", wtwNormalSpeed);
+        configData.set("wind_thunder_wings.boostSpeed", wtwBoostSpeed);
+        configData.set("wind_thunder_wings.burnSpeed", wtwBurnSpeed);
+        configData.set("wind_thunder_wings.burnSeconds", wtwBurnSeconds);
+        configData.set("wind_thunder_wings.burnHealthCost", wtwBurnHealthCost);
+        configData.set("wind_thunder_wings.burnMinHealth", wtwBurnMinHealth);
+        configData.set("wind_thunder_wings.burnCooldown", wtwBurnCooldown);
 
         configData.save();
         Data.invalidateCurrencyCache();
@@ -338,26 +349,20 @@ public class CuriosConfig {
         configData.set("currency_wallet.hudOffsetX", walletHudOffsetX);
         configData.set("currency_wallet.hudOffsetY", walletHudOffsetY);
         configData.set("currency_wallet.hudScale", walletHudScale);
+        configData.set("wind_thunder_wings.wingColor", wtwWingColor);
+        configData.set("wind_thunder_wings.thunderColor", wtwThunderColor);
+        configData.set("wind_thunder_wings.boostColor", wtwBoostColor);
+        configData.set("wind_thunder_wings.burnColor", wtwBurnColor);
+        configData.set("wind_thunder_wings.trailSeconds", wtwTrailSeconds);
+        configData.set("wind_thunder_wings.trailWidth", wtwTrailWidth);
+        configData.set("wind_thunder_wings.showWings", wtwShowWings);
+        configData.set("wind_thunder_wings.sparks", wtwSparks);
+        configData.set("wind_thunder_wings.sounds", wtwSounds);
         configData.save();
-    }
-
-    public static void setWalletMaxCurrencyTypes(int value) {
-        walletMaxCurrencyTypes = value;
-        Data.invalidateCurrencyCache();
     }
 
     public static void setWalletCurrencyDefinitions(List<String> value) {
         walletCurrencyDefinitions = value;
-        Data.invalidateCurrencyCache();
-    }
-
-    public static void setWalletExchangeRules(List<String> value) {
-        walletExchangeRules = value;
-        Data.invalidateCurrencyCache();
-    }
-
-    public static void setWalletManualExchangeOnlyCurrencies(List<String> value) {
-        walletManualExchangeOnlyCurrencies = value;
         Data.invalidateCurrencyCache();
     }
 
@@ -389,16 +394,42 @@ public class CuriosConfig {
         plConflicts = configData.getOrElse("paradise_lost.conflicts", Arrays.asList("enigmaticlegacy:cursed_ring"));
 
         walletExtraBeltSlots = configData.getOrElse("currency_wallet.extraBeltSlots", 1);
-        walletMaxCurrencyTypes = configData.getOrElse("currency_wallet.maxCurrencyTypes", 10);
-        walletMagnetRange = configData.getOrElse("currency_wallet.magnetRange", 6.0);
-        walletMagnetIntervalTicks = configData.getOrElse("currency_wallet.magnetIntervalTicks", 10);
         walletHudOffsetX = configData.getOrElse("currency_wallet.hudOffsetX", 0);
         walletHudOffsetY = configData.getOrElse("currency_wallet.hudOffsetY", 0);
         walletHudScale = configData.getOrElse("currency_wallet.hudScale", 0.75);
         walletCurrencyDefinitions = configData.getOrElse("currency_wallet.currencyDefinitions", DEFAULT_WALLET_CURRENCY_DEFINITIONS);
-        walletExchangeRules = configData.getOrElse("currency_wallet.exchangeRules", DEFAULT_WALLET_EXCHANGE_RULES);
-        walletManualExchangeOnlyCurrencies = configData.getOrElse("currency_wallet.manualExchangeOnlyCurrencies", DEFAULT_WALLET_MANUAL_EXCHANGE_ONLY_CURRENCIES);
         Data.invalidateCurrencyCache();
+
+        enableWindThunderWings = configData.getOrElse("general.enable_wind_thunder_wings", true);
+        wtwNormalSpeed = number("wind_thunder_wings.normalSpeed", 2.0).doubleValue();
+        wtwBoostSpeed = number("wind_thunder_wings.boostSpeed", 6.0).doubleValue();
+        wtwBurnSpeed = number("wind_thunder_wings.burnSpeed", 20.0).doubleValue();
+        // The first release's defaults (5 and 10) move to 3 and 10 times normal flight; speeds someone set stay.
+        if (wtwBoostSpeed == 5.0) wtwBoostSpeed = 6.0;
+        if (wtwBurnSpeed == 10.0) wtwBurnSpeed = 20.0;
+        wtwBurnSeconds = number("wind_thunder_wings.burnSeconds", 10).intValue();
+        wtwBurnHealthCost = number("wind_thunder_wings.burnHealthCost", 0.30).doubleValue();
+        wtwBurnMinHealth = number("wind_thunder_wings.burnMinHealth", 0.30).doubleValue();
+        wtwBurnCooldown = number("wind_thunder_wings.burnCooldown", 15).intValue();
+        wtwWingColor = number("wind_thunder_wings.wingColor", 0x2FA3AE).intValue();
+        wtwThunderColor = number("wind_thunder_wings.thunderColor", 0xD6ECFF).intValue();
+        // The first release's defaults (light cyan wings, violet thunder) move to the roc teal and blue-white lightning;
+        // colours someone picked themselves stay.
+        if (wtwWingColor == 0x5FD8FF) wtwWingColor = 0x2FA3AE;
+        if (wtwThunderColor == 0xB98CFF) wtwThunderColor = 0xD6ECFF;
+        wtwBoostColor = number("wind_thunder_wings.boostColor", 0x3CFF8A).intValue();
+        wtwBurnColor = number("wind_thunder_wings.burnColor", 0xD8101C).intValue();
+        wtwTrailSeconds = number("wind_thunder_wings.trailSeconds", 0.8).doubleValue();
+        wtwTrailWidth = number("wind_thunder_wings.trailWidth", 1.0).doubleValue();
+        wtwShowWings = configData.getOrElse("wind_thunder_wings.showWings", true);
+        wtwSparks = configData.getOrElse("wind_thunder_wings.sparks", true);
+        wtwSounds = configData.getOrElse("wind_thunder_wings.sounds", true);
+    }
+
+    /** Numbers may come back as Integer or Double whatever the default's type. */
+    private static Number number(String path, Number def) {
+        Object value = configData.get(path);
+        return value instanceof Number number ? number : def;
     }
 
     private static void define(Config old, String path, Object def, String comment) {

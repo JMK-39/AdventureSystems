@@ -3,7 +3,6 @@ package dev.xyat.adventuresystems.curios.wallet.event;
 import dev.xyat.adventuresystems.curios.mixin.MerchantMenuAccessor;
 import dev.xyat.adventuresystems.curios.wallet.data.Data;
 import dev.xyat.adventuresystems.curios.wallet.network.Network;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.MerchantMenu;
@@ -13,11 +12,13 @@ import net.minecraft.world.item.trading.Merchant;
 import net.minecraft.world.item.trading.MerchantOffer;
 import net.minecraft.world.item.trading.MerchantOffers;
 
+/**
+ * Villager trades that cost a coin item fill the payment slots from the wallet: each coin costs its value in wallet
+ * coins. Coins left in the payment slots go back into the wallet when the trade screen closes.
+ */
 public final class MerchantRefill {
     private static final int FIRST_PAYMENT_SLOT = 0;
     private static final int SECOND_PAYMENT_SLOT = 1;
-    private static final String MANUAL_EXCHANGE_TOAST_COOLDOWN_KEY = "adventuresystems_currency_wallet_merchant_manual_exchange_toast_cooldown";
-    private static final int MANUAL_EXCHANGE_TOAST_COOLDOWN_TICKS = 60;
 
     private MerchantRefill() {
     }
@@ -75,14 +76,11 @@ public final class MerchantRefill {
         String currencyId = Data.currencyId(cost);
         if (currencyId.isEmpty()) return false;
 
-        long available = Data.countDirectForAutomaticPayment(player, currencyId);
+        long available = Data.countDirect(player, currencyId);
         int wanted = (int) Math.min(missing, Math.min(maxStack, available));
-        if (wanted <= 0) {
-            notifyManualExchangeRequired(player, currencyId);
-            return false;
-        }
+        if (wanted <= 0) return false;
 
-        long extracted = Data.extractDirectForAutomaticPayment(player, currencyId, wanted, false);
+        long extracted = Data.extractDirect(player, currencyId, wanted, false);
         if (extracted <= 0L) return false;
 
         int accepted = (int) Math.min(extracted, missing);
@@ -99,15 +97,6 @@ public final class MerchantRefill {
         long leftover = extracted - accepted;
         if (leftover > 0L) Data.add(player, currencyId, leftover);
         return true;
-    }
-
-    private static void notifyManualExchangeRequired(ServerPlayer player, String currencyId) {
-        if (!Data.hasManualExchangeSourceFor(player, currencyId)) return;
-        long now = player.level().getGameTime();
-        CompoundTag data = player.getPersistentData();
-        if (data.getLong(MANUAL_EXCHANGE_TOAST_COOLDOWN_KEY) > now) return;
-        data.putLong(MANUAL_EXCHANGE_TOAST_COOLDOWN_KEY, now + MANUAL_EXCHANGE_TOAST_COOLDOWN_TICKS);
-        Network.toast(player, "msg.adventuresystems.curios.wallet.merchant_manual_exchange_required");
     }
 
     private static boolean storePaymentSlotToWallet(ServerPlayer player, MerchantMenu menu, int slotIndex) {

@@ -23,6 +23,7 @@ import dev.xyat.kineticcore.api.client.gui.text.KineticText;
 import dev.xyat.kineticcore.api.client.gui.theme.KineticTheme;
 import dev.xyat.kineticcore.api.client.gui.ui.KineticUi;
 import dev.xyat.kineticcore.api.client.gui.widget.KineticButton;
+import dev.xyat.kineticcore.api.client.gui.widget.KineticCustomControl;
 import dev.xyat.kineticcore.api.client.gui.widget.KineticTextField;
 import dev.xyat.kineticcore.api.client.gui.widget.list.KineticSelectionList;
 import dev.xyat.kineticcore.api.client.gui.widget.list.SelectionItem;
@@ -30,6 +31,7 @@ import dev.xyat.kineticcore.api.config.client.KTConfigApi;
 import dev.xyat.kineticcore.api.registry.KineticRegistries;
 import dev.xyat.kineticcore.api.resource.KineticResourceIds;
 import dev.xyat.adventuresystems.text.AdventureText;
+import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
@@ -53,6 +55,8 @@ public class TipEditorScreen extends KineticPage {
     private KineticButton timeBtn;
     private String searchText = "";
     private int listScroll;
+    private boolean deletingCondition;
+    private Runnable conditionDeleteAction;
 
     private int guiW;
     private int guiH;
@@ -60,7 +64,9 @@ public class TipEditorScreen extends KineticPage {
     private int y0;
     private int leftW;
     private int editX;
+    private int conditionButtonsY;
     private int dynamicCondY;
+    private int renderedConditionOffset;
     private final KineticScrollController conditionScroll = new KineticScrollController();
 
     private static final int[] COLORS = {
@@ -73,11 +79,18 @@ public class TipEditorScreen extends KineticPage {
             String languageCode,
             List<HelpTip.JsonModel.Entry> entries
     ) {
-        super(AdventureText.translatable("gui.adventuresystems.tips.tips.editor.title"), PageLayout.NATIVE);
+        super(AdventureText.translatable("gui.adventuresystems.tips.tips.editor.title"));
+        useCanvas(640, 360, 4);
         this.languageCode = languageCode == null ? "en_us" : languageCode;
         this.allEntries = entries == null ? new ArrayList<>() : new ArrayList<>(entries);
         this.displayEntries = new ArrayList<>(this.allEntries);
         if (!this.allEntries.isEmpty()) this.selectedEntry = this.allEntries.get(0);
+        bindDeleteAction(() -> deletingCondition ? conditionDeleteAction != null : selectedEntry != null && allEntries.contains(selectedEntry), () -> {
+            if (deletingCondition) {
+                Runnable action = conditionDeleteAction;conditionDeleteAction = null;
+                if (action != null) action.run();
+            } else removeTip(selectedEntry);
+        });
         configureStandaloneDraft(this::captureTipSnapshot, this::restoreTipSnapshot);
     }
 
@@ -106,22 +119,26 @@ public class TipEditorScreen extends KineticPage {
     protected void build(KineticUi ui) {
         if (leftList != null) listScroll = leftList.scrollOffset();
         leftList = null;
-        this.guiW = (int) (width() * 0.95D);
-        this.guiH = (int) (height() * 0.95D);
+        this.guiW = width();
+        this.guiH = height();
         this.x0 = (width() - guiW) / 2;
         this.y0 = (height() - guiH) / 2;
 
-        this.leftW = (int) (guiW * 0.30D);
+        this.leftW = 234;
         // The label column has the same width in every language; longer labels scroll inside it.
-        int maxLabelW = 50 + 8;
+        int maxLabelW = 36 + 4;
 
         // Keep long translations from consuming the editor controls' space.
         maxLabelW = Math.min(maxLabelW, Math.max(24, (guiW - leftW - 30) / 4));
-        this.editX = x0 + leftW + maxLabelW + 15;
-        int editW = (x0 + guiW - 15) - editX;
+        this.editX = x0 + leftW + maxLabelW + 8;
+        int editW = (x0 + guiW - 4) - editX;
 
         updateSearch(searchText);
-        ui.textField(x0 + 10, y0 + 10, leftW - 15)
+        int toolbarY = y0 + 4;
+        ui.button(x0 + 4, toolbarY, 40)
+                .text(AdventureText.translatable("gui.adventuresystems.tips.tips.back"))
+                .onClick(this::close).build();
+        ui.textField(x0 + 48, toolbarY, leftW - 52)
                 .label(Component.empty())
                 .placeholder(AdventureText.translatable("gui.adventuresystems.tips.tips.search"))
                 .value(searchText)
@@ -130,36 +147,42 @@ public class TipEditorScreen extends KineticPage {
                     updateSearch(value);
                 }).firstShownTextAsDefault().build();
 
-        this.leftList = ui.selectionList(x0 + 10, y0 + 40, leftW - 20, guiH - 80, tipSelectionItems())
+        // Tips are text, so they are listed as plain rows; buttons are only for actions.
+        int listTop = toolbarY + KineticPage.CONTROL_HEIGHT + 4;
+        this.leftList = ui.selectionList(x0 + 4, listTop, leftW - 10, y0 + guiH - 4 - listTop, tipSelectionItems()).textRows()
                 .selected(selectedDisplayIndex()).scrollOffset(listScroll)
                 .onSelect(index -> {
                     if (index >= 0 && index < displayEntries.size()) select(displayEntries.get(index));
                 }).build();
 
-        int curY = y0 + 10;
+        ui.button(x0 + guiW - 88, toolbarY, 40)
+                .text(AdventureText.translatable("gui.adventuresystems.tips.tips.new"))
+                .onClick(this::addNew).build();
+        ui.button(x0 + guiW - 44, toolbarY, 40)
+                .text(AdventureText.translatable("gui.adventuresystems.tips.tips.save"))
+                .onClick(this::save).build();
+
+        int curY = toolbarY + KineticPage.CONTROL_HEIGHT + 4;
         int swatchGap = 2;
-        int swatchSize = KineticPage.CONTROL_HEIGHT;
-        int swatchColumns = 8;
-        int swatchRows = (COLORS.length + swatchColumns - 1) / swatchColumns;
+        int swatchColumns = COLORS.length;
+        int swatchSize = Math.min(KineticPage.CONTROL_HEIGHT, Math.max(4, (editW - 44 - (swatchColumns - 1) * swatchGap) / swatchColumns));
         int paletteWidth = swatchColumns * swatchSize + (swatchColumns - 1) * swatchGap;
         for (int i = 0; i < COLORS.length; i++) {
             final String code = "§" + CODES[i];
-            int row = i / swatchColumns;
-            int column = i % swatchColumns;
-            ui.colorSwatch(editX + column * (swatchSize + swatchGap),
-                    curY + row * (swatchSize + swatchGap), COLORS[i])
-                    .onClick(() -> insertCode(code)).build();
+            ui.add(new TipColorSwatch(editX + i * (swatchSize + swatchGap),
+                    curY + (KineticPage.CONTROL_HEIGHT - swatchSize) / 2, swatchSize, COLORS[i], () -> insertCode(code)));
         }
-        ui.button(editX + paletteWidth + 8, curY + (swatchRows - 1) * (swatchSize + swatchGap), 24)
+        ui.button(editX + paletteWidth + 4, curY, 40)
                 .compact().text(AdventureText.translatable("gui.adventuresystems.tips.tips.reset_short"))
                 .tooltip(AdventureText.translatable("gui.adventuresystems.tips.tips.reset_tooltip"))
                 .onClick(() -> insertCode("§r")).build();
 
-        curY += swatchRows * swatchSize + (swatchRows - 1) * swatchGap + 12;
+        curY += KineticPage.CONTROL_HEIGHT + 4;
         this.textInput = ui.textField(editX, curY, editW)
                 .label(Component.empty())
                 .placeholder(AdventureText.translatable("gui.adventuresystems.tips.tips.content_hint_amp"))
                 .tooltip(AdventureText.translatable("gui.adventuresystems.tips.tips.text_limits"))
+                .validator(value -> TipTextLimits.isValid(TipTextLimits.fromEditor(value)))
                 .maxLength(65534)
                 .value(TipTextLimits.toEditor(selectedEntry==null?null:selectedEntry.text))
                 .onChange(value -> {
@@ -173,12 +196,13 @@ public class TipEditorScreen extends KineticPage {
             Style activeStyle = getStyleAtPos(this.textInput.textValue(), index);
             return Component.literal(string).setStyle(activeStyle).getVisualOrderText();
         });
-        int vGap = KineticPage.CONTROL_HEIGHT + 8;
+        int vGap = KineticPage.CONTROL_HEIGHT + 4;
         curY += vGap;
-        int halfW = (editW - 10) / 2;
+        // Stage and duration only as wide as their values need; the six condition buttons share one row.
+        int halfW = Math.min(96, (editW - 4) / 2);
         this.stageBtn = ui.button(editX, curY, halfW)
                 .text(stageText()).onClick(this::cycleStage).build();
-        this.timeBtn = ui.button(editX + halfW + 10, curY, halfW)
+        this.timeBtn = ui.button(editX + halfW + 4, curY, Math.min(72, halfW))
                 .text(durationText())
                 .onClick(
                 () -> {
@@ -193,37 +217,44 @@ public class TipEditorScreen extends KineticPage {
                 }).build();
 
         curY += vGap;
-        int thirdW = (editW - 20) / 3;
-        ui.button(editX, curY, thirdW).text(AdventureText.translatable("gui.adventuresystems.tips.tips.add_item"))
-                .onClick(() -> openItemSelector(false)).build();
-        ui.button(editX + thirdW + 10, curY, thirdW).text(AdventureText.translatable("gui.adventuresystems.tips.tips.add_curios"))
-                .onClick(() -> openItemSelector(true)).build();
-        ui.button(editX + (thirdW + 10) * 2, curY, thirdW)
-                .text(AdventureText.translatable("gui.adventuresystems.tips.tips.set_structure"))
-                .onClick(() -> openRegistrySelector("structures")).build();
+        this.conditionButtonsY = curY;
+        int sixthW = Math.min(56, (editW - 5 * 2) / 6);
+        String[] keys = {"add_item", "add_curios", "set_structure", "set_biome", "set_advancement", "set_dimension"};
+        Runnable[] actions = {() -> openItemSelector(false), () -> openItemSelector(true), () -> openRegistrySelector("structures"),
+                () -> openRegistrySelector("biomes"), () -> openRegistrySelector("advancements"), () -> openRegistrySelector("dimensions")};
+        for (int i = 0; i < keys.length; i++) {
+            Runnable action = actions[i];
+            ui.button(editX + i * (sixthW + 2), curY, sixthW)
+                    .text(AdventureText.translatable("gui.adventuresystems.tips.tips." + keys[i])).onClick(action).build();
+        }
 
-        curY += KineticPage.CONTROL_HEIGHT + 5;
-        ui.button(editX, curY, thirdW).text(AdventureText.translatable("gui.adventuresystems.tips.tips.set_biome"))
-                .onClick(() -> openRegistrySelector("biomes")).build();
-        ui.button(editX + thirdW + 10, curY, thirdW)
-                .text(AdventureText.translatable("gui.adventuresystems.tips.tips.set_advancement"))
-                .onClick(() -> openRegistrySelector("advancements")).build();
-        ui.button(editX + (thirdW + 10) * 2, curY, thirdW)
-                .text(AdventureText.translatable("gui.adventuresystems.tips.tips.set_dimension"))
-                .onClick(() -> openRegistrySelector("dimensions")).build();
-
-        this.dynamicCondY = curY + KineticPage.CONTROL_HEIGHT + 15;
-        // The header contains search and editing controls, so Back uses the lower-left fallback.
-        ui.button(x0 + 10 + 75 + 2, y0 + guiH - 30, 75)
-                .text(AdventureText.translatable("gui.adventuresystems.tips.tips.new"))
-                .onClick(this::addNew).build();
-        ui.button(x0 + guiW - 85, y0 + guiH - 30, 75)
-                .text(AdventureText.translatable("gui.adventuresystems.tips.tips.save"))
-                .onClick(this::save).build();
-        ui.button(x0 + 10, y0 + guiH - 30, 75)
-                .text(AdventureText.translatable("gui.adventuresystems.tips.tips.back"))
-                .onClick(this::close).build();
+        this.dynamicCondY = curY + KineticPage.CONTROL_HEIGHT + 6;
         updateUI();
+    }
+
+    private static final class TipColorSwatch extends KineticCustomControl {
+        private final int color;
+        private final Runnable action;
+
+        private TipColorSwatch(int x, int y, int size, int color, Runnable action) {
+            super(x, y, size, size);
+            this.color = color;
+            this.action = action;
+        }
+
+        @Override
+        protected void render(KineticGraphics graphics, int mouseX, int mouseY, float partialTick) {
+            KineticTheme.colorSwatch(graphics, controlX(), controlY(), controlWidth(), controlHeight(), color,
+                    controlHovered() || controlFocused());
+        }
+
+        @Override
+        protected boolean onMouseClick(MouseInput input) {
+            if (!input.isLeft()) return false;
+            playClickSound();
+            action.run();
+            return true;
+        }
     }
 
     private Style getStyleAtPos(String text, int index) {
@@ -248,7 +279,9 @@ public class TipEditorScreen extends KineticPage {
     @Override
     protected void renderBackground(KineticGraphics graphics, int mouseX, int mouseY, float partialTick) {
         KineticTheme.panel(graphics, x0, y0, guiW, guiH);
-        KineticTheme.verticalSeparator(graphics, x0 + leftW + 5, y0 + 5, guiH - 40);
+        KineticTheme.verticalSeparator(graphics, x0 + leftW - 2, y0 + 4, guiH - 8);
+        // Centred on the screen, clear of the search field on the left and New / Save on the right.
+        graphics.scrollingTextCentered(title(), width() / 2, y0 + 8, 2 * (width() / 2 - (x0 + leftW + 4)), KineticTheme.current().text(), true);
 
         if (textInput != null && stageBtn != null) {
             int labelX = editX - 10;
@@ -269,41 +302,73 @@ public class TipEditorScreen extends KineticPage {
                     graphics,
                     AdventureText.translatable("gui.adventuresystems.tips.tips.label.condition"),
                     labelX,
-                    dynamicCondY - KineticPage.CONTROL_HEIGHT - 15
+                    conditionButtonsY + (KineticPage.CONTROL_HEIGHT - fontHeight) / 2
             );
         }
 
-        graphics.scrollingText(AdventureText.translatable("gui.adventuresystems.tips.tips.delete_hint"), editX, dynamicCondY, Math.max(0, x0 + guiW - 15 - editX), KineticTheme.current().text(), true);
+        KineticTheme.surface(graphics, editX - 2, dynamicCondY - 2,
+                x0 + guiW - 6 - (editX - 2), y0 + guiH - 4 - (dynamicCondY - 2), KineticTheme.Surface.PANEL_ALT);
+        KineticTheme.separator(graphics, editX, dynamicCondY - 3, Math.max(0, conditionRight() - editX));
+        graphics.scrollingText(AdventureText.translatable("gui.adventuresystems.tips.tips.delete_hint"), editX + 2, dynamicCondY + 2, Math.max(0, conditionRight() - editX - 2), KineticTheme.current().text(), true);
+        KineticTheme.separator(graphics, editX, dynamicCondY + 13, Math.max(0, conditionRight() - editX));
         if (selectedEntry != null && selectedEntry.conditions != null) {
             updateConditionScroll();
+            renderedConditionOffset = (int) Math.round(conditionScroll.smoothOffset());
             graphics.clipped(editX, conditionTop(), conditionRight(), conditionBottom(),
-                    () -> renderConditions(graphics, mouseX, mouseY, editX, conditionTop() - conditionOffset()));
+                    () -> renderConditions(graphics, mouseX, mouseY, conditionLayout()));
             conditionScroll.render(graphics, mouseX, mouseY, conditionRight() + 2, conditionTop(), 3,
                     Math.max(1, conditionBottom() - conditionTop()), 8);
         }
     }
 
-    private int conditionTop() { return dynamicCondY + 15; }
-    private int conditionBottom() { return y0 + guiH - 34; }
-    private int conditionRight() { return x0 + guiW - 20; }
-    private int conditionOffset() { return (int) Math.round(conditionScroll.smoothOffset()); }
+    private int conditionTop() { return dynamicCondY + 17; }
+    private int conditionBottom() { return y0 + guiH - 6; }
+    private int conditionRight() { return x0 + guiW - 12; }
     private boolean conditionContains(double x, double y) {
         return x >= editX && x < conditionRight() && y >= conditionTop() && y < conditionBottom();
     }
     private void updateConditionScroll() {
-        int contentHeight = 0;
-        if (selectedEntry != null && selectedEntry.conditions != null) {
-            var conditions = selectedEntry.conditions;
-            if (hasText(conditions.structure)) contentHeight += 12;
-            if (hasText(conditions.biome)) contentHeight += 12;
-            if (hasText(conditions.dimension)) contentHeight += 12;
-            if (hasText(conditions.advancement)) contentHeight += 12;
-            if (conditions.items != null && !conditions.items.isEmpty()) contentHeight += 18;
-            if (conditions.curios != null) contentHeight += 18;
-        }
+        int contentHeight = conditionLayout().height();
         int visible = Math.max(1, conditionBottom() - conditionTop());
         conditionScroll.updateRange(Math.max(0, contentHeight - visible), contentHeight, visible);
     }
+
+    private record ConditionLine(int field, Component text, int y) {}
+    private record ConditionCell(List<HelpTip.JsonModel.ItemCheck> source, int index, int x, int y) {
+        HelpTip.JsonModel.ItemCheck check() { return source.get(index); }
+    }
+    private record ConditionLayout(List<ConditionLine> lines, List<ConditionCell> cells, int curiosY, int height) {}
+
+    /** One layout drives the scroll range, drawing, tooltips and both mouse actions. */
+    private ConditionLayout conditionLayout() {
+        List<ConditionLine> lines = new ArrayList<>();
+        List<ConditionCell> cells = new ArrayList<>();
+        if (selectedEntry == null || selectedEntry.conditions == null) return new ConditionLayout(lines, cells, -1, 0);
+        var conditions = selectedEntry.conditions;
+        String[] values = {conditions.structure, conditions.biome, conditions.dimension, conditions.advancement};
+        String[] keys = {"structure", "biome", "dimension", "advancement"};
+        int y = 0;
+        for (int i = 0; i < values.length; i++) {
+            if (!hasText(values[i])) continue;
+            lines.add(new ConditionLine(i, AdventureText.translatable("gui.adventuresystems.tips.tips.cond_prefix." + keys[i]).append(values[i]), y));
+            y += 12;
+        }
+        y += addConditionCells(cells, conditions.items, editX, y);
+        int curiosY = conditions.curios == null || conditions.curios.isEmpty() ? -1 : y;
+        y += addConditionCells(cells, conditions.curios, editX + 35, y);
+        return new ConditionLayout(lines, cells, curiosY, y);
+    }
+
+    private int addConditionCells(List<ConditionCell> cells, List<HelpTip.JsonModel.ItemCheck> source, int x, int y) {
+        if (source == null || source.isEmpty()) return 0;
+        int columns = Math.max(1, (conditionRight() - x + 2) / 20);
+        for (int i = 0; i < source.size(); i++) {
+            cells.add(new ConditionCell(source, i, x + i % columns * 20, y + i / columns * 20));
+        }
+        return (source.size() + columns - 1) / columns * 20;
+    }
+
+    private int conditionScreenY(int y) { return conditionTop() + y - renderedConditionOffset; }
     @Override
     protected boolean onMouseScroll(ScrollInput input) {
         if (!conditionContains(input.x(), input.y())) return false;
@@ -331,86 +396,53 @@ public class TipEditorScreen extends KineticPage {
         if (input.isRight() && leftList != null) {
             int index = leftList.itemAt(input.x(), input.y());
             if (index >= 0 && index < displayEntries.size()) {
-                allEntries.remove(displayEntries.get(index));
-                updateSearch(searchText);
+                removeTip(displayEntries.get(index));
                 return true;
             }
         }
         if (selectedEntry == null || selectedEntry.conditions == null) return false;
         HelpTip.JsonModel.Conditions conditions = selectedEntry.conditions;
-        int x = this.editX;
         if (!conditionContains(mouseX, mouseY)) return false;
-        int currentY = conditionTop() - conditionOffset();
-        if (input.isRight()) {
-            if (hasText(conditions.structure)) {
-                if (isHover(mouseX, mouseY, x, currentY, 150, 10)) {
-                    conditions.structure = null;
+        ConditionLayout layout = conditionLayout();
+        if (input.isRight() || input.isLeft()) {
+            for (ConditionLine line : layout.lines()) {
+                if (isHover(mouseX, mouseY, editX, conditionScreenY(line.y()), conditionRight() - editX, 10)) {
+                    deletingCondition = true;
+                    conditionDeleteAction = () -> {
+                        switch (line.field()) {
+                            case 0 -> conditions.structure = null;
+                            case 1 -> conditions.biome = null;
+                            case 2 -> conditions.dimension = null;
+                            case 3 -> conditions.advancement = null;
+                        }
+                    };
+                    if (input.isRight()) {conditionDeleteAction.run();conditionDeleteAction = null;}
                     return true;
                 }
-                currentY += 12;
             }
-            if (hasText(conditions.biome)) {
-                if (isHover(mouseX, mouseY, x, currentY, 150, 10)) {
-                    conditions.biome = null;
-                    return true;
-                }
-                currentY += 12;
-            }
-            if (hasText(conditions.dimension)) {
-                if (isHover(mouseX, mouseY, x, currentY, 150, 10)) {
-                    conditions.dimension = null;
-                    return true;
-                }
-                currentY += 12;
-            }
-            if (hasText(conditions.advancement)) {
-                if (isHover(mouseX, mouseY, x, currentY, 150, 10)) {
-                    conditions.advancement = null;
-                    return true;
-                }
-                currentY += 12;
-            }
-        } else {
-            if (hasText(conditions.structure)) currentY += 12;
-            if (hasText(conditions.biome)) currentY += 12;
-            if (hasText(conditions.dimension)) currentY += 12;
-            if (hasText(conditions.advancement)) currentY += 12;
         }
-
-        if (conditions.items != null) {
-            int itemX = x;
-            for (int i = 0; i < conditions.items.size(); i++) {
-                if (isHover(mouseX, mouseY, itemX, currentY, 16, 16)) {
-                    if (input.isRight()) {
-                        conditions.items.remove(i);
-                        return true;
-                    }
-                    if (input.isLeft()) {
-                        cycleNbtMode(conditions.items.get(i));
-                        return true;
-                    }
+        for (ConditionCell cell : layout.cells()) {
+            if (isHover(mouseX, mouseY, cell.x(), conditionScreenY(cell.y()), 18, 18)) {
+                deletingCondition = true;
+                conditionDeleteAction = () -> cell.source().remove(cell.check());
+                if (input.isRight()) {
+                    conditionDeleteAction.run();conditionDeleteAction = null;
+                    return true;
                 }
-                itemX += 18;
-            }
-            if (!conditions.items.isEmpty()) currentY += 18;
-        }
-        if (conditions.curios != null) {
-            int itemX = x + 35;
-            for (int i = 0; i < conditions.curios.size(); i++) {
-                if (isHover(mouseX, mouseY, itemX, currentY, 16, 16)) {
-                    if (input.isRight()) {
-                        conditions.curios.remove(i);
-                        return true;
-                    }
-                    if (input.isLeft()) {
-                        cycleNbtMode(conditions.curios.get(i));
-                        return true;
-                    }
+                if (input.isLeft()) {
+                    cycleNbtMode(cell.check());
+                    return true;
                 }
-                itemX += 18;
             }
         }
         return false;
+    }
+
+    private void removeTip(HelpTip.JsonModel.Entry entry) {
+        if (entry == null) return;
+        allEntries.remove(entry);
+        if (entry == selectedEntry) {deletingCondition = false;conditionDeleteAction = null;}
+        updateSearch(searchText);
     }
 
     private void insertCode(String code) {
@@ -466,45 +498,23 @@ public class TipEditorScreen extends KineticPage {
         }));
     }
 
-    private void renderConditions(KineticGraphics graphics, int mouseX, int mouseY, int x, int y) {
-        HelpTip.JsonModel.Conditions conditions = selectedEntry.conditions;
-        int currentY = y;
-        if (hasText(conditions.structure)) {
-            drawConditionLine(graphics, mouseX, mouseY, x, currentY, AdventureText.translatable("gui.adventuresystems.tips.tips.cond_prefix.structure").append(conditions.structure));
-            currentY += 12;
+    private void renderConditions(KineticGraphics graphics, int mouseX, int mouseY, ConditionLayout layout) {
+        for (ConditionLine line : layout.lines()) {
+            drawConditionLine(graphics, mouseX, mouseY, editX, conditionScreenY(line.y()), line.text());
         }
-        if (hasText(conditions.biome)) {
-            drawConditionLine(graphics, mouseX, mouseY, x, currentY, AdventureText.translatable("gui.adventuresystems.tips.tips.cond_prefix.biome").append(conditions.biome));
-            currentY += 12;
+        if (layout.curiosY() >= 0) {
+            graphics.scrollingText(AdventureText.translatable("gui.adventuresystems.tips.tips.condition.normal", AdventureText.translatable("gui.adventuresystems.tips.tips.cond_prefix.curios")), editX, conditionScreenY(layout.curiosY()), 31, KineticTheme.current().text(), true);
         }
-        if (hasText(conditions.dimension)) {
-            drawConditionLine(graphics, mouseX, mouseY, x, currentY, AdventureText.translatable("gui.adventuresystems.tips.tips.cond_prefix.dimension").append(conditions.dimension));
-            currentY += 12;
-        }
-        if (hasText(conditions.advancement)) {
-            drawConditionLine(graphics, mouseX, mouseY, x, currentY, AdventureText.translatable("gui.adventuresystems.tips.tips.cond_prefix.advancement").append(conditions.advancement));
-            currentY += 12;
-        }
-        if (conditions.items != null) {
-            int itemX = x;
-            for (HelpTip.JsonModel.ItemCheck check : conditions.items) {
-                renderItemCheck(graphics, mouseX, mouseY, itemX, currentY, check);
-                itemX += 18;
-            }
-            if (!conditions.items.isEmpty()) currentY += 18;
-        }
-        if (conditions.curios != null) {
-            graphics.scrollingText(AdventureText.translatable("gui.adventuresystems.tips.tips.condition.normal", AdventureText.translatable("gui.adventuresystems.tips.tips.cond_prefix.curios")), x, currentY, 31, KineticTheme.current().text(), true);
-            int itemX = x + 35;
-            for (HelpTip.JsonModel.ItemCheck check : conditions.curios) {
-                renderItemCheck(graphics, mouseX, mouseY, itemX, currentY, check);
-                itemX += 18;
+        for (ConditionCell cell : layout.cells()) {
+            int y = conditionScreenY(cell.y());
+            if (y + 18 > conditionTop() && y < conditionBottom()) {
+                renderItemCheck(graphics, mouseX, mouseY, cell.x(), y, cell.check());
             }
         }
     }
 
     private void drawConditionLine(KineticGraphics graphics, int mouseX, int mouseY, int x, int y, Component text) {
-        String key = isHover(mouseX, mouseY, x, y, 150, 10)
+        String key = conditionContains(mouseX, mouseY) && isHover(mouseX, mouseY, x, y, conditionRight() - x, 10)
                 ? "gui.adventuresystems.tips.tips.condition.hover"
                 : "gui.adventuresystems.tips.tips.condition.normal";
         graphics.scrollingText(AdventureText.translatable(key, text), x, y, Math.max(0, conditionRight() - x), KineticTheme.current().text(), true);
@@ -521,7 +531,7 @@ public class TipEditorScreen extends KineticPage {
         *///?} else {
         ItemStack stack = new ItemStack(item);
         //?}
-        boolean hovered = isHover(mouseX, mouseY, x, y, 18, 18);
+        boolean hovered = conditionContains(mouseX, mouseY) && isHover(mouseX, mouseY, x, y, 18, 18);
         KineticTheme.itemSlot(graphics, x, y, 18, 4, hovered);
         KineticTheme.item(graphics, stack, x, y, 18, 0.75F, false);
         graphics.push();
@@ -545,28 +555,9 @@ public class TipEditorScreen extends KineticPage {
 
     private ItemStack hoveredConditionStack(int mouseX, int mouseY) {
         if (selectedEntry == null || selectedEntry.conditions == null) return ItemStack.EMPTY;
-        HelpTip.JsonModel.Conditions conditions = selectedEntry.conditions;
-        int x = editX;
         if (!conditionContains(mouseX, mouseY)) return ItemStack.EMPTY;
-        int currentY = conditionTop() - conditionOffset();
-        if (hasText(conditions.structure)) currentY += 12;
-        if (hasText(conditions.biome)) currentY += 12;
-        if (hasText(conditions.dimension)) currentY += 12;
-        if (hasText(conditions.advancement)) currentY += 12;
-        if (conditions.items != null) {
-            int itemX = x;
-            for (HelpTip.JsonModel.ItemCheck check : conditions.items) {
-                if (isHover(mouseX, mouseY, itemX, currentY, 18, 18)) return stackFor(check);
-                itemX += 18;
-            }
-            if (!conditions.items.isEmpty()) currentY += 18;
-        }
-        if (conditions.curios != null) {
-            int itemX = x + 35;
-            for (HelpTip.JsonModel.ItemCheck check : conditions.curios) {
-                if (isHover(mouseX, mouseY, itemX, currentY, 18, 18)) return stackFor(check);
-                itemX += 18;
-            }
+        for (ConditionCell cell : conditionLayout().cells()) {
+            if (isHover(mouseX, mouseY, cell.x(), conditionScreenY(cell.y()), 18, 18)) return stackFor(cell.check());
         }
         return ItemStack.EMPTY;
     }
@@ -604,7 +595,7 @@ public class TipEditorScreen extends KineticPage {
     }
 
     private boolean isHover(int mouseX, int mouseY, int x, int y, int width, int height) {
-        return mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height;
+        return mouseX >= x && mouseX < x + width && mouseY >= y && mouseY < y + height;
     }
 
     private void addNew() {
@@ -619,7 +610,9 @@ public class TipEditorScreen extends KineticPage {
 
     private void select(HelpTip.JsonModel.Entry entry) {
         this.selectedEntry = entry;
+        deletingCondition = false;conditionDeleteAction = null;
         conditionScroll.reset();
+        renderedConditionOffset = 0;
         if (textInput != null) textInput.setTextValue(TipTextLimits.toEditor(entry.text));
         if (leftList != null) {
             leftList.setSelectedIndex(selectedDisplayIndex());
@@ -675,16 +668,31 @@ public class TipEditorScreen extends KineticPage {
         return selectedEntry == null ? -1 : displayEntries.indexOf(selectedEntry);
     }
 
+    // A tip over the limits blocks saving the whole list, so it is red and its tooltip says why.
     private List<SelectionItem> tipSelectionItems() {
         return displayEntries.stream()
-                .map(entry -> new SelectionItem(
-                        tipLabel(entry),
-                        null,
-                        AdventureText.literal(TipTextLimits.normalizeLines(entry.text)),
-                        true,
-                        false
-                ))
+                .map(entry -> {
+                    Component problem = limitProblem(entry);
+                    Component tooltip = AdventureText.literal(TipTextLimits.normalizeLines(entry.text == null ? "" : entry.text));
+                    if (problem != null) tooltip = tooltip.copy().append("\n").append(problem.copy().withStyle(ChatFormatting.RED));
+                    return new SelectionItem(tipLabel(entry), null, tooltip, true, problem != null);
+                })
                 .toList();
+    }
+
+    /** What keeps this tip from being saved, or null. */
+    private static Component limitProblem(HelpTip.JsonModel.Entry entry) {
+        TipTextLimits.Problem problem = TipTextLimits.problem(entry == null ? null : entry.text);
+        if (problem == null) return null;
+        String key = "gui.adventuresystems.tips.tips.limit.";
+        return switch (problem.kind()) {
+            case EMPTY -> AdventureText.translatable(key + "empty");
+            case TOO_LONG -> AdventureText.translatable("gui.adventuresystems.tips.tips.text_limits");
+            case TOO_MANY_LINES -> AdventureText.translatable(key + "lines", problem.count(), TipTextLimits.MAX_LINES);
+            case LINE_TOO_LONG -> AdventureText.translatable(key + "line_length", problem.line(), problem.count(),
+                    TipTextLimits.CHARACTERS_PER_LINE);
+            case CONTROL_CHARACTER -> AdventureText.translatable(key + "control", problem.line());
+        };
     }
 
     private Component tipLabel(HelpTip.JsonModel.Entry entry) {
@@ -697,8 +705,15 @@ public class TipEditorScreen extends KineticPage {
 
     private void save() {
         if (savePending) return;
-        if(allEntries.stream().anyMatch(entry->entry==null||!TipTextLimits.isValid(entry.text))){
-            KineticOverlays.toast(AdventureText.translatable("gui.adventuresystems.tips.tips.text_limits"));
+        // Name the tip that blocks saving and select it; it may be one the player never opened.
+        HelpTip.JsonModel.Entry blocking = allEntries.stream().filter(entry -> limitProblem(entry) != null).findFirst().orElse(null);
+        if (blocking != null) {
+            if (!displayEntries.contains(blocking)) {
+                searchText = "";
+                rebuild();
+            }
+            select(blocking);
+            KineticOverlays.toast(AdventureText.translatable("gui.adventuresystems.tips.tips.limit.save_blocked", limitProblem(blocking)));
             return;
         }
         savePending = true;

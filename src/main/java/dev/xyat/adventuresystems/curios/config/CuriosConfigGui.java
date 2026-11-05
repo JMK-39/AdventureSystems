@@ -14,6 +14,7 @@ public final class CuriosConfigGui {
     public static final String HUD_PAGE_ID = "adventuresystems:wallet_hud";
     public static final String MECHANICS_PAGE_ID = "adventuresystems:mechanics";
     public static final String SHOP_PAGE_ID = "adventuresystems:shop_editor";
+    public static final String WINGS_PAGE_ID = "adventuresystems:wind_thunder_wings";
 
     private static final String KEY = "cfg.adventuresystems.curios.";
 
@@ -24,6 +25,7 @@ public final class CuriosConfigGui {
         registerHudPage();
         registerMechanicsPage();
         registerShopPage();
+        registerWingsPage();
     }
 
     private static void registerHudPage() {
@@ -58,6 +60,9 @@ public final class CuriosConfigGui {
                 .booleanValue("enable_currency_wallet", text("general.enable_currency_wallet"),
                         () -> CuriosConfig.enableCurrencyWallet, value -> CuriosConfig.enableCurrencyWallet = value,
                         true, tooltip("general.enable_currency_wallet"))
+                .booleanValue("enable_wind_thunder_wings", text("general.enable_wind_thunder_wings"),
+                        () -> CuriosConfig.enableWindThunderWings, value -> CuriosConfig.enableWindThunderWings = value,
+                        true, tooltip("general.enable_wind_thunder_wings"))
                 .divider()
                 .booleanValue("levitation_knockback_immunity", text("levitation_backpack.knockback_immunity"),
                         () -> CuriosConfig.levitationKnockbackImmunity, value -> CuriosConfig.levitationKnockbackImmunity = value,
@@ -122,34 +127,93 @@ public final class CuriosConfigGui {
                         () -> CuriosConfig.plConflicts, value -> CuriosConfig.plConflicts = value,
                         java.util.List.of("enigmaticlegacy:cursed_ring"), tooltip("paradise_lost.conflicts"))
                 .divider()
+                .doubleValue("wtw_normal_speed", text("wind_thunder_wings.normal_speed"),
+                        () -> CuriosConfig.wtwNormalSpeed, value -> CuriosConfig.wtwNormalSpeed = value,
+                        2.0D, 1.0D, 100.0D, tooltip("wind_thunder_wings.normal_speed"))
+                .doubleValue("wtw_boost_speed", text("wind_thunder_wings.boost_speed"),
+                        () -> CuriosConfig.wtwBoostSpeed, value -> CuriosConfig.wtwBoostSpeed = value,
+                        6.0D, 1.0D, 100.0D, tooltip("wind_thunder_wings.boost_speed"))
+                .doubleValue("wtw_burn_speed", text("wind_thunder_wings.burn_speed"),
+                        () -> CuriosConfig.wtwBurnSpeed, value -> CuriosConfig.wtwBurnSpeed = value,
+                        20.0D, 1.0D, 100.0D, tooltip("wind_thunder_wings.burn_speed"))
+                .intValue("wtw_burn_seconds", text("wind_thunder_wings.burn_seconds"),
+                        () -> CuriosConfig.wtwBurnSeconds, value -> CuriosConfig.wtwBurnSeconds = value,
+                        10, 1, 600, tooltip("wind_thunder_wings.burn_seconds"))
+                .doubleValue("wtw_burn_health_cost", text("wind_thunder_wings.burn_health_cost"),
+                        () -> CuriosConfig.wtwBurnHealthCost, value -> CuriosConfig.wtwBurnHealthCost = value,
+                        0.30D, 0.0D, 1.0D, tooltip("wind_thunder_wings.burn_health_cost"))
+                .doubleValue("wtw_burn_min_health", text("wind_thunder_wings.burn_min_health"),
+                        () -> CuriosConfig.wtwBurnMinHealth, value -> CuriosConfig.wtwBurnMinHealth = value,
+                        0.30D, 0.0D, 1.0D, tooltip("wind_thunder_wings.burn_min_health"))
+                .intValue("wtw_burn_cooldown", text("wind_thunder_wings.burn_cooldown"),
+                        () -> CuriosConfig.wtwBurnCooldown, value -> CuriosConfig.wtwBurnCooldown = value,
+                        15, 0, 3600, tooltip("wind_thunder_wings.burn_cooldown"))
+                .divider()
                 .intValueUnbounded("wallet_extra_belt_slots", text("wallet.extra_belt_slots"),
                         () -> CuriosConfig.walletExtraBeltSlots, value -> CuriosConfig.walletExtraBeltSlots = value,
                         1, tooltip("wallet.extra_belt_slots"))
-                .intValueUnbounded("wallet_max_currency_types", text("wallet.max_currency_types"),
-                        () -> CuriosConfig.walletMaxCurrencyTypes, CuriosConfig::setWalletMaxCurrencyTypes,
-                        10, tooltip("wallet.max_currency_types"))
-                .doubleValueUnbounded("wallet_magnet_range", text("wallet.magnet_range"),
-                        () -> CuriosConfig.walletMagnetRange, value -> CuriosConfig.walletMagnetRange = value,
-                        6.0D, tooltip("wallet.magnet_range"))
-                .intValueUnbounded("wallet_magnet_interval", text("wallet.magnet_interval"),
-                        () -> CuriosConfig.walletMagnetIntervalTicks, value -> CuriosConfig.walletMagnetIntervalTicks = value,
-                        10, tooltip("wallet.magnet_interval"))
-                .stringList("wallet_currency_definitions", text("wallet.currency_definitions"),
+                // Each coin item as an item slot with its value in Adventure Coins beside it.
+                .itemValueList("wallet_currency_definitions", text("wallet.currency_definitions"),
                         () -> CuriosConfig.walletCurrencyDefinitions, CuriosConfig::setWalletCurrencyDefinitions,
-                        CuriosConfig.DEFAULT_WALLET_CURRENCY_DEFINITIONS, tooltip("wallet.currency_definitions"))
-                .stringList("wallet_exchange_rules", text("wallet.exchange_rules"),
-                        () -> CuriosConfig.walletExchangeRules, CuriosConfig::setWalletExchangeRules,
-                        CuriosConfig.DEFAULT_WALLET_EXCHANGE_RULES, tooltip("wallet.exchange_rules"))
-                .itemList("wallet_manual_only", text("wallet.manual_only"),
-                        () -> CuriosConfig.walletManualExchangeOnlyCurrencies,
-                        CuriosConfig::setWalletManualExchangeOnlyCurrencies,
-                        CuriosConfig.DEFAULT_WALLET_MANUAL_EXCHANGE_ONLY_CURRENCIES,
-                        tooltip("wallet.manual_only"))
+                        CuriosConfig.DEFAULT_WALLET_CURRENCY_DEFINITIONS, CuriosConfigGui::validCurrencyDefinitions,
+                        tooltip("wallet.currency_definitions"))
                 .build());
+    }
+
+    /** The look of the Wind-Thunder Wings on this client: colours, trail, wings, sparks and sounds. */
+    private static void registerWingsPage() {
+        KTConfigApi.register(KTConfigPage.builder(WINGS_PAGE_ID, text("wind_thunder_wings.look.title"))
+                .scope(KTConfigScope.CLIENT_LOCAL)
+                .pageDescription(text("wind_thunder_wings.look.description"))
+                .applyTiming(KTConfigPage.ApplyTiming.IMMEDIATE)
+                .color("wing_color", text("wind_thunder_wings.wing_color"),
+                        () -> CuriosConfig.wtwWingColor, value -> CuriosConfig.wtwWingColor = value,
+                        0x2FA3AE, tooltip("wind_thunder_wings.wing_color"))
+                .color("thunder_color", text("wind_thunder_wings.thunder_color"),
+                        () -> CuriosConfig.wtwThunderColor, value -> CuriosConfig.wtwThunderColor = value,
+                        0xD6ECFF, tooltip("wind_thunder_wings.thunder_color"))
+                .color("boost_color", text("wind_thunder_wings.boost_color"),
+                        () -> CuriosConfig.wtwBoostColor, value -> CuriosConfig.wtwBoostColor = value,
+                        0x3CFF8A, tooltip("wind_thunder_wings.boost_color"))
+                .color("burn_color", text("wind_thunder_wings.burn_color"),
+                        () -> CuriosConfig.wtwBurnColor, value -> CuriosConfig.wtwBurnColor = value,
+                        0xD8101C, tooltip("wind_thunder_wings.burn_color"))
+                .doubleValue("trail_seconds", text("wind_thunder_wings.trail_seconds"),
+                        () -> CuriosConfig.wtwTrailSeconds, value -> CuriosConfig.wtwTrailSeconds = value,
+                        0.8D, 0.05D, 5.0D, tooltip("wind_thunder_wings.trail_seconds"))
+                .doubleValue("trail_width", text("wind_thunder_wings.trail_width"),
+                        () -> CuriosConfig.wtwTrailWidth, value -> CuriosConfig.wtwTrailWidth = value,
+                        1.0D, 0.1D, 4.0D, tooltip("wind_thunder_wings.trail_width"))
+                .booleanValue("show_wings", text("wind_thunder_wings.show_wings"),
+                        () -> CuriosConfig.wtwShowWings, value -> CuriosConfig.wtwShowWings = value,
+                        true, tooltip("wind_thunder_wings.show_wings"))
+                .booleanValue("sparks", text("wind_thunder_wings.sparks"),
+                        () -> CuriosConfig.wtwSparks, value -> CuriosConfig.wtwSparks = value,
+                        true, tooltip("wind_thunder_wings.sparks"))
+                .booleanValue("sounds", text("wind_thunder_wings.sounds"),
+                        () -> CuriosConfig.wtwSounds, value -> CuriosConfig.wtwSounds = value,
+                        true, tooltip("wind_thunder_wings.sounds"))
+                .onSave(CuriosConfig::saveClientSettings)
+                .build());
+    }
+
+    /** Every row is "itemId|value" with a whole value of at least 1. */
+    private static boolean validCurrencyDefinitions(java.util.List<String> rows) {
+        for (String row : rows) {
+            int bar = row.lastIndexOf('|');
+            if (bar <= 0) return false;
+            try {
+                if (Long.parseLong(row.substring(bar + 1).trim()) < 1L) return false;
+            } catch (NumberFormatException invalid) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private static void registerShopPage() {
         KTConfigApi.register(KTConfigPage.builder(SHOP_PAGE_ID, text("shop.title"))
+                .displayOrder(-100)
                 .scope(KTConfigScope.SERVER_AUTHORITATIVE)
                 .serverManaged()
                 .pageDescription(text("shop.description"))

@@ -22,24 +22,26 @@ public class TimeEditScreen extends KineticPage {
         this.inputValue = NumberType.DECIMAL.format(currentTimeMs / 1000.0D);
     }
 
+    // A compact dialog: Back, the title and Save on one row, the seconds field below it (the hint is its tooltip).
+    private static final int W = 220, H = 48, FIELD_W = 80;
+
     @Override
     protected void build(KineticUi ui) {
-        int centerX = width() / 2;
-        int centerY = height() / 2;
-
-        this.input = ui.numberField(centerX - 100, centerY - 10, 200, NumberType.DECIMAL)
+        int px = (width() - W) / 2;
+        int py = (height() - H) / 2;
+        this.input = ui.numberField(px + (W - FIELD_W) / 2, py + 28, FIELD_W, NumberType.DECIMAL)
                 .label(AdventureText.translatable("gui.adventuresystems.tips.tips.label"))
+                .tooltip(AdventureText.translatable("gui.adventuresystems.tips.tips.hint"))
                 .allowNegative(false).range(0.25D, 3600.0D)
                 .validator(value -> true)
                 .onChange(value -> inputValue = value).firstShownTextAsDefault().build();
         this.input.setTextValue(inputValue);
-
-        ui.button(centerX - 105, centerY + 20, 100)
-                .text(AdventureText.translatable("gui.adventuresystems.tips.tips.save"))
-                .onClick(this::save).build();
-        ui.button(centerX - 110, centerY - 42, 100)
+        ui.button(px + 4, py + 4, 40)
                 .text(AdventureText.translatable("gui.adventuresystems.tips.tips.cancel"))
                 .onClick(this::closeToParent).build();
+        ui.button(px + W - 44, py + 4, 40)
+                .text(AdventureText.translatable("gui.adventuresystems.tips.tips.save"))
+                .onClick(this::save).build();
     }
 
     private void save() {
@@ -50,21 +52,18 @@ public class TimeEditScreen extends KineticPage {
         }
         int ms = (int) Math.round(seconds * 1000.0D);
         onSave.accept(ms);
+        navigateBack();
     }
 
     @Override
     protected void renderBackground(KineticGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        int w = 240;
-        int h = 100;
-        int px = (width() - w) / 2;
-        int py = (height() - h) / 2;
-        KineticTheme.panel(graphics, px, py, w, h);
-
-        int titleLeft = px + 10 + 100 + 2;
-        int titleRight = px + w - 12;
-        graphics.scrollingTextCentered(title(), (titleLeft + titleRight) / 2, py + 15,
-                titleRight - titleLeft, KineticTheme.current().text(), true);
-        graphics.scrollingTextCentered(AdventureText.translatable("gui.adventuresystems.tips.tips.hint"), width() / 2, py + 30, w - 24, KineticTheme.current().text(), true);
+        int px = (width() - W) / 2;
+        int py = (height() - H) / 2;
+        KineticTheme.panel(graphics, px, py, W, H);
+        graphics.scrollingTextCentered(title(), width() / 2, py + 8, W - 2 * 48, KineticTheme.current().text(), false);
+        KineticTheme.separator(graphics, px + 4, py + 24, W - 8);
+        graphics.text(AdventureText.translatable("gui.adventuresystems.tips.tips.seconds"), px + (W + FIELD_W) / 2 + 4, py + 32,
+                KineticTheme.current().mutedText(), false);
     }
 
     @Override
