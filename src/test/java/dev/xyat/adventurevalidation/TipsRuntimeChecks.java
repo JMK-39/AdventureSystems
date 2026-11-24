@@ -17,8 +17,9 @@ public final class TipsRuntimeChecks {
     private static final org.slf4j.Logger LOG=org.slf4j.LoggerFactory.getLogger(TipsRuntimeChecks.class);
     private TipsRuntimeChecks() {}
     public static void verifyFiles() throws Exception {
+        verifyConfigLocationMigration();
         for(String language:List.of("en_us","zh_cn")) {
-            var path=KineticPaths.configFile("kineticcore/tips/tips_"+language+".json");
+            var path=KineticPaths.configFile("kineticcore/adventuresystems/tips/tips_"+language+".json");
             byte[] original=Files.exists(path)?Files.readAllBytes(path):null;
             try {
                 String defaults=resource("defaults/tips_"+language+".json");
@@ -78,6 +79,32 @@ public final class TipsRuntimeChecks {
         }
         LOG.info("TIPS_RUNTIME_PASS defaults=16 lineLimit=16 maxLines=3 migration=exact customPreserved=true rejectedWritesPreserved=true");
     }
+    private static void verifyConfigLocationMigration() throws Exception {
+        String language = "zz_" + java.util.UUID.randomUUID().toString().substring(0, 8);
+        String filename = "/tips_" + language + ".json";
+        var legacy = KineticPaths.configFile("kineticcore/tips" + filename);
+        var current = KineticPaths.configFile("kineticcore/adventuresystems/tips" + filename);
+        String custom = "{\"tips\":[{\"text\":\"Migration probe\",\"stage\":\"game\",\"time\":5000}]}";
+        Files.createDirectories(legacy.getParent());
+        Files.writeString(legacy, custom);
+        try {
+            var entries = ConfigLoader.getRawEntriesForLanguage(language);
+            require(entries.size() == 1 && entries.get(0).text.equals("Migration probe"),
+                    "custom language loads from archived directory");
+            require(!Files.exists(legacy) && Files.readString(current).equals(custom),
+                    "legacy custom language moves with original bytes");
+
+            Files.createDirectories(legacy.getParent());
+            Files.writeString(legacy, "{}");
+            ConfigLoader.getRawEntriesForLanguage(language);
+            require(Files.readString(current).equals(custom) && Files.readString(legacy).equals("{}"),
+                    "file at new location wins and conflicting legacy content is retained");
+        } finally {
+            Files.deleteIfExists(legacy);
+            Files.deleteIfExists(current);
+        }
+    }
+
     private static void verifySelection(String language,List<HelpTip.JsonModel.Entry> entries)throws Exception {
         var probe=new HelpTip.JsonModel.Entry();probe.text="Title\nUse \\n here\nLast";
         var copy=new java.util.ArrayList<>(entries);copy.add(probe);

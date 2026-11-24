@@ -11,6 +11,7 @@ import dev.xyat.adventuresystems.curios.CuriosModule;
 import dev.xyat.adventuresystems.ftb.api.FTBQuestApi;
 import dev.xyat.adventuresystems.curios.wallet.data.Data;
 import dev.xyat.adventuresystems.curios.wallet.data.StackCodec;
+import dev.xyat.adventuresystems.curios.wallet.event.WalletModule;
 import dev.xyat.adventuresystems.curios.wallet.storage.MaterialStorage;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
@@ -31,8 +32,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
 public final class Shop {
-    private static final String CONFIG_FILE = "kineticcore/currency_wallet_shop.toml";
-    private static final Path CONFIG_PATH = KineticPaths.configFile(CONFIG_FILE);
+    private static final Path CONFIG_PATH = KineticPaths.configFile(WalletModule.SHOP_CONFIG_FILE);
     private static final String EDIT_KEY = "adventuresystems_currency_wallet_shop_editor";
     private static final String USAGE_KEY = "adventuresystems_currency_wallet_shop_usage";
     private static final String TIMED_KEY = "Timed";
@@ -55,9 +55,9 @@ public final class Shop {
 
     public static void load() {
         try {
-            KineticPaths.ensureConfigDirectory("kineticcore");
+            KineticPaths.ensureConfigDirectory("kineticcore/adventuresystems");
             Config old = Config.inMemory();
-            if (KineticPaths.configFileExists(CONFIG_FILE)) {
+            if (KineticPaths.configFileExists(WalletModule.SHOP_CONFIG_FILE)) {
                 try (FileConfig oldFile = FileConfig.of(CONFIG_PATH)) {
                     oldFile.load();
                     old.putAll(oldFile);

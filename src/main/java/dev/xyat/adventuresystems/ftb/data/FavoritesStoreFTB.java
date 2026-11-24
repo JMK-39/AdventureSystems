@@ -14,12 +14,13 @@ import java.util.Map;
 public final class FavoritesStoreFTB {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Map<String, Long> FAVORITES = new HashMap<>();
-    private static final String CONFIG_FILE = "kineticcore/ftb_quest_favorites.json";
+    private static final String CONFIG_FILE = "kineticcore/adventuresystems/ftb_quest_favorites.json";
 
     private FavoritesStoreFTB() {
     }
 
     public static void load() {
+        KineticPaths.migrateConfigFile("kineticcore/ftb_quest_favorites.json", CONFIG_FILE);
         FAVORITES.clear();
         try {
             String content = String.join("\n", KineticPaths.readConfigLines(CONFIG_FILE));

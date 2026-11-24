@@ -5,6 +5,7 @@ import dev.xyat.kineticcore.api.runtime.KineticClientRuntime;
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import com.electronwill.nightconfig.core.io.WritingMode;
 import dev.xyat.adventuresystems.curios.CuriosModule;
+import dev.xyat.adventuresystems.curios.wallet.event.WalletModule;
 import dev.xyat.adventuresystems.curios.wallet.shop.Shop;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -16,8 +17,7 @@ import java.util.Map;
 import java.util.Set;
 
 public final class ShopClientPreferences {
-    private static final String CONFIG_FILE = "kineticcore/currency_wallet_shop_client.toml";
-    private static final Path CONFIG_PATH = KineticPaths.configFile(CONFIG_FILE);
+    private static final Path CONFIG_PATH = KineticPaths.configFile(WalletModule.SHOP_CLIENT_CONFIG_FILE);
     private static final Map<String, Set<String>> FAVORITES = new HashMap<>();
     private static CommentedFileConfig configData;
     private static boolean loaded;
@@ -89,13 +89,13 @@ public final class ShopClientPreferences {
         if (loaded) return;
         loaded = true;
         try {
-            KineticPaths.ensureConfigDirectory("kineticcore");
+            KineticPaths.ensureConfigDirectory("kineticcore/adventuresystems");
             configData = CommentedFileConfig.builder(CONFIG_PATH)
                     .sync()
                     .preserveInsertionOrder()
                     .writingMode(WritingMode.REPLACE)
                     .build();
-            if (KineticPaths.configFileExists(CONFIG_FILE)) configData.load();
+            if (KineticPaths.configFileExists(WalletModule.SHOP_CLIENT_CONFIG_FILE)) configData.load();
         } catch (Exception exception) {
             configData = null;
             CuriosModule.LOGGER.error("Failed to load currency wallet shop client preferences", exception);

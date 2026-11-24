@@ -14,7 +14,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class CuriosConfig {
-    private static final String CONFIG_FILE = "kineticcore/curios.toml";
+    private static final String CONFIG_FILE = "kineticcore/adventuresystems/curios.toml";
     private static final Path CONFIG_PATH = KineticPaths.configFile(CONFIG_FILE);
     private static CommentedFileConfig configData;
 
@@ -85,7 +85,8 @@ public class CuriosConfig {
     public static void load() {
         if (configData != null) return;
         try {
-            KineticPaths.ensureConfigDirectory("kineticcore");
+            KineticPaths.migrateConfigFile("kineticcore/curios.toml", CONFIG_FILE);
+            KineticPaths.ensureConfigDirectory("kineticcore/adventuresystems");
             Config old = Config.inMemory();
             if (KineticPaths.configFileExists(CONFIG_FILE)) {
                 try (FileConfig oldFile = FileConfig.of(CONFIG_PATH)) {

@@ -27,7 +27,7 @@ public final class GeneralConfig {
 
     public static synchronized void load() {
         if (!registered) {
-            KTCommonConfigApi.register(SPEC, "kineticcore/tips_settings.toml");
+            KTCommonConfigApi.register(SPEC, "kineticcore/adventuresystems/tips_settings.toml");
             registered = true;
         }
         syncFromLoadedSpec();

@@ -23,7 +23,7 @@ import java.util.Set;
 public final class BlacklistStoreFTB {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Set<String> BLACKLIST = new LinkedHashSet<>();
-    private static final String CONFIG_FILE = "kineticcore/ftb_item_blacklist.json";
+    private static final String CONFIG_FILE = "kineticcore/adventuresystems/ftb_item_blacklist.json";
     private static final Set<String> MOD_INDEX = new HashSet<>();
     private static final Set<String> TAG_INDEX = new HashSet<>();
     private static final Set<String> ITEM_INDEX = new HashSet<>();
@@ -33,6 +33,7 @@ public final class BlacklistStoreFTB {
     }
 
     public static void load() {
+        KineticPaths.migrateConfigFile("kineticcore/ftb_item_blacklist.json", CONFIG_FILE);
         BLACKLIST.clear();
         try {
             String content = String.join("\n", KineticPaths.readConfigLines(CONFIG_FILE));

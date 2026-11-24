@@ -22,7 +22,7 @@ public final class FTBClientConfig {
 
     public static void register() {
         if (registered) return;
-        KTClientConfigAdapter.registerSpec(SPEC, "kineticcore/ftb_item_client.toml");
+        KTClientConfigAdapter.registerSpec(SPEC, "kineticcore/adventuresystems/ftb_item_client.toml");
         registered = true;
     }
 

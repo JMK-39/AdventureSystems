@@ -6,6 +6,7 @@ import dev.xyat.adventuresystems.curios.wallet.data.Data;
 import dev.xyat.adventuresystems.curios.wallet.network.Network;
 import dev.xyat.kineticcore.api.event.KineticEventPriority;
 import dev.xyat.kineticcore.api.player.event.KineticPlayerEvents;
+import dev.xyat.kineticcore.api.runtime.KineticPaths;
 import dev.xyat.kineticcore.api.runtime.KineticPlatform;
 import dev.xyat.kineticcore.api.server.event.KineticServerEvents;
 import net.minecraft.core.BlockPos;
@@ -18,12 +19,16 @@ import net.minecraft.world.item.ItemStack;
 import java.util.Optional;
 
 public final class WalletModule {
+    public static final String SHOP_CONFIG_FILE = "kineticcore/adventuresystems/currency_wallet_shop.toml";
+    public static final String SHOP_CLIENT_CONFIG_FILE = "kineticcore/adventuresystems/currency_wallet_shop_client.toml";
     private static final String HAD_WALLET_KEY = "adventuresystems_currency_wallet_had_wallet";
 
     private WalletModule() {
     }
 
     public static void install() {
+        KineticPaths.migrateConfigFile("kineticcore/currency_wallet_shop.toml", SHOP_CONFIG_FILE);
+        KineticPaths.migrateConfigFile("kineticcore/currency_wallet_shop_client.toml", SHOP_CLIENT_CONFIG_FILE);
         KineticServerEvents.onPlayerLogin(KineticEventPriority.NORMAL, WalletModule::onLogin);
         KineticServerEvents.onPlayerTick(
                 KineticEventPriority.NORMAL,

@@ -27,7 +27,7 @@ import java.util.Map;
 
 public class ConfigLoader {
     public static final Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
-    private static final String CONFIG_DIR = "kineticcore/tips/";
+    private static final String CONFIG_DIR = "kineticcore/adventuresystems/tips";
 
     public static List<HelpTip.JsonModel.Entry> getRawEntriesForLanguage(String languageCode) {
         ensureDefaultFiles();
@@ -253,19 +253,20 @@ public class ConfigLoader {
     }
 
     private static String fileForLanguage(String languageCode) {
-        return CONFIG_DIR + "tips_" + normalizeLanguageCode(languageCode) + ".json";
+        return CONFIG_DIR + "/tips_" + normalizeLanguageCode(languageCode) + ".json";
     }
 
     private static String resolveReadFile(String languageCode) {
         String requested = fileForLanguage(languageCode);
         if (KineticPaths.configFileExists(requested)) return requested;
-        return CONFIG_DIR + "tips_en_us.json";
+        return fileForLanguage("en_us");
     }
 
     private static void ensureDefaultFiles() {
+        KineticPaths.migrateConfigDirectory("kineticcore/tips", CONFIG_DIR);
         try {
             for(String language:List.of("zh_cn","en_us")){
-                String path=CONFIG_DIR+"tips_"+language+".json";
+                String path = fileForLanguage(language);
                 if(!KineticPaths.configFileExists(path)||TipDefaults.isLegacy(KineticPaths.readConfigText(path),language)){
                     String defaults=TipDefaults.read(language);
                     if(fromJson(defaults)==null)throw new IOException("Invalid bundled tips: "+language);

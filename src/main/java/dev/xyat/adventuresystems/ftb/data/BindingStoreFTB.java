@@ -27,7 +27,7 @@ import java.util.Map;
 public final class BindingStoreFTB {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Map<String, ItemBindingEntryFTB> BINDINGS = new LinkedHashMap<>();
-    private static final String CONFIG_FILE = "kineticcore/ftb_item_quest_bindings.json";
+    private static final String CONFIG_FILE = "kineticcore/adventuresystems/ftb_item_quest_bindings.json";
     private static final Map<String, List<IndexedBinding>> ITEM_INDEX = new HashMap<>();
     private static final Map<String, List<IndexedBinding>> TAG_INDEX = new HashMap<>();
 
@@ -35,6 +35,7 @@ public final class BindingStoreFTB {
     }
 
     public static void load() {
+        KineticPaths.migrateConfigFile("kineticcore/ftb_item_quest_bindings.json", CONFIG_FILE);
         BINDINGS.clear();
         ITEM_INDEX.clear();
         TAG_INDEX.clear();
