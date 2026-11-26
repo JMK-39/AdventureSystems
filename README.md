@@ -6,6 +6,12 @@
 
 Adventure Systems adds Curios accessories and progression, currency wallets and configurable shops, FTB Quests navigation and submission, and contextual tips. Settings and editors are available through KineticCore's F6 configuration center.
 
+**Configure shop entries visually.** Set product and payment items, configure selectable rewards, and search for required quests. The product details then show the corresponding quest requirements.
+
+![AdventureSystems: product and payment slots, rewards, quest selection and requirement details](https://raw.githubusercontent.com/wiki/JMK-39/AdventureSystems/media/showcase-20261126/en/adventure-shop-editor.gif)
+
+*Captured editor steps · Minecraft 1.20.1 Forge*
+
 - **Accessories:** Heart of Steel, Paradise Lost, a levitation backpack and the Wind-Thunder Wings: modelled feathered wings that grant super flight (double-jump to take off, the flight pose while moving), a green light escape laid along the body, and a blood burn that trades health for a few seconds of top speed, with their own sounds and a fading trail. Speeds, duration, health cost and colours are set in F6. Requires KineticCore 26.10.31+.
 - **Wallet and shops:** one Adventure Coin balance with quick deposit of coin items, material trading, quest gates, item rewards and administrator-managed command rewards.
 - **FTB Quests:** item-linked navigation, favorites, filters and restricted repeatable-task submission.
@@ -20,6 +26,12 @@ Detailed instructions belong in the [English Wiki](https://github.com/JMK-39/Adv
 ## 简体中文
 
 Adventure Systems 提供 Curios 饰品与成长、货币钱包和可配置商店、FTB 任务关联与提交，以及情境提示。通过 KineticCore 的 F6 配置中心管理设置与编辑内容。
+
+**可视化配置商店条目。** 设置商品与支付物品，配置可选奖励并搜索所需任务，再在商品详情中核对对应的任务门槛。
+
+![AdventureSystems 实拍：商品支付槽位、奖励、任务选择与门槛详情](https://raw.githubusercontent.com/wiki/JMK-39/AdventureSystems/media/showcase-20261126/zh/adventure-shop-editor.gif)
+
+*实拍编辑步骤 · Minecraft 1.20.1 Forge*
 
 - **饰品：** 心之钢、失乐园、悬浮背包与风雷翅：建模的羽翼，佩戴后获得超人飞行（双击跳跃起飞，移动时进入飞行姿势）；遁光加速化作沿身体铺开的青绿遁光；燃血以生命换取数秒极速，化作血红遁光；配有自制音效与渐散的尾迹。速度、时长、扣血与颜色可在 F6 中设置。需要 KineticCore 26.10.31+。
 - **钱包和商店：** 单一冒险币余额与货币物品快速存入、材料买卖、任务门槛、物品奖励与管理员维护的指令奖励。
