@@ -36,6 +36,8 @@ Detailed instructions belong in the [English Wiki](https://github.com/JMK-39/Adv
 
 Adventure Systems 提供 Curios 饰品与成长、货币钱包和可配置商店、FTB 任务关联与提交，以及情境提示。通过 KineticCore 的 F6 配置中心管理设置与编辑内容。
 
+<a name="zh-walkthrough"></a>
+
 ### 从商品编辑到商店陈列
 
 把钻石镐的价格改为 12 枚绿宝石，给商品取名「探险补给」并保存。回到商店即可看到新条目，服务端购买列表也读回了同样的名称和价格。
