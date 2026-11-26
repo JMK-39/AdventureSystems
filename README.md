@@ -10,14 +10,10 @@ Adventure Systems adds Curios accessories and progression, currency wallets and 
 
 Price a diamond pickaxe at 12 emeralds, name it Expedition Supplies and save. The shop then lists the product with the new name and price.
 
-![Setting a diamond pickaxe's price and name and saving it to the AdventureSystems shop](https://raw.githubusercontent.com/wiki/JMK-39/AdventureSystems/media/tutorials-20261126/en.gif)
+![Setting a diamond pickaxe's price and name and saving it to the AdventureSystems shop](https://raw.githubusercontent.com/wiki/JMK-39/AdventureSystems/media/bilingual-editors/AdventureSystems/en.gif)
 
-<details>
-<summary>Full walkthrough with Mandarin narration</summary>
+[Watch with English narration](https://raw.githubusercontent.com/wiki/JMK-39/AdventureSystems/media/bilingual-editors/AdventureSystems/en.mp4) · [Download English subtitles](https://raw.githubusercontent.com/wiki/JMK-39/AdventureSystems/media/bilingual-editors/AdventureSystems/en.srt)
 
-https://github.com/user-attachments/assets/984539e2-b0de-499f-b519-fb99137529cb
-
-</details>
 
 [Editor guide](https://github.com/JMK-39/AdventureSystems/wiki/Shops)
 
@@ -42,14 +38,10 @@ Adventure Systems 提供 Curios 饰品与成长、货币钱包和可配置商店
 
 把钻石镐的价格改为 12 枚绿宝石，给商品取名「探险补给」并保存。回到商店即可看到新条目，服务端购买列表也读回了同样的名称和价格。
 
-![给钻石镐设定绿宝石价格和商品名称，然后保存到冒险商店的实录](https://raw.githubusercontent.com/wiki/JMK-39/AdventureSystems/media/tutorials-20261126/zh.gif)
+![给钻石镐设定绿宝石价格和商品名称，然后保存到冒险商店的实录](https://raw.githubusercontent.com/wiki/JMK-39/AdventureSystems/media/bilingual-editors/AdventureSystems/zh.gif)
 
-<details>
-<summary>播放完整普通话讲解</summary>
+[观看中文配音版](https://raw.githubusercontent.com/wiki/JMK-39/AdventureSystems/media/bilingual-editors/AdventureSystems/zh.mp4) · [下载中文字幕](https://raw.githubusercontent.com/wiki/JMK-39/AdventureSystems/media/bilingual-editors/AdventureSystems/zh.srt)
 
-https://github.com/user-attachments/assets/984539e2-b0de-499f-b519-fb99137529cb
-
-</details>
 
 [编辑器使用指南](https://github.com/JMK-39/AdventureSystems/wiki/%E5%95%86%E5%BA%97%E7%BC%96%E8%BE%91)
 
